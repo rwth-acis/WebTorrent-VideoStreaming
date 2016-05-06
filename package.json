@@ -1,0 +1,37 @@
+{
+  "name": "videostream",
+  "version": "2.3.0",
+  "description": "Video streaming demo",
+  "main": "videostream.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jhiesey/videostream.git"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "build-example": "browserify example/index.js > example/built.js",
+    "start": "http-server example",
+    "watch": "watchify example/index.js -o example/built.js"
+  },
+  "author": "John Hiesey",
+  "license": "MIT",
+  "dependencies": {
+    "binary-search": "^1.2.0",
+    "http": "0.0.0",
+    "inherits": "^2.0.1",
+    "mediasource": "^2.0.0",
+    "mp4-box-encoding": "^1.1.1",
+    "mp4-stream": "^2.0.0",
+    "multistream": "^2.0.5",
+    "pump": "^1.0.1",
+    "range-slice-stream": "^1.0.0",
+    "steam": "^1.4.0",
+    "util": "^0.10.3",
+    "webtorrent": "^0.91.1"
+  },
+  "devDependencies": {
+    "browserify": "^13.0.0",
+    "http-server": "^0.8.5",
+    "watchify": "^3.7.0"
+  }
+}
