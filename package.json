@@ -25,9 +25,10 @@
     "multistream": "^2.0.5",
     "pump": "^1.0.1",
     "range-slice-stream": "^1.0.0",
+    "readable-stream": "^2.1.2",
     "steam": "^1.4.0",
     "util": "^0.10.3",
-    "webtorrent": "^0.91.1"
+    "webtorrent": "^0.91.4"
   },
   "devDependencies": {
     "browserify": "^13.0.0",
