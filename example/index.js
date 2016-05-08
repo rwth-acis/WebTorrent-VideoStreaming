@@ -2,7 +2,7 @@
 var http = require('http');
 var MultiStream = require('multistream');
 var util = require('util');
-var Readable = require('stream').Readable; 
+//var Readable = require('stream').Readable;
 var readableStream = require('readable-stream');
 var videostream = require('../');
 var WebTorrent = require('webtorrent');
@@ -55,13 +55,15 @@ var file = function (path) {
 	this.path = path
 }
 file.prototype.createReadStream = function (opts){
-      var videostreamRequestNumber = ++globalvideostreamRequestNumber;
+   inCritical = true;
+   var self = this;
+   var videostreamRequestNumber = ++globalvideostreamRequestNumber;
    console.log(consoleCounter++ + " called createreadStream " + videostreamRequestNumber);
    console.log(consoleCounter++ + " opts.start: " + opts.start);
    console.log(consoleCounter++ + " opts.end: " + opts.end);
-   var conductingXHRRequest = false;
    var CBcount = 0;
-   var thisRequest = new VideostreamRequestHandler(videostreamRequestNumber, opts);
+   var end = isNaN(opts.end) ? fileSize : (opts.end + 1);
+   var thisRequest = new VideostreamRequestHandler(videostreamRequestNumber, opts, end, self);
    var MyWriteableStream = function(){ // step 2
       readableStream.Writable.call(this);
    };
@@ -75,7 +77,7 @@ file.prototype.createReadStream = function (opts){
       }
       thisRequest.oldStartWebTorrent += chunk.length;
       //ceckIfAnswerStreamReady(thisRequest);
-      done();
+      //done();
    };
    thisRequest.collectorStreamForWebtorrent = new MyWriteableStream(); // instanciate your brand new stream
    videostreamRequestHandlers.push(thisRequest);
@@ -100,10 +102,9 @@ file.prototype.createReadStream = function (opts){
       */
    }
               
-   var self = this;
-   var req = null;
+   //var req = null;
    //var end = opts.end ? (opts.end + 1) : fileSize;
-   var end = isNaN(thisRequest.opts.end) ? fileSize : (thisRequest.opts.end + 1);     
+     
    
    
    
@@ -121,97 +122,8 @@ file.prototype.createReadStream = function (opts){
       if(thisRequest.webTorrentStream){
          thisRequest.webTorrentStream.resume();
       }
-      if(inCritical && !conductingXHRRequest){
-         conductingXHRRequest = true;
-
-         var reqStart = thisRequest.start;
-         /*
-         if(!firstCreateReadStream && reqStart < 500){
-            var rs = new Readable();
-            rs.push(first500ByteBuffer.slice(reqStart, 501));
-            rs.push(null);
-            start += 500-reqStart;
-            return cb(null, rs);
-         }
-         */
-         var reqEnd = reqStart + REQUEST_SIZE;
-         if (end >= 0 && reqEnd > end){
-            reqEnd = end;
-         }
-         if (reqStart >= reqEnd){
-            req = null;
-            return cb(null, null);
-         }
-         /*
-         if(firstCreateReadStream){
-            reqEnd = reqEnd - REQUEST_SIZE + 500;
-         }
-         */
-         if(theCoolCounter<20){
-            //console.log(consoleCounter++ + " reqStart: " + reqStart);
-            //console.log(consoleCounter++ + " reqEnd: " + reqEnd);
-         }
-        
-         ////console.log("reqStart before ceck: " + reqStart);
-         ////console.log("reqEnd before ceck: " + reqEnd);
-         /* NFUT64 Brauche ich glaube ich garnicht
-         for(var k=0, length=RequestedRanges.length; k<length; k++){
-            if(RequestedRanges[k].end >= reqStart && reqEnd >= RequestedRanges[k].start){
-               if(reqEnd >= RequestedRanges[k].end){
-                  reqStart = RequestedRanges[k].end+1;
-               } else {
-                  reqEnd = RequestedRanges[k].start-1;
-               }           
-            }    
-         }
-         */ 
-         ////console.log("reqStart AFTER ceck: " + reqStart);
-         ////console.log("reqEnd AFTER ceck: " + reqEnd);
-         //Belong to NFUT64: RequestedRanges.push(theReq);
-         //endXHRRequest = false;
-         
-         ////console.log("Conducting XHR request");
-           
-         function XHRDataHandler(chunk){
-            if(theCoolCounter<20){
-               console.log(consoleCounter++, "BAM In XHRDataHandler from readStream ", videostreamRequestNumber, "and thisCBNumber", thisCBNumber);
-               console.log(consoleCounter++, "chunk size:", chunk.length);
-            }
-            bytesReceivedFromServer += chunk.length;
-            if(thisRequest.start-thisRequest.oldStartServer < chunk.length){
-               //console.log("add data to answerStream");
-               //console.log("thisRequest.start: " + thisRequest.start);
-               //console.log("thisRequest.oldStartServer: " + thisRequest.oldStartServer);
-               //var videoDataBuffer = Buffer.allocUnsafe(chunk.length - (thisRequest.start-thisRequest.oldStartServer));
-               thisRequest.answerStream.push(chunk.slice(thisRequest.start-thisRequest.oldStartServer, chunk.length));
-               thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartServer);
-               //console.log("thisRequest.bytesInAnswerStream after adding of data: " + thisRequest.bytesInAnswerStream);
-               thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartServer);
-               //ceckIfAnswerStreamReady(thisRequest);
-            }
-            thisRequest.oldStartServer += chunk.length;
-         }
-         
-         function XHREnd(){
-            //console.log("XHREnd from videostreamRequest number " + thisRequest.readStreamNumber);
-            conductingXHRRequest = false;               
-         }
-      
-         req = http.get({
-               path: self.path,
-               headers: {
-                  range: 'bytes=' + reqStart + '-' + (reqEnd - 1)
-                  }
-            }, function (res){
-               var contentRange = res.headers['content-range']
-               if (contentRange){
-                  fileSize = parseInt(contentRange.split('/')[1], 10)
-               }
-               //console.log("function(res) is executed from readstream number " + videostreamRequestNumber + " and CB number " + thisCBNumber);
-               res.on('end', XHREnd);
-               res.on('data', XHRDataHandler);             
-            }
-         ); 
+      if(inCritical && !thisRequest.XHRConducted){
+         conductXHR(thisRequest);
       }
    });
    console.log(consoleCounter++ + " terminate createReadStream");
@@ -227,7 +139,7 @@ function ceckIfAnswerStreamReady(thisRequest){
       }
       thisRequest.bytesInAnswerStream = 0;
       var res = thisRequest.answerStream; 
-      thisRequest.answerStream = new readableStream.Readable();
+      thisRequest.answerStream = new Readable();
       var theCallbackFunction = thisRequest.currentCB;
       thisRequest.currentCB = null;
       //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
@@ -244,7 +156,7 @@ function updateChart(){
    setTimeout(updateChart, 5000);
 }
 
-function VideostreamRequestHandler(readStreamNumber, opts){
+function VideostreamRequestHandler(readStreamNumber, opts, end){
    this.readStreamNumber = readStreamNumber;
    this.opts = opts;
    this.start = opts.start;
@@ -255,6 +167,9 @@ function VideostreamRequestHandler(readStreamNumber, opts){
    this.answerStream = new Readable();
    this.bytesInAnswerStream = 0;
    this.collectorStreamForWebtorrent = null;
+   this.XHRConducted = false;
+   this.end = end;
+   this.self = self;
 }
 
 function frequentlyCeckIfAnswerStreamReady(){
@@ -276,7 +191,86 @@ function checkIfBufferFullEnough(){
          } 
       }   
    }
+   if(inCritical){
+      for(var j=0, length=videostreamRequestHandlers.length; j<length; j++){
+         if(videostreamRequestHandlers[i].currentCB !== null && videostreamRequestHandlers[i].XHRConducted === false){
+            conductXHR(videostreamRequestHandlers[i]);           
+         }       
+      }      
+   }
    setTimeout(checkIfBufferFullEnough, 3000);   
+}
+
+function conductXHR(thisRequest){
+   thisRequest.XHRConducted = true;
+   var reqStart = thisRequest.start;
+   /*
+   if(!firstCreateReadStream && reqStart < 500){
+      var rs = new Readable();
+      rs.push(first500ByteBuffer.slice(reqStart, 501));
+      rs.push(null);
+      start += 500-reqStart;
+      return cb(null, rs);
+   }
+   */
+   var reqEnd = reqStart + REQUEST_SIZE;
+   if (thisRequest.end >= 0 && reqEnd > thisRequest.end){
+      reqEnd = thisRequest.end;
+   }
+   if (reqStart >= reqEnd){
+      req = null;
+      return thisRequest.currentCB(null, null);
+   }
+   /*
+   if(firstCreateReadStream){
+      reqEnd = reqEnd - REQUEST_SIZE + 500;
+   }
+   */
+   if(theCoolCounter<20){
+      //console.log(consoleCounter++ + " reqStart: " + reqStart);
+      //console.log(consoleCounter++ + " reqEnd: " + reqEnd);
+   }
+       
+   function XHRDataHandler(chunk){
+      if(theCoolCounter<20){
+         console.log(consoleCounter++, "BAM In XHRDataHandler from readStream ", thisRequest.videostreamRequestNumber, "and thisCBNumber", thisRequest.thisCBNumber);
+         console.log(consoleCounter++, "chunk size:", chunk.length);
+      }
+      if(thisRequest.start-thisRequest.oldStartServer < chunk.length){
+         //console.log("add data to answerStream");
+         //console.log("thisRequest.start: " + thisRequest.start);
+         //console.log("thisRequest.oldStartServer: " + thisRequest.oldStartServer);
+         //var videoDataBuffer = Buffer.allocUnsafe(chunk.length - (thisRequest.start-thisRequest.oldStartServer));
+         thisRequest.answerStream.push(chunk.slice(thisRequest.start-thisRequest.oldStartServer, chunk.length));
+         thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartServer);
+         //console.log("thisRequest.bytesInAnswerStream after adding of data: " + thisRequest.bytesInAnswerStream);
+         thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartServer);
+         //ceckIfAnswerStreamReady(thisRequest);
+      }
+      thisRequest.oldStartServer += chunk.length;
+      bytesReceivedFromServer += chunk.length;
+   }
+   
+   function XHREnd(){
+      //console.log("XHREnd from videostreamRequest number " + thisRequest.readStreamNumber);
+      conductingXHRRequest = false;               
+   }
+
+   req = http.get({
+         path: self.path,
+         headers: {
+            range: 'bytes=' + reqStart + '-' + (reqEnd - 1)
+            }
+      }, function (res){
+         var contentRange = res.headers['content-range']
+         if (contentRange){
+            fileSize = parseInt(contentRange.split('/')[1], 10)
+         }
+         //console.log("function(res) is executed from readstream number " + videostreamRequestNumber + " and CB number " + thisCBNumber);
+         res.on('end', XHREnd);
+         res.on('data', XHRDataHandler);             
+      }
+   ); 
 }
 
 var video = document.querySelector('video')
