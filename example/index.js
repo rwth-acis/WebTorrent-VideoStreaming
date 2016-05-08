@@ -2,7 +2,7 @@
 var http = require('http');
 var MultiStream = require('multistream');
 var util = require('util');
-var Readable = require('stream').Readable;
+var Readable = require('stream').Readable; 
 var readableStream = require('readable-stream');
 var videostream = require('../');
 var WebTorrent = require('webtorrent');
@@ -11,87 +11,74 @@ var theCoolCounter = 0;
 var consoleCounter = 0;
 //var firstCreateReadStream = true;
 //var first500ByteBuffer = Buffer.allocUnsafe(500);
-var globalCreateReadStreamCounter = 0;
+var globalvideostreamRequestNumber = 0;
 //var xhrhappened = false;
 var fileSize = -1;
 //var first500ByteBufferFull = false;
 var bytesReceivedFromServer = 0;
 var theTorrent;
 var webTorrentFile;
-var createReadStreamHandlers = [];
+var videostreamRequestHandlers = [];
 var inCritical = true;
 
-
+/*
 var client = new WebTorrent();
 client.add('magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d&dn=sintel.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io', function (torrent){
-   console.log("torrent meta data ready");
+   //console.log("torrent meta data ready");
    theTorrent = torrent;
    webTorrentFile = torrent.files[0];
    webTorrentFile.deselect();
    
-   for(var i=0, length=createReadStreamHandlers.length; i<length; i++){
-      var thisRequest = createReadStreamHandlers[i];
-      if(thisRequest.webTorrentStream !==  null && thisRequest.currentCB !== null){
+   for(var i=0, length=videostreamRequestHandlers.length; i<length; i++){
+      var thisRequest = videostreamRequestHandlers[i];
+      if(thisRequest.currentCB !== null){
          thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : webTorrentFile.length});
-         webTorrentStream.pause();
+         thisRequest.webTorrentStream.pause();
          thisRequest.oldStartWebTorrent = thisRequest.start;
-         thisRequest.webTorrentStream = webTorrentStream;
-         webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
-         webTorrentStream.resume();
-         /*
-         (thisRequest.webTorrentStream).on('readable', () => {
-           var chunk;
-           if(null !== (chunk = (thisRequest.webTorrentStream).read())){
-               if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
-                  var videoDataBuffer = Buffer.allocUnsafe(chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent));
-                  thisRequest.answerStream.push(videoDataBuffer.fill(chunk, thisRequest.start-thisRequest.oldStartWebTorrent, chunk.length));
-                  thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
-                  thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
-               }
-               thisRequest.oldStartWebTorrent += chunk.length;
-               ceckIfAnswerStreamReady(thisRequest); 
-            }
-         });
-         */
+         thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
+         thisRequest.webTorrentStream.resume();    
       }
    }
 });   
-
+*/
 
 updateChart();
 frequentlyCeckIfAnswerStreamReady();
 checkIfBufferFullEnough();
-console.log("Program starts");
-var REQUEST_SIZE = 500000 // 500 kibibyte
+
+
+
+//console.log("Program starts");
+//console.log("version 2");
+var REQUEST_SIZE = 500000 // 500 kilobyte
 var file = function (path) {
 	this.path = path
 }
 file.prototype.createReadStream = function (opts){
+      var videostreamRequestNumber = ++globalvideostreamRequestNumber;
+   console.log(consoleCounter++ + " called createreadStream " + videostreamRequestNumber);
    console.log(consoleCounter++ + " opts.start: " + opts.start);
    console.log(consoleCounter++ + " opts.end: " + opts.end);
-   var createReadStreamCounter = ++globalCreateReadStreamCounter;
+   var conductingXHRRequest = false;
    var CBcount = 0;
-   console.log(consoleCounter++ + " called createreadStream " + createReadStreamCounter);
-   var thisRequest = new VideostreamRequestHandler(createReadStreamCounter, opts);
+   var thisRequest = new VideostreamRequestHandler(videostreamRequestNumber, opts);
    var MyWriteableStream = function(){ // step 2
       readableStream.Writable.call(this);
    };
    util.inherits(MyWriteableStream, readableStream.Writable); // step 1
    MyWriteableStream.prototype._write = function(chunk, encoding, done){ // step 3
       if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
-         var videoDataBuffer = Buffer.allocUnsafe(chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent));
-         thisRequest.answerStream.push(videoDataBuffer.fill(chunk, thisRequest.start-thisRequest.oldStartWebTorrent, chunk.length));
+         //var videoDataBuffer = Buffer.allocUnsafe(chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent));
+         thisRequest.answerStream.push(chunk.slice(thisRequest.start-thisRequest.oldStartWebTorrent, chunk.length));
          thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
          thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
       }
       thisRequest.oldStartWebTorrent += chunk.length;
-      if(ceckIfAnswerStreamReady(thisRequest)){
-         return;
-      } 
+      //ceckIfAnswerStreamReady(thisRequest);
       done();
    };
    thisRequest.collectorStreamForWebtorrent = new MyWriteableStream(); // instanciate your brand new stream
-   createReadStreamHandlers.push(thisRequest);
+   videostreamRequestHandlers.push(thisRequest);
    
    if(webTorrentFile){
       var webTorrentStream = webTorrentFile.createReadStream({"start" : opts.start, "end" : webTorrentFile.length});
@@ -113,29 +100,30 @@ file.prototype.createReadStream = function (opts){
       */
    }
               
-   var self = this;   
+   var self = this;
    var req = null;
    //var end = opts.end ? (opts.end + 1) : fileSize;
    var end = isNaN(thisRequest.opts.end) ? fileSize : (thisRequest.opts.end + 1);     
-   var conductingXHRRequest = false;
+   
    
    
    var multi = new MultiStream(function (cb){
-      thisRequest.currentCB = cb;
-      if(ceckIfAnswerStreamReady(thisRequest)){
-         return;
+     // if(ceckIfAnswerStreamReady(thisRequest)){
+     //    return;
+     // }
+      var thisCBNumber = ++CBcount;
+      if(theCoolCounter<20){
+         console.log(consoleCounter++ + "    " + thisCBNumber + ". call of function(cb) from " + videostreamRequestNumber);
+         console.log(consoleCounter++ + "    start: " + thisRequest.start);
       }
+      thisRequest.currentCB = cb;
+      
       if(thisRequest.webTorrentStream){
          thisRequest.webTorrentStream.resume();
       }
-      var thisCBNumber = ++CBcount;
-      
       if(inCritical && !conductingXHRRequest){
          conductingXHRRequest = true;
-         if(theCoolCounter<7){
-            console.log(consoleCounter++ + "    " + thisCBNumber + ". call of function(cb) from " + createReadStreamCounter);
-            console.log(consoleCounter++ + "    start: " + thisRequest.start);
-         }
+
          var reqStart = thisRequest.start;
          /*
          if(!firstCreateReadStream && reqStart < 500){
@@ -159,13 +147,13 @@ file.prototype.createReadStream = function (opts){
             reqEnd = reqEnd - REQUEST_SIZE + 500;
          }
          */
-         if(theCoolCounter<7){
-            console.log(consoleCounter++ + " reqStart: " + reqStart);
-            console.log(consoleCounter++ + " reqEnd: " + reqEnd);
+         if(theCoolCounter<20){
+            //console.log(consoleCounter++ + " reqStart: " + reqStart);
+            //console.log(consoleCounter++ + " reqEnd: " + reqEnd);
          }
         
-         //console.log("reqStart before ceck: " + reqStart);
-         //console.log("reqEnd before ceck: " + reqEnd);
+         ////console.log("reqStart before ceck: " + reqStart);
+         ////console.log("reqEnd before ceck: " + reqEnd);
          /* NFUT64 Brauche ich glaube ich garnicht
          for(var k=0, length=RequestedRanges.length; k<length; k++){
             if(RequestedRanges[k].end >= reqStart && reqEnd >= RequestedRanges[k].start){
@@ -177,30 +165,35 @@ file.prototype.createReadStream = function (opts){
             }    
          }
          */ 
-         //console.log("reqStart AFTER ceck: " + reqStart);
-         //console.log("reqEnd AFTER ceck: " + reqEnd);
+         ////console.log("reqStart AFTER ceck: " + reqStart);
+         ////console.log("reqEnd AFTER ceck: " + reqEnd);
          //Belong to NFUT64: RequestedRanges.push(theReq);
          //endXHRRequest = false;
-         console.log("Conducting XHR request");
+         
+         ////console.log("Conducting XHR request");
            
          function XHRDataHandler(chunk){
-            if(theCoolCounter<7){
-               console.log(consoleCounter++, "BAM In XHRDataHandler from readStream ", createReadStreamCounter, "and thisCBNumber", thisCBNumber);
+            if(theCoolCounter<20){
+               console.log(consoleCounter++, "BAM In XHRDataHandler from readStream ", videostreamRequestNumber, "and thisCBNumber", thisCBNumber);
                console.log(consoleCounter++, "chunk size:", chunk.length);
             }
             bytesReceivedFromServer += chunk.length;
             if(thisRequest.start-thisRequest.oldStartServer < chunk.length){
-               var videoDataBuffer = Buffer.allocUnsafe(chunk.length - (thisRequest.start-thisRequest.oldStartServer));
-               thisRequest.answerStream.push(videoDataBuffer.fill(chunk, thisRequest.start-thisRequest.oldStartServer, chunk.length));
+               //console.log("add data to answerStream");
+               //console.log("thisRequest.start: " + thisRequest.start);
+               //console.log("thisRequest.oldStartServer: " + thisRequest.oldStartServer);
+               //var videoDataBuffer = Buffer.allocUnsafe(chunk.length - (thisRequest.start-thisRequest.oldStartServer));
+               thisRequest.answerStream.push(chunk.slice(thisRequest.start-thisRequest.oldStartServer, chunk.length));
+               thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartServer);
+               //console.log("thisRequest.bytesInAnswerStream after adding of data: " + thisRequest.bytesInAnswerStream);
                thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartServer);
+               //ceckIfAnswerStreamReady(thisRequest);
             }
             thisRequest.oldStartServer += chunk.length;
-            if(ceckIfAnswerStreamReady(thisRequest)){
-               return;
-            }
          }
          
          function XHREnd(){
+            //console.log("XHREnd from videostreamRequest number " + thisRequest.readStreamNumber);
             conductingXHRRequest = false;               
          }
       
@@ -214,7 +207,7 @@ file.prototype.createReadStream = function (opts){
                if (contentRange){
                   fileSize = parseInt(contentRange.split('/')[1], 10)
                }
-               console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thisCBNumber);
+               //console.log("function(res) is executed from readstream number " + videostreamRequestNumber + " and CB number " + thisCBNumber);
                res.on('end', XHREnd);
                res.on('data', XHRDataHandler);             
             }
@@ -226,14 +219,18 @@ file.prototype.createReadStream = function (opts){
 };
 
 function ceckIfAnswerStreamReady(thisRequest){
-   if(webTorrentFile && (thisRequest.bytesInAnswerStream >= 500 || thisRequest.start >= webTorrentFile.length)){ 
+   //console.log("In ceckIfAnswerStreamReady of videostreamRequest number " + thisRequest.readStreamNumber +  ". thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream + "     thisRequest.currentCB: " + thisRequest.currentCB);
+   if(thisRequest.currentCB && (thisRequest.bytesInAnswerStream >= 500000 || (webTorrentFile && thisRequest.start >= webTorrentFile.length) || (fileSize !== -1 && thisRequest.start >= fileSize))){ 
       thisRequest.answerStream.push(null);
-      thisRequest.webTorrentStream.pause();
+      if(thisRequest.webTorrentStream){
+         thisRequest.webTorrentStream.pause();
+      }
       thisRequest.bytesInAnswerStream = 0;
       var res = thisRequest.answerStream; 
-      thisRequest.answerStream = new readable();
+      thisRequest.answerStream = new readableStream.Readable();
       var theCallbackFunction = thisRequest.currentCB;
       thisRequest.currentCB = null;
+      //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
       theCallbackFunction(null, res);
       return true;
    }
@@ -244,7 +241,7 @@ function updateChart(){
    if(theTorrent){
       document.getElementById("WebTorrent-received").innerHTML = "file.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer;
    }
-   setTimeout(updateChart, 2000);
+   setTimeout(updateChart, 5000);
 }
 
 function VideostreamRequestHandler(readStreamNumber, opts){
@@ -261,32 +258,25 @@ function VideostreamRequestHandler(readStreamNumber, opts){
 }
 
 function frequentlyCeckIfAnswerStreamReady(){
-   for(var i=0, length=createReadStreamHandlers.length; i<length; i++){
-      var thisRequest = createReadStreamHandlers[i];
-      ceckIfAnswerStreamReady(thisRequest);
+   for(var i=0, length=videostreamRequestHandlers.length; i<length; i++){
+      ceckIfAnswerStreamReady(videostreamRequestHandlers[i]);
    }
-   setTimeout(frequentlyCeckIfAnswerStreamReady,500);
+   setTimeout(frequentlyCeckIfAnswerStreamReady, 1000);
 }
 
 function checkIfBufferFullEnough(){
    var timeRanges = document.querySelector('video').buffered;
+   inCritical = true;
    for(var i=0, length=timeRanges.length; i<length; i++){
+      console.log("Time range number " + i + ": start(" + timeRanges.start(i) + ") end(" + timeRanges.end(i) + ")");
       if(myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)){
-         if(timeRanges.end(i)-myVideo.currentTime >= 2){
+         if(timeRanges.end(i)-myVideo.currentTime >= 10){
             inCritical = false;
-            criticalByteCounter = -1;
             console.log("I set inCritical to false");
-         } else {
-            if(criticalByteCounter === -1){
-               criticalByteCounter = 0;
-            }
-            inCritical = true;
-            // startXHRRequest(); füge ich später hinzu
-            console.log("I set inCritical to true;");
-         }
+         } 
       }   
    }
-   setTimeout(checkIfBufferFullEnough,500);   
+   setTimeout(checkIfBufferFullEnough, 3000);   
 }
 
 var video = document.querySelector('video')
