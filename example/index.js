@@ -2,7 +2,7 @@
 var http = require('http');
 var MultiStream = require('multistream');
 var util = require('util');
-//var Readable = require('stream').Readable;
+var Readable = require('stream').Readable;
 var readableStream = require('readable-stream');
 var videostream = require('../');
 var WebTorrent = require('webtorrent');
@@ -12,7 +12,6 @@ var consoleCounter = 0;
 //var firstCreateReadStream = true;
 //var first500ByteBuffer = Buffer.allocUnsafe(500);
 var globalvideostreamRequestNumber = 0;
-//var xhrhappened = false;
 var fileSize = -1;
 //var first500ByteBufferFull = false;
 var bytesReceivedFromServer = 0;
@@ -21,18 +20,18 @@ var webTorrentFile;
 var videostreamRequestHandlers = [];
 var inCritical = true;
 
-/*
+
 var client = new WebTorrent();
 client.add('magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d&dn=sintel.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io', function (torrent){
    console.log("torrent meta data ready");
    theTorrent = torrent;
    webTorrentFile = torrent.files[0];
-   webTorrentFile.deselect();
+   //webTorrentFile.deselect();
    
    for(var i=0, length=videostreamRequestHandlers.length; i<length; i++){
       var thisRequest = videostreamRequestHandlers[i];
       if(thisRequest.currentCB !== null){
-         thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : webTorrentFile.length});
+         thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : webTorrentFile.length-1});
          thisRequest.webTorrentStream.pause();
          thisRequest.oldStartWebTorrent = thisRequest.start;
          thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
@@ -40,7 +39,7 @@ client.add('magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d&dn=sint
       }
    }
 });   
-*/
+
 
 updateChart();
 frequentlyCeckIfAnswerStreamReady();
@@ -48,8 +47,7 @@ checkIfBufferFullEnough();
 
 
 
-//console.log("Program starts");
-//console.log("version 2");
+console.log("Program starts");
 var REQUEST_SIZE = 500000 // 500 kilobyte
 var file = function (path) {
 	this.path = path
@@ -70,7 +68,6 @@ file.prototype.createReadStream = function (opts){
    util.inherits(MyWriteableStream, readableStream.Writable); // step 1
    MyWriteableStream.prototype._write = function(chunk, encoding, done){ // step 3
       if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
-         //var videoDataBuffer = Buffer.allocUnsafe(chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent));
          thisRequest.answerStream.push(chunk.slice(thisRequest.start-thisRequest.oldStartWebTorrent, chunk.length));
          thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
          thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
@@ -100,12 +97,7 @@ file.prototype.createReadStream = function (opts){
          ceckIfAnswerStreamReady(thisRequest); 
       });
       */
-   }
-              
-   //var req = null;
-   //var end = opts.end ? (opts.end + 1) : fileSize;
-     
-   
+   }  
    
    
    var multi = new MultiStream(function (cb){
