@@ -2,7 +2,7 @@
 var http = require('http');
 var MultiStream = require('multistream');
 var util = require('util');
-var Readable = require('stream').Readable;
+//var Readable = require('stream').Readable;
 var readableStream = require('readable-stream');
 var videostream = require('../');
 var WebTorrent = require('webtorrent');
@@ -139,7 +139,7 @@ function ceckIfAnswerStreamReady(thisRequest){
       }
       thisRequest.bytesInAnswerStream = 0;
       var res = thisRequest.answerStream; 
-      thisRequest.answerStream = new Readable();
+      thisRequest.answerStream = new readableStream.Readable();
       var theCallbackFunction = thisRequest.currentCB;
       thisRequest.currentCB = null;
       //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
@@ -164,7 +164,7 @@ function VideostreamRequestHandler(readStreamNumber, opts, end){
    this.oldStartServer = opts.start;
    this.currentCB = null;
    this.webTorrentStream = null;
-   this.answerStream = new Readable();
+   this.answerStream = new readableStream.Readable();
    this.bytesInAnswerStream = 0;
    this.collectorStreamForWebtorrent = null;
    this.XHRConducted = false;
