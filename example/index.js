@@ -1,6 +1,15 @@
 (function(){
-//Paramters   
-var uploadLimit = 2;   
+//Paramters
+const DOWNLOAD_FROM_SERVER_TIME_RANGE = 5; // in seconds   
+const UPLOAD_LIMIT = 2; // multiplied by number of downloaded bytes
+const XHR_REQUEST_SIZE = 500000 // in byte
+const THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = 500000 // in byte
+
+const CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = 3000; // in miliseconds
+const CHECK_IF_ANSWERSTREAM_READY_INTERVAL = 1000; // in miliseconds
+const UPDATE_CHART_INTERVAL = 5000; // in miliseconds
+const CHOKE_IF_NECESSARY_INTERVAL = 800; // in miliseconds
+
    
    
 var http = require('http');
@@ -69,9 +78,6 @@ frequentlyCeckIfAnswerStreamReady();
 checkIfBufferFullEnough();
 
 
-console.log("Version 42")
-console.log("Program starts");
-var REQUEST_SIZE = 500000 // 500 kilobyte
 var file = function (path) {
 	this.path = path
 }
@@ -155,7 +161,7 @@ file.prototype.createReadStream = function (opts){
 
 function ceckIfAnswerStreamReady(thisRequest){
    //console.log("In ceckIfAnswerStreamReady of videostreamRequest number " + thisRequest.readStreamNumber +  ". thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream + "     thisRequest.currentCB: " + thisRequest.currentCB);
-   if(thisRequest.currentCB && (thisRequest.bytesInAnswerStream >= 500000 || (webTorrentFile && thisRequest.start >= webTorrentFile.length) || (fileSize !== -1 && thisRequest.start >= fileSize))){ 
+   if(thisRequest.currentCB && (thisRequest.bytesInAnswerStream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM || (webTorrentFile && thisRequest.start >= webTorrentFile.length) || (fileSize !== -1 && thisRequest.start >= fileSize))){ 
       thisRequest.answerStream.push(null);
       /*
       if(thisRequest.webTorrentStream){
@@ -175,19 +181,19 @@ function ceckIfAnswerStreamReady(thisRequest){
 }
 
 function chokeIfNecessary(){
-   if(theTorrent && theTorrent.uploaded >= theTorrent.downloaded * uploadLimit){
+   if(theTorrent && theTorrent.uploaded >= theTorrent.downloaded * UPLOAD_LIMIT){
       for(var i=0, length=wires.length; i<length; i++){
          wires[i].choke();
       }
    }
-   setTimeout(chokeIfNecessary, 800);
+   setTimeout(chokeIfNecessary, CHOKE_IF_NECESSARY_INTERVAL);
 }
 
 function updateChart(){
    if(theTorrent){
       document.getElementById("WebTorrent-received").innerHTML = "file.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer;
    }
-   setTimeout(updateChart, 5000);
+   setTimeout(updateChart, UPDATE_CHART_INTERVAL);
 }
 
 function VideostreamRequestHandler(readStreamNumber, opts, end){
@@ -211,7 +217,7 @@ function frequentlyCeckIfAnswerStreamReady(){
    for(var i=0, length=videostreamRequestHandlers.length; i<length; i++){
       ceckIfAnswerStreamReady(videostreamRequestHandlers[i]);
    }
-   setTimeout(frequentlyCeckIfAnswerStreamReady, 1000);
+   setTimeout(frequentlyCeckIfAnswerStreamReady, CHECK_IF_ANSWERSTREAM_READY_INTERVAL);
 }
 
 function checkIfBufferFullEnough(){
@@ -220,7 +226,7 @@ function checkIfBufferFullEnough(){
    for(var i=0, length=timeRanges.length; i<length; i++){
       console.log("Time range number " + i + ": start(" + timeRanges.start(i) + ") end(" + timeRanges.end(i) + ")");
       if(myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)){
-         if(timeRanges.end(i)-myVideo.currentTime >= 10){
+         if(timeRanges.end(i)-myVideo.currentTime >=  DOWNLOAD_FROM_SERVER_TIME_RANGE){
             inCritical = false;
             console.log("I set inCritical to false");
          } 
@@ -233,7 +239,7 @@ function checkIfBufferFullEnough(){
          }       
       }      
    }
-   setTimeout(checkIfBufferFullEnough, 3000);   
+   setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);   
 }
 
 function conductXHR(thisRequest){
@@ -248,7 +254,7 @@ function conductXHR(thisRequest){
       return cb(null, rs);
    }
    */
-   var reqEnd = reqStart + REQUEST_SIZE;
+   var reqEnd = reqStart + XHR_REQUEST_SIZE;
    if (thisRequest.end >= 0 && reqEnd > thisRequest.end){
       reqEnd = thisRequest.end;
    }
@@ -258,7 +264,7 @@ function conductXHR(thisRequest){
    }
    /*
    if(firstCreateReadStream){
-      reqEnd = reqEnd - REQUEST_SIZE + 500;
+      reqEnd = reqEnd - XHR_REQUEST_SIZE + 500;
    }
    */
    if(theCoolCounter<20){
