@@ -27,6 +27,7 @@
     "range-slice-stream": "^1.0.0",
     "readable-stream": "^2.1.2",
     "steam": "^1.4.0",
+    "stream": "0.0.2",
     "util": "^0.10.3",
     "webtorrent": "^0.91.4"
   },
