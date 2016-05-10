@@ -9,7 +9,6 @@ const CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = 3000; // in miliseconds
 const CHECK_IF_ANSWERSTREAM_READY_INTERVAL = 1000; // in miliseconds
 const UPDATE_CHART_INTERVAL = 5000; // in miliseconds
 const CHOKE_IF_NECESSARY_INTERVAL = 800; // in miliseconds
-
    
    
 var http = require('http');
