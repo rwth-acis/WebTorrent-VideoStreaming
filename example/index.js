@@ -2,16 +2,22 @@ var firstWire;
 (function(){
 //Parameters
 
-var deliveryByServer = true;
-var deliveryByWebtorrent = false;
+console.log("8 Cheese");
 
-var VIDEO_FILE_NAME = "bam.mp4";
-var SIZE_OF_VIDEO_FILE = 788493;
-var MAGNET_URI = "magnet:?xt=urn:btih:c99b557b765302db6d84eca0125e6d5f6f9d4f84&dn=bam.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io";
-//Magnet URI of bam.mp4: "magnet:?xt=urn:btih:c99b557b765302db6d84eca0125e6d5f6f9d4f84&dn=bam.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io";
+//var magnet_YawsAndCechi = "magnet:?xt=urn:btih:be1594ca948b3c1d1a4f25c3cf17f08a4c9b4309&dn=Warcraft+III-+Nirvana+of+the+Elapse+-+Cechi+vs.+YAWS.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io";
+var magnet_Bam = "magnet:?xt=urn:btih:c99b557b765302db6d84eca0125e6d5f6f9d4f84&dn=bam.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io";
+var magnet_Sintel = "magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d&dn=sintel.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io";
+
+var deliveryByServer = false;
+var deliveryByWebtorrent = true;
+
+var VIDEO_FILE_NAME = "sintel.mp4";
+var SIZE_OF_VIDEO_FILE = 596269367;
+var MAGNET_URI = magnet_Sintel;
+
 //File size bam.mp4: 788493
-//Magnet URI of sintel.mp4: "magnet:?xt=urn:btih:6a9759bffd5c0af65319979fb7832189f4f3c35d&dn=sintel.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io";
 //File size sintel.mp4: 129241752
+//File size Yaws_and_Cechi: 596269367
 
 
 var DOWNLOAD_FROM_SERVER_TIME_RANGE = 5; // in seconds
@@ -62,7 +68,6 @@ if(deliveryByWebtorrent){
       //console.log("torrent meta data ready");
       theTorrent = torrent;
       webTorrentFile = torrent.files[0];
-      //webTorrentFile.deselect();
       
       torrent.on('wire', function (wire){
          wires.push(wire);
@@ -86,7 +91,7 @@ if(deliveryByWebtorrent){
    });   
 }
 
-console.log("5 Cheese");
+
 var file = function (path) {
 	this.path = path;
 }
