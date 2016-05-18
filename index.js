@@ -12,7 +12,7 @@ var deliveryByServer = false;
 var deliveryByWebtorrent = true;
 
 var VIDEO_FILE_NAME = "sintel.mp4";
-var SIZE_OF_VIDEO_FILE = 596269367;
+var SIZE_OF_VIDEO_FILE = 129241752;
 var MAGNET_URI = magnet_Sintel;
 
 //File size bam.mp4: 788493
