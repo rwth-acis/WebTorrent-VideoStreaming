@@ -54,7 +54,7 @@ function bundle() {
     //.pipe(sourcemaps.init({loadMaps: true})) // loads map from browserify file
        // Add transformation tasks to the pipeline here.
     //.pipe(sourcemaps.write('./')) // writes .map file
-    .pipe(gulp.dest('./browserfied/'));
+    .pipe(gulp.dest('./build/'));
 }
 
 
@@ -63,7 +63,7 @@ function errorLog(error){
    this.emit('end');
 }
 
-
+/* Commented out for debugging
 // Uglifies output of browserify
 gulp.task('uglify_bundle', function(){
    return gulp.src('./browserfied/index.js')
@@ -72,7 +72,10 @@ gulp.task('uglify_bundle', function(){
    .pipe(gulp.dest('./build'));
    console.log("Uglified bundle");
 });
+*/
 
+
+/* Commented out for debugging
 // Uglifies index.html
 gulp.task('minify_index.html', function(){
    gulp.src('./index.html')
@@ -81,14 +84,14 @@ gulp.task('minify_index.html', function(){
    .pipe(gulp.dest('./build'));
    console.log("uglified index.html");
 });
+*/
 
 
 //Watch Task
 // Watches JS
 gulp.task('watch', function(){
-   gulp.watch('./index.js', ['browserify', 'uglify_bundle']);
-   gulp.watch('./index.html', ['minify_index.html']);
-   //gulp.watch(['./build/*.*'], ['html']);
+   gulp.watch('./index.js', ['browserify']);
+  // gulp.watch('./index.html', ['minify_index.html']);
 });
 
-gulp.task('default', ['browserify', 'uglify_bundle', 'minify_index.html', 'connect', 'watch']);
+gulp.task('default', ['browserify', 'connect', 'watch']);
