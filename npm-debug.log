@@ -1,0 +1,95 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'C:\\Program Files\\nodejs\\node.exe',
+1 verbose cli   'C:\\Users\\Philipp\\AppData\\Roaming\\npm\\node_modules\\npm\\bin\\npm-cli.js',
+1 verbose cli   'install',
+1 verbose cli   'videostream',
+1 verbose cli   '--save-dev' ]
+2 info using npm@3.9.0
+3 info using node@v4.4.4
+4 silly loadCurrentTree Starting
+5 silly install loadCurrentTree
+6 silly install readLocalPackageData
+7 silly fetchPackageMetaData videostream
+8 silly fetchNamedPackageData videostream
+9 silly mapToRegistry name videostream
+10 silly mapToRegistry using default registry
+11 silly mapToRegistry registry https://registry.npmjs.org/
+12 silly mapToRegistry data Result {
+12 silly mapToRegistry   raw: 'videostream',
+12 silly mapToRegistry   scope: null,
+12 silly mapToRegistry   name: 'videostream',
+12 silly mapToRegistry   rawSpec: '',
+12 silly mapToRegistry   spec: 'latest',
+12 silly mapToRegistry   type: 'tag' }
+13 silly mapToRegistry uri https://registry.npmjs.org/videostream
+14 verbose request uri https://registry.npmjs.org/videostream
+15 verbose request no auth needed
+16 info attempt registry request try #1 at 12:08:27
+17 verbose request id 2a833a3b11c4e6a6
+18 verbose etag "2AH44H5RXDLOYGSKKN3DZP3UI"
+19 http request GET https://registry.npmjs.org/videostream
+20 http 304 https://registry.npmjs.org/videostream
+21 verbose headers { date: 'Thu, 19 May 2016 10:08:31 GMT',
+21 verbose headers   via: '1.1 varnish',
+21 verbose headers   'cache-control': 'max-age=300',
+21 verbose headers   etag: '"2AH44H5RXDLOYGSKKN3DZP3UI"',
+21 verbose headers   age: '0',
+21 verbose headers   connection: 'keep-alive',
+21 verbose headers   'x-served-by': 'cache-ams4136-AMS',
+21 verbose headers   'x-cache': 'MISS',
+21 verbose headers   'x-cache-hits': '0',
+21 verbose headers   'x-timer': 'S1463652511.625702,VS0,VE116',
+21 verbose headers   vary: 'Accept-Encoding' }
+22 silly get cb [ 304,
+22 silly get   { date: 'Thu, 19 May 2016 10:08:31 GMT',
+22 silly get     via: '1.1 varnish',
+22 silly get     'cache-control': 'max-age=300',
+22 silly get     etag: '"2AH44H5RXDLOYGSKKN3DZP3UI"',
+22 silly get     age: '0',
+22 silly get     connection: 'keep-alive',
+22 silly get     'x-served-by': 'cache-ams4136-AMS',
+22 silly get     'x-cache': 'MISS',
+22 silly get     'x-cache-hits': '0',
+22 silly get     'x-timer': 'S1463652511.625702,VS0,VE116',
+22 silly get     vary: 'Accept-Encoding' } ]
+23 verbose etag https://registry.npmjs.org/videostream from cache
+24 verbose get saving videostream to C:\Users\Philipp\AppData\Roaming\npm-cache\registry.npmjs.org\videostream\.cache.json
+25 verbose correctMkdir C:\Users\Philipp\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+26 silly install normalizeTree
+27 silly loadCurrentTree Finishing
+28 silly loadIdealTree Starting
+29 silly install loadIdealTree
+30 silly cloneCurrentTree Starting
+31 silly install cloneCurrentTreeToIdealTree
+32 silly cloneCurrentTree Finishing
+33 silly loadShrinkwrap Starting
+34 silly install loadShrinkwrap
+35 silly loadShrinkwrap Finishing
+36 silly loadAllDepsIntoIdealTree Starting
+37 silly install loadAllDepsIntoIdealTree
+38 silly rollbackFailedOptional Starting
+39 silly rollbackFailedOptional Finishing
+40 silly runTopLevelLifecycles Starting
+41 silly runTopLevelLifecycles Finishing
+42 silly install printInstalled
+43 verbose stack Error: Refusing to install videostream as a dependency of itself
+43 verbose stack     at checkSelf (C:\Users\Philipp\AppData\Roaming\npm\node_modules\npm\lib\install\validate-args.js:53:14)
+43 verbose stack     at Array.<anonymous> (C:\Users\Philipp\AppData\Roaming\npm\node_modules\npm\node_modules\slide\lib\bind-actor.js:15:8)
+43 verbose stack     at LOOP (C:\Users\Philipp\AppData\Roaming\npm\node_modules\npm\node_modules\slide\lib\chain.js:15:14)
+43 verbose stack     at chain (C:\Users\Philipp\AppData\Roaming\npm\node_modules\npm\node_modules\slide\lib\chain.js:20:5)
+43 verbose stack     at C:\Users\Philipp\AppData\Roaming\npm\node_modules\npm\lib\install\validate-args.js:16:5
+43 verbose stack     at C:\Users\Philipp\AppData\Roaming\npm\node_modules\npm\node_modules\slide\lib\async-map.js:52:35
+43 verbose stack     at Array.forEach (native)
+43 verbose stack     at C:\Users\Philipp\AppData\Roaming\npm\node_modules\npm\node_modules\slide\lib\async-map.js:52:11
+43 verbose stack     at Array.forEach (native)
+43 verbose stack     at asyncMap (C:\Users\Philipp\AppData\Roaming\npm\node_modules\npm\node_modules\slide\lib\async-map.js:51:8)
+44 verbose cwd C:\Users\Philipp\Desktop\ProgrammingBA
+45 error Windows_NT 10.0.10586
+46 error argv "C:\\Program Files\\nodejs\\node.exe" "C:\\Users\\Philipp\\AppData\\Roaming\\npm\\node_modules\\npm\\bin\\npm-cli.js" "install" "videostream" "--save-dev"
+47 error node v4.4.4
+48 error npm  v3.9.0
+49 error code ENOSELF
+50 error Refusing to install videostream as a dependency of itself
+51 error If you need help, you may report this error at:
+51 error     <https://github.com/npm/npm/issues>
+52 verbose exit [ 1, true ]

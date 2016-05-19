@@ -12,8 +12,8 @@ var uglify = require('gulp-uglify');
 var htmlmin = require('gulp-htmlmin');
 var gulp = require('gulp');
 var connect = require('gulp-connect');
- 
- 
+
+
 gulp.task('connect', function(){
   connect.server({
     root: './build',
@@ -34,7 +34,7 @@ var customOpts = {
   debug: true
 };
 var opts = assign({}, watchify.args, customOpts);
-var b = watchify(browserify(opts)); 
+var b = watchify(browserify(opts));
 
 // add transformations here
 // i.e. b.transform(coffeeify);
@@ -49,15 +49,15 @@ function bundle() {
     .on('error', gutil.log.bind(gutil, 'Browserify Error'))
     .pipe(source('index.js'))
     // optional, remove if you don't need to buffer file contents
-    .pipe(buffer())
+    //.pipe(buffer())
     // optional, remove if you dont want sourcemaps
-    .pipe(sourcemaps.init({loadMaps: true})) // loads map from browserify file
+    //.pipe(sourcemaps.init({loadMaps: true})) // loads map from browserify file
        // Add transformation tasks to the pipeline here.
-    .pipe(sourcemaps.write('./')) // writes .map file 
+    //.pipe(sourcemaps.write('./')) // writes .map file
     .pipe(gulp.dest('./browserfied/'));
 }
 
-   
+
 function errorLog(error){
    console.error.bind(error);
    this.emit('end');
@@ -66,9 +66,9 @@ function errorLog(error){
 
 // Uglifies output of browserify
 gulp.task('uglify_bundle', function(){
-   gulp.src('./browserfied/index.js')
+   return gulp.src('./browserfied/index.js')
    .pipe(uglify())
-   .on('error', errorLog)
+   //.on('error', errorLog)
    .pipe(gulp.dest('./build'));
    console.log("Uglified bundle");
 });
