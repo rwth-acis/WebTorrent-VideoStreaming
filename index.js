@@ -15,8 +15,8 @@ var deliveryByWebtorrent = false;
 //File size sintel.mp4: 129241752
 //File size Yaws_and_Cechi: 596269367
 
-    var VIDEO_FILE_NAME = "sintel.mp4";
-    var SIZE_OF_VIDEO_FILE = 129241752;
+var VIDEO_FILE_NAME = "sintel.mp4";
+var SIZE_OF_VIDEO_FILE = 129241752;
 
 var DOWNLOAD_FROM_SERVER_TIME_RANGE = 5; // in seconds
 var UPLOAD_LIMIT = 2; // multiplied by number of downloaded bytes
@@ -66,14 +66,14 @@ if(deliveryByWebtorrent){
       //console.log("torrent meta data ready");
       theTorrent = torrent;
       webTorrentFile = torrent.files[0];
-      
+
       torrent.on('wire', function (wire){
          wires.push(wire);
          if(!firstWire){
             firstWire = wire;
          }
       });
-      
+
       for(var i=0, length=videostreamRequestHandlers.length; i<length; i++){
          var thisRequest = videostreamRequestHandlers[i];
          if(thisRequest.currentCB !== null){
@@ -83,10 +83,10 @@ if(deliveryByWebtorrent){
             //thisRequest.webTorrentStream.pause();
             thisRequest.oldStartWebTorrent = thisRequest.start;
             thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
-            //thisRequest.webTorrentStream.resume();    
+            //thisRequest.webTorrentStream.resume();
          }
       }
-   });   
+   });
 }
 
 
@@ -131,9 +131,9 @@ file.prototype.createReadStream = function (opts){
       //ceckIfAnswerStreamReady(thisRequest);
       done();
    };
-   thisRequest.collectorStreamForWebtorrent = new MyWriteableStream(); 
+   thisRequest.collectorStreamForWebtorrent = new MyWriteableStream();
    videostreamRequestHandlers.push(thisRequest);
-   
+
    if(theTorrent && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
       if(webTorrentFile){
          //console.log("after new videostreamRequest creating a corresponding webtorrent stream");
@@ -152,12 +152,12 @@ file.prototype.createReadStream = function (opts){
                thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
             }
             thisRequest.oldStartWebTorrent += chunk.length;
-            ceckIfAnswerStreamReady(thisRequest); 
+            ceckIfAnswerStreamReady(thisRequest);
          });
          */
-      }  
+      }
    }
-   
+
    var multi = new MultiStream(function (cb){
       thisRequest.CBNumber++;
       if(theCoolCounter<20){
@@ -165,7 +165,7 @@ file.prototype.createReadStream = function (opts){
          //console.log(consoleCounter++ + "    start: " + thisRequest.start);
       }
       thisRequest.currentCB = cb;
-      
+
       if(thisRequest.webTorrentStream){
          thisRequest.webTorrentStream.resume();
       } else if(webTorrentFile){
@@ -174,9 +174,9 @@ file.prototype.createReadStream = function (opts){
          //thisRequest.webTorrentStream.pause();
          thisRequest.oldStartWebTorrent = thisRequest.start;
          thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
-         //thisRequest.webTorrentStream.resume();    
+         //thisRequest.webTorrentStream.resume();
       }
-      
+
       if(deliveryByServer && inCritical && !thisRequest.XHRConducted){
          conductXHR(thisRequest);
       }

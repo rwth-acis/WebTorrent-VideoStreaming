@@ -1,4 +1,4 @@
-'use strict';
+//'use strict';
 
 var watchify = require('watchify');
 var browserify = require('browserify');
@@ -12,14 +12,9 @@ var uglify = require('gulp-uglify');
 var htmlmin = require('gulp-htmlmin');
 var gulp = require('gulp');
 var connect = require('gulp-connect');
+var jasmine = require('gulp-jasmine');
+var reporters = require('jasmine-reporters');
 
-
-gulp.task('connect', function(){
-  connect.server({
-    root: './build',
-    livereload: false
-  });
-});
 
 /*
 gulp.task('html', function (){
@@ -39,7 +34,7 @@ var b = watchify(browserify(opts));
 // add transformations here
 // i.e. b.transform(coffeeify);
 
-gulp.task('browserify', bundle); // so you can run `gulp js` to build the file
+gulp.task('browserify', function(cb){bundle(); cb()}); // so you can run `gulp js` to build the file
 b.on('update', bundle); // on any dep update, runs the bundler
 b.on('log', gutil.log); // output build logs to terminal
 
@@ -86,6 +81,24 @@ gulp.task('minify_index.html', function(){
 });
 */
 
+//start web server
+gulp.task('connect', function() {
+    connect.server();
+});
+
+
+//Run Jasmine tests
+gulp.task('tests',['browserify'], () =>
+gulp.src('./tests/test.js')
+// gulp-jasmine works on filepaths so you can't have any plugins before it
+    .pipe(jasmine({
+        reporter: new reporters.JUnitXmlReporter({
+            savePath: './test-results',
+            consolidateAll: false
+        })
+    }))
+);
+
 
 //Watch Task
 // Watches JS
@@ -94,4 +107,5 @@ gulp.task('watch', function(){
   // gulp.watch('./index.html', ['minify_index.html']);
 });
 
-gulp.task('default', ['browserify', 'connect', 'watch']);
+
+gulp.task('default', ['browserify', 'connect', 'tests', 'watch']);

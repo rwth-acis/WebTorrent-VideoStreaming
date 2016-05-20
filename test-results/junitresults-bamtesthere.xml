@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites>
+ <testsuite name="bam test here" timestamp="2016-05-20T18:14:08" hostname="localhost" time="0.004" errors="0" tests="2" skipped="0" disabled="0" failures="0">
+  <testcase classname="bam test here" name="and this is spec 1 which runs correct" time="0.002" />
+  <testcase classname="bam test here" name="and this is spec 2 which does not run correct" time="0" />
+ </testsuite>
+</testsuites>

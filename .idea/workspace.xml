@@ -2,12 +2,26 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ad90ad1d-cfcf-423b-8d44-f990bf194f7f" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/dictionaries/Philipp.xml" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/test-suites/suite1.js" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/calculator.js" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/example/bam.mp4" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/example/index.html" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/example/index.js" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/npm-debug.log" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/SpecRunner.html" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/calculator_spec.js" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/lib/jasmine-2.4.1/boot.js" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/lib/jasmine-2.4.1/console.js" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/lib/jasmine-2.4.1/jasmine-html.js" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/lib/jasmine-2.4.1/jasmine.css" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/lib/jasmine-2.4.1/jasmine.js" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/lib/jasmine-2.4.1/jasmine_favicon.png" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/browserfied/index.js" afterPath="$PROJECT_DIR$/browserfied/index.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/build/index.js" afterPath="$PROJECT_DIR$/build/index.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/gulpfile.js" afterPath="$PROJECT_DIR$/gulpfile.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/index.html" afterPath="$PROJECT_DIR$/index.html" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/index.js" afterPath="$PROJECT_DIR$/index.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/package.json" afterPath="$PROJECT_DIR$/package.json" />
     </list>
     <ignored path="ProgrammingBA.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -38,22 +52,18 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="calculator_spec.js" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tests/calculator_spec.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="136">
-              <caret line="8" column="7" selection-start-line="8" selection-start-column="7" selection-end-line="8" selection-end-column="7" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="package.json" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/package.json">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="0">
-              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-              <folding />
+              <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
+              <folding>
+                <marker date="1463760381938" expanded="true" signature="0:1427" placeholder="{&quot;name&quot;: &quot;videostream&quot;...}" />
+                <marker date="1463760381938" expanded="true" signature="134:212" placeholder="{&quot;type&quot;: &quot;git&quot;...}" />
+                <marker date="1463760381938" expanded="true" signature="227:459" placeholder="{&quot;test&quot;: &quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 0&quot;...}" />
+                <marker date="1463760381938" expanded="true" signature="526:917" placeholder="{&quot;binary-search&quot;: &quot;^1.2.0&quot;...}" />
+                <marker date="1463760381938" expanded="true" signature="940:1425" placeholder="{&quot;browserify&quot;: &quot;^13.0.0&quot;...}" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -61,8 +71,18 @@
       <file leaf-file-name="gulpfile.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/gulpfile.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+            <state relative-caret-position="201">
+              <caret line="46" column="21" selection-start-line="46" selection-start-column="21" selection-end-line="46" selection-end-column="21" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="suite1.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test-suites/suite1.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="119">
+              <caret line="7" column="3" selection-start-line="7" selection-start-column="3" selection-end-line="7" selection-end-column="3" />
               <folding />
             </state>
           </provider>
@@ -71,18 +91,8 @@
       <file leaf-file-name="index.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/index.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="187">
-              <caret line="11" column="33" selection-start-line="11" selection-start-column="33" selection-end-line="11" selection-end-column="33" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="SpecRunner.html" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tests/SpecRunner.html">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="238">
-              <caret line="14" column="15" selection-start-line="14" selection-start-column="15" selection-end-line="14" selection-end-column="15" />
+            <state relative-caret-position="-696">
+              <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -107,9 +117,10 @@
         <option value="$PROJECT_DIR$/tests/lib/SpecRunner.html" />
         <option value="$PROJECT_DIR$/tests/SpecRunner.html" />
         <option value="$PROJECT_DIR$/tests/calculator_spec.js" />
-        <option value="$PROJECT_DIR$/gulpfile.js" />
-        <option value="$PROJECT_DIR$/index.js" />
         <option value="$PROJECT_DIR$/index.html" />
+        <option value="$PROJECT_DIR$/gulpfile.js" />
+        <option value="$PROJECT_DIR$/tests/test.js" />
+        <option value="$PROJECT_DIR$/index.js" />
       </list>
     </option>
   </component>
@@ -131,6 +142,22 @@
     <option name="y" value="-8" />
     <option name="width" value="1382" />
     <option name="height" value="744" />
+  </component>
+  <component name="ProjectInspectionProfilesVisibleTreeState">
+    <entry key="Project Default">
+      <profile-state>
+        <expanded-state>
+          <State>
+            <id />
+          </State>
+        </expanded-state>
+        <selected-state>
+          <State>
+            <id>AngularJS</id>
+          </State>
+        </selected-state>
+      </profile-state>
+    </entry>
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -157,6 +184,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -175,41 +203,8 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="ProgrammingBA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="ProgrammingBA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="tests" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="ProgrammingBA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="ProgrammingBA" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="tests" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="lib" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
       <pane id="Scratches" />
     </panes>
   </component>
@@ -220,6 +215,8 @@
     <property name="js-jscs-nodeInterpreter" value="C:\Program Files\nodejs\node.exe" />
     <property name="nodejs_interpreter_path" value="C:\Program Files\nodejs\node" />
     <property name="js.buildTools.gulp.gulp_package_dir" value="C:\Users\Philipp\Desktop\ProgrammingBA\node_modules\gulp" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.smartKeys" />
+    <property name="settings.editor.splitter.proportion" value="0.23212537" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -233,7 +230,7 @@
     <configuration default="false" name="SpecRunner.html" type="JavascriptDebugType" factoryName="JavaScript Debug" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/ProgrammingBA/tests/SpecRunner.html">
       <method />
     </configuration>
-    <configuration default="false" name="calculator_spec.js" type="NodeJSConfigurationType" factoryName="Node.js" temporary="true" path-to-node="project" path-to-js-file="calculator_spec.js" working-dir="$PROJECT_DIR$/tests">
+    <configuration default="false" name="calculator_spec.js" type="NodeJSConfigurationType" factoryName="Node.js" temporary="true" path-to-node="project" path-to-js-file="calculator_spec.js" working-dir="$PROJECT_DIR$/test-suites">
       <method />
     </configuration>
     <configuration default="false" name="SpecRunner.html (1)" type="JavascriptDebugType" factoryName="JavaScript Debug" temporary="true" nameIsGenerated="true" uri="http://localhost:63342/ProgrammingBA/tests/lib/SpecRunner.html">
@@ -339,24 +336,25 @@
       <workItem from="1463670059960" duration="1444000" />
       <workItem from="1463671524013" duration="9000" />
       <workItem from="1463671676418" duration="2626000" />
-      <workItem from="1463675720425" duration="6158000" />
+      <workItem from="1463675720425" duration="7360000" />
+      <workItem from="1463753947065" duration="8458000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="19015000" />
+    <option name="totallyTimeSpent" value="28675000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Gulp" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14641288" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17789166" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.30441642" sideWeight="0.50292826" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.30441642" sideWeight="0.5058565" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="npm" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.30441642" sideWeight="0.49707174" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.30441642" sideWeight="0.4941435" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -388,6 +386,60 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/index.html">
       <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="7" column="46" selection-start-line="7" selection-start-column="46" selection-end-line="7" selection-end-column="46" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/calculator_spec.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="8" column="7" selection-start-line="8" selection-start-column="7" selection-end-line="8" selection-end-column="7" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/package.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <marker date="1463760381938" expanded="true" signature="0:1427" placeholder="{&quot;name&quot;: &quot;videostream&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="134:212" placeholder="{&quot;type&quot;: &quot;git&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="227:459" placeholder="{&quot;test&quot;: &quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 0&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="526:917" placeholder="{&quot;binary-search&quot;: &quot;^1.2.0&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="940:1425" placeholder="{&quot;browserify&quot;: &quot;^13.0.0&quot;...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gulpfile.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/index.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/SpecRunner.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="14" column="15" selection-start-line="14" selection-start-column="15" selection-end-line="14" selection-end-column="15" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/index.html">
+      <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
@@ -406,7 +458,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <marker date="1463760381938" expanded="true" signature="0:1427" placeholder="{&quot;name&quot;: &quot;videostream&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="134:212" placeholder="{&quot;type&quot;: &quot;git&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="227:459" placeholder="{&quot;test&quot;: &quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 0&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="526:917" placeholder="{&quot;binary-search&quot;: &quot;^1.2.0&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="940:1425" placeholder="{&quot;browserify&quot;: &quot;^13.0.0&quot;...}" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -454,7 +512,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <marker date="1463760381938" expanded="true" signature="0:1427" placeholder="{&quot;name&quot;: &quot;videostream&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="134:212" placeholder="{&quot;type&quot;: &quot;git&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="227:459" placeholder="{&quot;test&quot;: &quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 0&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="526:917" placeholder="{&quot;binary-search&quot;: &quot;^1.2.0&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="940:1425" placeholder="{&quot;browserify&quot;: &quot;^13.0.0&quot;...}" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -502,7 +566,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <marker date="1463760381938" expanded="true" signature="0:1427" placeholder="{&quot;name&quot;: &quot;videostream&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="134:212" placeholder="{&quot;type&quot;: &quot;git&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="227:459" placeholder="{&quot;test&quot;: &quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 0&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="526:917" placeholder="{&quot;binary-search&quot;: &quot;^1.2.0&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="940:1425" placeholder="{&quot;browserify&quot;: &quot;^13.0.0&quot;...}" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -550,7 +620,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <marker date="1463760381938" expanded="true" signature="0:1427" placeholder="{&quot;name&quot;: &quot;videostream&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="134:212" placeholder="{&quot;type&quot;: &quot;git&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="227:459" placeholder="{&quot;test&quot;: &quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 0&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="526:917" placeholder="{&quot;binary-search&quot;: &quot;^1.2.0&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="940:1425" placeholder="{&quot;browserify&quot;: &quot;^13.0.0&quot;...}" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -598,7 +674,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <marker date="1463760381938" expanded="true" signature="0:1427" placeholder="{&quot;name&quot;: &quot;videostream&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="134:212" placeholder="{&quot;type&quot;: &quot;git&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="227:459" placeholder="{&quot;test&quot;: &quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 0&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="526:917" placeholder="{&quot;binary-search&quot;: &quot;^1.2.0&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="940:1425" placeholder="{&quot;browserify&quot;: &quot;^13.0.0&quot;...}" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -681,16 +763,14 @@
     <entry file="file://$PROJECT_DIR$/package.json">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/gulpfile.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
+          <folding>
+            <marker date="1463760381938" expanded="true" signature="0:1427" placeholder="{&quot;name&quot;: &quot;videostream&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="134:212" placeholder="{&quot;type&quot;: &quot;git&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="227:459" placeholder="{&quot;test&quot;: &quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 0&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="526:917" placeholder="{&quot;binary-search&quot;: &quot;^1.2.0&quot;...}" />
+            <marker date="1463760381938" expanded="true" signature="940:1425" placeholder="{&quot;browserify&quot;: &quot;^13.0.0&quot;...}" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -702,10 +782,26 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/test-suites/suite1.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="7" column="3" selection-start-line="7" selection-start-column="3" selection-end-line="7" selection-end-column="3" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/gulpfile.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="201">
+          <caret line="46" column="21" selection-start-line="46" selection-start-column="21" selection-end-line="46" selection-end-column="21" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/index.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="11" column="33" selection-start-line="11" selection-start-column="33" selection-end-line="11" selection-end-column="33" />
+        <state relative-caret-position="-696">
+          <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
           <folding />
         </state>
       </provider>
