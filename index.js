@@ -1,4 +1,8 @@
+'use strict'
+
 var firstWire;
+
+
 (function(){
 //Parameters
 
@@ -194,7 +198,7 @@ function ceckIfAnswerStreamReady(thisRequest) {
 
         thisRequest.answerStream.push(null);
 
-        if (thisRequest.webTorrentStream) {
+        if (thisRequest.webTorrentStream){
             thisRequest.webTorrentStream.pause();
         }
         thisRequest.bytesInAnswerStream = 0;

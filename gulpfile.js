@@ -10,7 +10,6 @@ var sourcemaps = require('gulp-sourcemaps');
 var assign = require('lodash.assign');
 var uglify = require('gulp-uglify');
 var htmlmin = require('gulp-htmlmin');
-var gulp = require('gulp');
 var connect = require('gulp-connect');
 var jasmine = require('gulp-jasmine');
 var reporters = require('jasmine-reporters');
