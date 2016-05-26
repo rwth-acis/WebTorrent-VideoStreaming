@@ -18,7 +18,7 @@ module.exports = function(groupId){
          console.log("Video file was seeded");
          streamInformationObject.magnetURI = torrent.magnetURI;
          streamInformationObject.videoFileSize = torrent.files[0].length;
-         streamInformationObject.XHRRequestPath = options.XHRPath;
+         streamInformationObject.XHRPath = options.XHRPath;
          console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
          callback(streamInformationObject);
       });   
@@ -27,10 +27,10 @@ module.exports = function(groupId){
    this.loadVideo = function(options){   
       console.log("I entered this.loadVideo");
       console.log("option paramter:\n" + JSON.stringify(options));
-      var deliveryByServer = options.XHRRequestPath ? true : false;
+      var deliveryByServer = options.XHRPath ? true : false;
       var deliveryByWebtorrent = options.magnetURI ? true : false;
       var MAGNET_URI = options.magnetURI;
-      var PATH_TO_VIDEO_FILE = options.XHRRquestPath || "Wayne";
+      var PATH_TO_VIDEO_FILE = options.XHRPath || "Wayne";
       var SIZE_OF_VIDEO_FILE = options.videoFileSize;
       
       var DOWNLOAD_FROM_SERVER_TIME_RANGE = options.downloadFromServerTimeRange || 5; // in seconds
