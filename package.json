@@ -1,19 +1,15 @@
 {
-  "name": "videostream",
-  "version": "2.3.0",
-  "description": "Video streaming demo",
-  "main": "videostream.js",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/jhiesey/videostream.git"
-  },
+  "name": "OakStreaming",
+  "version": "0.0.1",
+  "description": "A WebTorrent-based video streaming API",
+  "main": "./module-source/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 0",
     "build-example": "browserify example/index.js > example/built.js",
     "start": "http-server example",
     "watch": "watchify example/index.js -o example/built.js"
   },
-  "author": "John Hiesey",
+  "author": "Horst Wayne",
   "license": "MIT",
   "dependencies": {
     "binary-search": "^1.2.0",
@@ -29,7 +25,12 @@
     "steam": "^1.4.0",
     "stream": "0.0.2",
     "util": "^0.10.3",
-    "webtorrent": "^0.91.4"
+    "webtorrent": "^0.91.4",
+    "y-array": "^9.0.3",
+    "y-map": "^9.0.3",
+    "y-memory": "^8.0.5",
+    "y-websockets-client": "^8.0.9",
+    "yjs": "^11.2.1"
   },
   "devDependencies": {
     "browserify": "^13.0.0",
