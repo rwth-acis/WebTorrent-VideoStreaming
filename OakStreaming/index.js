@@ -15,18 +15,18 @@ module.exports = function(groupId){
       var webTorrentClient = new WebTorrent();
       webTorrentClient.seed(videoFile, function(torrent){
          var streamInformationObject = {};
-         console.log("Video file was seeded");
+         //console.log("Video file was seeded");
          streamInformationObject.magnetURI = torrent.magnetURI;
          streamInformationObject.videoFileSize = torrent.files[0].length;
          streamInformationObject.XHRPath = options.XHRPath;
-         console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
+         //console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
          callback(streamInformationObject);
       });   
    };
    
    this.loadVideo = function(options){   
-      console.log("I entered this.loadVideo");
-      console.log("option paramter:\n" + JSON.stringify(options));
+      //console.log("I entered this.loadVideo");
+      //console.log("option paramter:\n" + JSON.stringify(options));
       var deliveryByServer = options.XHRPath ? true : false;
       var deliveryByWebtorrent = options.magnetURI ? true : false;
       var MAGNET_URI = options.magnetURI;
@@ -69,7 +69,7 @@ module.exports = function(groupId){
       if(deliveryByWebtorrent){
          var client = new WebTorrent();
          client.add(MAGNET_URI, function (torrent){
-            console.log("torrent meta data ready");
+            //console.log("torrent meta data ready");
             theTorrent = torrent;
             webTorrentFile = torrent.files[0];
 
@@ -83,8 +83,8 @@ module.exports = function(groupId){
             for(var i=0, length=videostreamRequestHandlers.length; i<length; i++){
                var thisRequest = videostreamRequestHandlers[i];
                if(thisRequest.currentCB !== null){
-                  //console.log("In onTorrent nachträglich webtorrent stream erzeugen  thisRequest.start: " + thisRequest.start);
-                  //console.log("In onTorrent  webTorrentFile.length: " + webTorrentFile.length);
+                  ////console.log("In onTorrent nachträglich webtorrent stream erzeugen  thisRequest.start: " + thisRequest.start);
+                  ////console.log("In onTorrent  webTorrentFile.length: " + webTorrentFile.length);
                   thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : webTorrentFile.length-1});
                   //thisRequest.webTorrentStream.pause();
                   thisRequest.oldStartWebTorrent = thisRequest.start;
@@ -101,9 +101,9 @@ module.exports = function(groupId){
       file.prototype.createReadStream = function (opts){
          inCritical = true;
          var videostreamRequestNumber = ++globalvideostreamRequestNumber;
-         console.log(consoleCounter++ + " called createreadStream " + videostreamRequestNumber);
-         //console.log(consoleCounter++ + " opts.start: " + opts.start);
-         //console.log(consoleCounter++ + " opts.end: " + opts.end);
+         //console.log(consoleCounter++ + " called createreadStream " + videostreamRequestNumber);
+         ////console.log(consoleCounter++ + " opts.start: " + opts.start);
+         ////console.log(consoleCounter++ + " opts.end: " + opts.end);
          var end = isNaN(opts.end) ? SIZE_OF_VIDEO_FILE : (opts.end + 1);
          var thisRequest = new VideostreamRequestHandler(videostreamRequestNumber, opts, end, this);
          var MyWriteableStream = function(){
@@ -111,9 +111,9 @@ module.exports = function(groupId){
          };
          util.inherits(MyWriteableStream, readableStream.Writable);
          MyWriteableStream.prototype._write = function(chunk, encoding, done){
-            console.log("MyWriteableStream _write is called");
+            //console.log("MyWriteableStream _write is called");
             if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
-               //console.log("MyWriteableStream _write: pushing received data in answerStream")
+               ////console.log("MyWriteableStream _write: pushing received data in answerStream")
                if(thisRequest.answerStream.push(chunk.slice(thisRequest.start-thisRequest.oldStartWebTorrent, chunk.length))){
                   thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
                } else {
@@ -127,7 +127,7 @@ module.exports = function(groupId){
                   thisRequest.answerStream = new MyReadableStream({highWaterMark: 50000000});
                   var theCallbackFunction = thisRequest.currentCB;
                   thisRequest.currentCB = null;
-                  //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
+                  ////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
                   theCallbackFunction(null, res);
                }
                thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
@@ -141,7 +141,7 @@ module.exports = function(groupId){
 
          if(theTorrent && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
             if(webTorrentFile){
-               //console.log("after new videostreamRequest creating a corresponding webtorrent stream");
+               ////console.log("after new videostreamRequest creating a corresponding webtorrent stream");
                var webTorrentStream = webTorrentFile.createReadStream({"start" : opts.start, "end" : webTorrentFile.length-1});
                //webTorrentStream.pause();
                thisRequest.webTorrentStream = webTorrentStream;
@@ -166,15 +166,15 @@ module.exports = function(groupId){
          var multi = new MultiStream(function (cb){
             thisRequest.CBNumber++;
             if(theCoolCounter<20){
-               console.log(consoleCounter++ + "    " + thisRequest.CBNumber + ". call of function(cb) from " + videostreamRequestNumber);
-               //console.log(consoleCounter++ + "    start: " + thisRequest.start);
+               //console.log(consoleCounter++ + "    " + thisRequest.CBNumber + ". call of function(cb) from " + videostreamRequestNumber);
+               ////console.log(consoleCounter++ + "    start: " + thisRequest.start);
             }
             thisRequest.currentCB = cb;
 
             if(thisRequest.webTorrentStream){
                thisRequest.webTorrentStream.resume();
             } else if(webTorrentFile){
-               //console.log("New cb function was called and I subsequently create a new torrentStream for it because non existed before for this videostreamRequest");
+               ////console.log("New cb function was called and I subsequently create a new torrentStream for it because non existed before for this videostreamRequest");
                thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : webTorrentFile.length-1});
                //thisRequest.webTorrentStream.pause();
                thisRequest.oldStartWebTorrent = thisRequest.start;
@@ -186,16 +186,16 @@ module.exports = function(groupId){
                conductXHR(thisRequest);
             }
          });
-         //console.log(consoleCounter++ + " terminate createReadStream");
+         ////console.log(consoleCounter++ + " terminate createReadStream");
          return multi;
       };
 
       function ceckIfAnswerStreamReady(thisRequest) {
-          //console.log("At the beginning of thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
-          //console.log("In ceckIfAnswerStreamReady of videostreamRequest number " + thisRequest.readStreamNumber +  ". thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream + "     thisRequest.currentCB: " + thisRequest.currentCB);
+          ////console.log("At the beginning of thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
+          ////console.log("In ceckIfAnswerStreamReady of videostreamRequest number " + thisRequest.readStreamNumber +  ". thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream + "     thisRequest.currentCB: " + thisRequest.currentCB);
           if (thisRequest.currentCB && ((thisRequest.bytesInAnswerStream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM) || (thisRequest.start >= SIZE_OF_VIDEO_FILE))) {
-              //console.log("answerStream from videostream Request number " + thisRequest.readStreamNumber + " and CB number " + thisRequest.CBNumber + " gets returned");
-            // console.log("Returing answerStream out of ceckIfAnswerStreamReady()");
+              ////console.log("answerStream from videostream Request number " + thisRequest.readStreamNumber + " and CB number " + thisRequest.CBNumber + " gets returned");
+            // //console.log("Returing answerStream out of ceckIfAnswerStreamReady()");
 
               thisRequest.answerStream.push(null);
 
@@ -208,7 +208,7 @@ module.exports = function(groupId){
               var theCallbackFunction = thisRequest.currentCB;
               thisRequest.currentCB = null;
 
-              //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
+              ////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
               theCallbackFunction(null, res);
               return true;
           }
@@ -218,7 +218,7 @@ module.exports = function(groupId){
           function chokeIfNecessary() {
               if (theTorrent && theTorrent.uploaded >= theTorrent.downloaded * UPLOAD_LIMIT + ADDITION_TO_UPLOAD_LIMIT) {
                   for (var i = 0, length = wires.length; i < length; i++) {
-                      console.log("I choked a peer");
+                      //console.log("I choked a peer");
                       wires[i].choke();
                   }
               }
@@ -260,11 +260,11 @@ module.exports = function(groupId){
               var timeRanges = document.querySelector('video').buffered;
               inCritical = true;
               for (var i = 0, length = timeRanges.length; i < length; i++) {
-                  //console.log("Time range number " + i + ": start(" + timeRanges.start(i) + ") end(" + timeRanges.end(i) + ")");
+                  ////console.log("Time range number " + i + ": start(" + timeRanges.start(i) + ") end(" + timeRanges.end(i) + ")");
                   if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)) {
                       if (timeRanges.end(i) - myVideo.currentTime >= DOWNLOAD_FROM_SERVER_TIME_RANGE) {
                           inCritical = false;
-                          //console.log("I set inCritical to false");
+                          ////console.log("I set inCritical to false");
                       }
                   }
               }
@@ -291,35 +291,35 @@ module.exports = function(groupId){
                   return thisRequest.currentCB(null, null);
               }
               if (consoleCounter < 10000000) {
-                  ////console.log(consoleCounter++ + "  videoStream " + thisRequest.readStreamNumber + "  CB number " + thisRequest.CBNumber + "    reqStart: " + reqStart);
-                  ////console.log(consoleCounter++ + "  Multistream " + thisRequest.readStreamNumber + "   CB number " + thisRequest.CBNumber + "    reqEnd: " + reqEnd);
+                  //////console.log(consoleCounter++ + "  videoStream " + thisRequest.readStreamNumber + "  CB number " + thisRequest.CBNumber + "    reqStart: " + reqStart);
+                  //////console.log(consoleCounter++ + "  Multistream " + thisRequest.readStreamNumber + "   CB number " + thisRequest.CBNumber + "    reqEnd: " + reqEnd);
               }
 
               var XHRDataHandler = function (chunk) {
-                  ////console.log("TypeOf chunk: " + typeof chunk);
+                  //////console.log("TypeOf chunk: " + typeof chunk);
                   if (consoleCounter < 1000000000) {
-                      ////console.log(consoleCounter++, "BAM In XHRDataHandler from readStream ", thisRequest.readStreamNumber, "and thisRequestCBNumber", thisRequest.CBNumber);
-                      ////console.log(consoleCounter++, "chunk.length: ", chunk.length);
-                      ////console.log("thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
-                      ////console.log("thisRequest.answerStream: " + thisRequest.answerStream);
-                      ////console.log("thisRequest.start: " + thisRequest.start);
+                      //////console.log(consoleCounter++, "BAM In XHRDataHandler from readStream ", thisRequest.readStreamNumber, "and thisRequestCBNumber", thisRequest.CBNumber);
+                      //////console.log(consoleCounter++, "chunk.length: ", chunk.length);
+                      //////console.log("thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
+                      //////console.log("thisRequest.answerStream: " + thisRequest.answerStream);
+                      //////console.log("thisRequest.start: " + thisRequest.start);
                   }
                   if (thisRequest.start - thisRequest.oldStartServer < chunk.length) {
                       if (consoleCounter < 100000000) {
                           /*
-                          console.log("add data to answerStream");
-                          console.log("chunk.length: " + chunk.length);
-                          console.log("thisRequest.start: " + thisRequest.start);
-                          console.log("thisRequest.oldStartServer: " + thisRequest.oldStartServer);
-                          console.log("thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
-                          console.log("length of slice: " + (chunk.slice(thisRequest.start - thisRequest.oldStartServer, chunk.length)).length);
+                          //console.log("add data to answerStream");
+                          //console.log("chunk.length: " + chunk.length);
+                          //console.log("thisRequest.start: " + thisRequest.start);
+                          //console.log("thisRequest.oldStartServer: " + thisRequest.oldStartServer);
+                          //console.log("thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
+                          //console.log("length of slice: " + (chunk.slice(thisRequest.start - thisRequest.oldStartServer, chunk.length)).length);
                           */
                       }
                       if (thisRequest.answerStream.push(chunk.slice(thisRequest.start - thisRequest.oldStartServer, chunk.length))) {
-                         // console.log("push returned true");
+                         // //console.log("push returned true");
                           thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
                       } else {
-                         // console.log("push returned false");
+                         // //console.log("push returned false");
                           thisRequest.answerStream.push(null);
 
                           if (thisRequest.webTorrentStream) {
@@ -330,7 +330,7 @@ module.exports = function(groupId){
                           thisRequest.answerStream = new MyReadableStream({highWaterMark: 50000000});
                           var theCallbackFunction = thisRequest.currentCB;
                           thisRequest.currentCB = null;
-                          //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
+                          ////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
                           theCallbackFunction(null, res);
                       }
                       thisRequest.start += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
@@ -338,21 +338,21 @@ module.exports = function(groupId){
                   thisRequest.oldStartServer += chunk.length;
                   bytesReceivedFromServer += chunk.length;
                   if (consoleCounter < 10000000000) {
-                      ////console.log("After putting in answerStream - thisRequest.start: " + thisRequest.start);
-                      ////console.log("After putting in answerStream - thisRequest.oldStartServer: " + thisRequest.oldStartServer);
-                      ////console.log("After putting in answerStream - thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
+                      //////console.log("After putting in answerStream - thisRequest.start: " + thisRequest.start);
+                      //////console.log("After putting in answerStream - thisRequest.oldStartServer: " + thisRequest.oldStartServer);
+                      //////console.log("After putting in answerStream - thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
                   }
               }
 
               var XHREnd = function () {
                   if (consoleCounter < 1000000000000) {
-                      ////console.log("XHREnd from videostreamRequest number " + thisRequest.readStreamNumber);
+                      //////console.log("XHREnd from videostreamRequest number " + thisRequest.readStreamNumber);
                   }
                   thisRequest.XHRConducted = false;
               }
 
               thisRequest.oldStartServer = reqStart;
-              ////console.log("At htto.get   reqStart: " + reqStart + "     reqEnd: " + reqEnd);
+              //////console.log("At htto.get   reqStart: " + reqStart + "     reqEnd: " + reqEnd);
 
               req = http.get({
                   path: thisRequest.self.path,
@@ -364,8 +364,8 @@ module.exports = function(groupId){
                   if (contentRange) {
                       fileSize2 = parseInt(contentRange.split('/')[1], 10);
                   }
-                  ////console.log("I return currentCB with http response stream");
-                  //////console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thisCBNumber);
+                  //////console.log("I return currentCB with http response stream");
+                  ////////console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thisCBNumber);
                   res.on('end', XHREnd);
                   res.on('data', XHRDataHandler);
               });
@@ -380,7 +380,7 @@ module.exports = function(groupId){
       video.addEventListener('error', function (err){
          console.error(video.error);
       });
-      console.log("I call Videostream constructor");
+      //console.log("I call Videostream constructor");
       videostream(new file(PATH_TO_VIDEO_FILE), video);
    };
  
