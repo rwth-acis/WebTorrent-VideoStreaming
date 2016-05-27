@@ -2,6 +2,6 @@
 build/
 sintel.mp4
 browserified/
-node_modules/
 .idea/
 test-results/
+node_modules/
