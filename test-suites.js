@@ -51,7 +51,7 @@ describe("Testing if loadVideo method", function(){
          }
       }, function (res) {
          var webTorrentClient = new WebTorrent();
-         webTorrentClient.seed(res, onSeed(torrent){
+         webTorrentClient.seed(res, {}, function onSeed (torrent){
             myStreaming.loadVideo({magnetURI : torrent.magnetURI, videoFileSize : 788493}, done);            
          });
       });
@@ -66,9 +66,9 @@ describe("Testing if loadVideo method", function(){
          }
       }, function (res) {
          var webTorrentClient = new WebTorrent();
-         webTorrentClient.seed(res, onSeed(torrent){
+         webTorrentClient.seed(res, function onSeed (torrent){
             myStreaming.loadVideo({XHRPath: "example.mp4", magnetURI : torrent.magnetURI, videoFileSize : 788493}, done);            
          });
       });
-   }, 10000); 
-}
+   });
+});

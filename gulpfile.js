@@ -27,15 +27,31 @@ var customOpts = {
   entries: ['./index.js'],
   debug: true
 };
+var customOpts2 = {
+  entries: ['./testsuites-build.js'],
+  debug: true
+};
 var opts = assign({}, watchify.args, customOpts);
+var opts2 = assign({}, watchify.args, customOpts2); 
 var b = watchify(browserify(opts));
+var b2 = watchify(browserify(opts2));
 
 // add transformations here
 // i.e. b.transform(coffeeify);
 
 gulp.task('browserify', function(cb){bundle(); cb()}); // so you can run `gulp js` to build the file
+gulp.task('browserify2', ['browserify'], function(cb){bundle2(); cb()});
 b.on('update', bundle); // on any dep update, runs the bundler
+b2.on('update', bundle2);
 b.on('log', gutil.log); // output build logs to terminal
+b2.on('log', gutil.log);
+
+function bundle2(){
+  return b.bundle()
+    .on('error', gutil.log.bind(gutil, 'Browserify Error'))
+    .pipe(source('test-suites.js'))
+    .pipe(gulp.dest('./testsuites-build/'));
+}
 
 function bundle() {
   return b.bundle()
@@ -89,8 +105,8 @@ gulp.task('connect', function() {
 
 
 //Run Jasmine tests
-gulp.task('tests',['browserify'], () =>
-gulp.src('./tests/test.js')
+gulp.task('tests', ['browserify2'], () =>
+gulp.src('./testsuites-build/test-suites.js')
 // gulp-jasmine works on filepaths so you can't have any plugins before it
     .pipe(jasmine({
         reporter: new reporters.JUnitXmlReporter({
@@ -105,8 +121,9 @@ gulp.src('./tests/test.js')
 // Watches JS
 gulp.task('watch', function(){
    gulp.watch('./index.js', ['browserify']);
+   //gulp.watch('./test-suites', ['browserify2']);
   // gulp.watch('./index.html', ['minify_index.html']);
 });
 
 
-gulp.task('default', ['browserify', 'connect', 'watch']);
+gulp.task('default', ['browserify', 'browserify2', 'tests', 'connect', 'watch']);
