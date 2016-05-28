@@ -3,7 +3,6 @@
 ## General information
 This project is a JavaScript library for easily integrating peer-assisted streaming into an existing website.
 Peer-assisted delivery denotes a hybrid between peer-to-peer and server delivery.
-The program code of the library itself is located in the OakStreaming folder.
 
 
 ## Build steps

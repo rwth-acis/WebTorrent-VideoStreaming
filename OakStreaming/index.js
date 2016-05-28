@@ -16,6 +16,7 @@ module.exports = function(groupId){
       webTorrentClient.seed(videoFile, function(torrent){
          var streamInformationObject = {};
          //console.log("Video file was seeded");
+         streamInformationObject.torrent = torrent;
          streamInformationObject.magnetURI = torrent.magnetURI;
          streamInformationObject.videoFileSize = torrent.files[0].length;
          streamInformationObject.XHRPath = options.XHRPath;
@@ -24,7 +25,7 @@ module.exports = function(groupId){
       });   
    };
    
-   this.loadVideo = function(options){   
+   this.loadVideo = function(options, doneLoadingVideo){   
       //console.log("I entered this.loadVideo");
       //console.log("option paramter:\n" + JSON.stringify(options));
       var deliveryByServer = options.XHRPath ? true : false;
@@ -59,6 +60,9 @@ module.exports = function(groupId){
       var inCritical = true;
       var wires = [];
       var fileSize2 = 42;
+      var videoCompletelyLoaded = false;
+      var endStreaming = false;
+      
 
       function MyReadableStream(options){
          Readable.call(this, options);
@@ -210,6 +214,12 @@ module.exports = function(groupId){
 
               ////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
               theCallbackFunction(null, res);
+              if(thisRequest.start >= SIZE_OF_VIDEO_FILE){
+                 if(doneLoadingVideo){
+                    videoCompletelyLoaded = true;
+                    doneLoadingVideo();
+                 };
+              }
               return true;
           }
           return false;
@@ -221,11 +231,19 @@ module.exports = function(groupId){
                       //console.log("I choked a peer");
                       wires[i].choke();
                   }
+                  if(theTorrent.progress >= 1){
+                     theTorrent.destroy();
+                     endStreaming = true;
+                     return;
+                  }
               }
               setTimeout(chokeIfNecessary, CHOKE_IF_NECESSARY_INTERVAL);
           }
 
           function updateChart() {
+                if(endStreaming){
+                   return;
+                }
               if (theTorrent) {
                   document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer;
               }
@@ -250,6 +268,9 @@ module.exports = function(groupId){
           }
 
           function frequentlyCeckIfAnswerStreamReady() {
+            if(videoCompletelyLoaded){
+               return;
+            }
               for (var i = 0, length = videostreamRequestHandlers.length; i < length; i++) {
                   ceckIfAnswerStreamReady(videostreamRequestHandlers[i]);
               }
@@ -257,6 +278,9 @@ module.exports = function(groupId){
           }
 
           function checkIfBufferFullEnough() {
+              if(videoCompletelyLoaded){
+                 return;
+              }
               var timeRanges = document.querySelector('video').buffered;
               inCritical = true;
               for (var i = 0, length = timeRanges.length; i < length; i++) {

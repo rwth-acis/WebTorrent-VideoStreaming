@@ -48,7 +48,7 @@ Y({
 
 window.handleFiles = function(files){
    streamSource = true;
-   myStreaming.streamVideo(files[0], {XHRPath : "sintel.mp4"}, function(streamInformationObject){
+   myStreaming.streamVideo(files[0], {XHRPath : "example.mp4"}, function(streamInformationObject){
       theSharedMap.set("message", streamInformationObject); 
    });
 }
