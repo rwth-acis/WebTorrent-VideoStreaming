@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "browserify": "^13.0.0",
+    "cors": "^2.7.1",
     "gulp": "^3.9.1",
     "gulp-connect": "^4.0.0",
     "gulp-htmlmin": "^2.0.0",

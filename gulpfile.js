@@ -14,6 +14,7 @@ var connect = require('gulp-connect');
 //var jasmine = require('gulp-jasmine');
 //var reporters = require('jasmine-reporters');
 var jasmineBrowser = require('gulp-jasmine-browser');
+var cors = require('cors');
 
 
 /*
@@ -100,7 +101,10 @@ gulp.task('minify_index.html', function(){
 //start web server
 gulp.task('connect', function() {
    connect.server({
-      root : "./build"
+      root : "./build",
+      middleware: function(connect, opts) {
+         return [cors()];
+      }
    });
 });
 
