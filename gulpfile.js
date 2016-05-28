@@ -11,8 +11,9 @@ var assign = require('lodash.assign');
 var uglify = require('gulp-uglify');
 var htmlmin = require('gulp-htmlmin');
 var connect = require('gulp-connect');
-var jasmine = require('gulp-jasmine');
-var reporters = require('jasmine-reporters');
+//var jasmine = require('gulp-jasmine');
+//var reporters = require('jasmine-reporters');
+var jasmineBrowser = require('gulp-jasmine-browser');
 
 
 /*
@@ -28,7 +29,7 @@ var customOpts = {
   debug: true
 };
 var customOpts2 = {
-  entries: ['./testsuites-build.js'],
+  entries: ['./test-help.js'],
   debug: true
 };
 var opts = assign({}, watchify.args, customOpts);
@@ -40,16 +41,16 @@ var b2 = watchify(browserify(opts2));
 // i.e. b.transform(coffeeify);
 
 gulp.task('browserify', function(cb){bundle(); cb()}); // so you can run `gulp js` to build the file
-gulp.task('browserify2', ['browserify'], function(cb){bundle2(); cb()});
+gulp.task('browserify2', [], function(cb){bundle2(); cb()});
 b.on('update', bundle); // on any dep update, runs the bundler
 b2.on('update', bundle2);
 b.on('log', gutil.log); // output build logs to terminal
 b2.on('log', gutil.log);
 
 function bundle2(){
-  return b.bundle()
+  return b2.bundle()
     .on('error', gutil.log.bind(gutil, 'Browserify Error'))
-    .pipe(source('test-suites.js'))
+    .pipe(source('./test-help.js'))
     .pipe(gulp.dest('./testsuites-build/'));
 }
 
@@ -103,7 +104,7 @@ gulp.task('connect', function() {
    });
 });
 
-
+/* War nicht die Jasmine-browser variante
 //Run Jasmine tests
 gulp.task('tests', ['browserify2'], () =>
 gulp.src('./testsuites-build/test-suites.js')
@@ -115,13 +116,19 @@ gulp.src('./testsuites-build/test-suites.js')
         })
     }))
 );
+*/
 
+gulp.task('tests', ['browserify2'], function() {
+  return gulp.src(['./testsuites-build/test-help.js', './test-suites.js'])
+    .pipe(jasmineBrowser.specRunner())
+    .pipe(jasmineBrowser.server({port: 8888}));
+});
 
 //Watch Task
 // Watches JS
 gulp.task('watch', function(){
    gulp.watch('./index.js', ['browserify']);
-   //gulp.watch('./test-suites', ['browserify2']);
+   gulp.watch('./test-suites.js', ['browserify2', 'tests']);
   // gulp.watch('./index.html', ['minify_index.html']);
 });
 
