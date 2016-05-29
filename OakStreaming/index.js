@@ -8,10 +8,9 @@ var WebTorrent = require('webtorrent');
 
 
 /**
- * @module jsdoctest
- */
-
- 
+ * OakStreaming module. 
+ * @module oakstreaming
+ */ 
  module.exports = function(groupId){
    this.groupId = groupId;
    this.peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);
@@ -24,10 +23,39 @@ var WebTorrent = require('webtorrent');
 };
 
  
+ 
+ /**
+ * Wash the shirt.
+ * @alias module:my/shirt.wash
+ */
+
+ /**
+ * Set the shoe's color. Use {@link Shoe#setSize} to set the shoe size.
+ *
+ * @param {string} color - The shoe's color.
+ */
+ 
+ /**
+ * Set the color and type of the shoelaces.
+ *
+ * @param {LACE_COLORS} color - The shoelace color.
+ * @param {LACE_TYPES} type - The type of shoelace.
+ */
+ 
+ /**
+  @typedef StreamInformationObject
+  @type {object}
+  @property {string} magnetURI - Magnet URI of the torrent. If this property is undefined, no video data will be requested from the WebTorrent network.
+  @property {number} videoFileSize - The size in byte of the video file that was passed as an argument.
+  @property {string} XHRPath - The path that will be used for the XML HTTP Request (XHR). If this property is undefined, no video data will be requested from the server.
+ /
+
 /**
- * Creates a new jsdocTest object.
- * @name jsdocTestFactory
- * @returns {jsdocTest}
+ * Streams a video file to all other clients.
+ * @param {W3C File object} [videoFile] - The video file that should be streamed to the other clients/peers.
+ * @param {object} [options] - Options for the creation of the StreamInformationObject that gets passed as an argument to the callback function.
+ * @param {string} options.XHRPath - The path that will be used for the XML HTTP Request (XHR). If the option object or this property of the option object is undefined, no video data will be requested from the server.
+ * @param {requestCallback} cb - The callback that handles the response. The callback gets called with the generated @see StreamInformationObject as argument which can be passed as a argument to the loadVideo method of another client/peer to download the video.
  */
 function streamVideo(videoFile, options, callback){
    var webTorrentClient = new WebTorrent();
@@ -44,26 +72,26 @@ function streamVideo(videoFile, options, callback){
 };
 
 
-function loadVideo(options, doneLoadingVideo){
+function loadVideo(streamInformationObject, doneLoadingVideo){
    //console.log("I entered this.loadVideo");
-   //console.log("option paramter:\n" + JSON.stringify(options));
-   var deliveryByServer = options.XHRPath ? true : false;
-   var deliveryByWebtorrent = options.magnetURI ? true : false;
-   var MAGNET_URI = options.magnetURI;
-   var PATH_TO_VIDEO_FILE = options.XHRPath || "Wayne";
-   var SIZE_OF_VIDEO_FILE = options.videoFileSize;
+   //console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
+   var deliveryByServer = streamInformationObject.XHRPath ? true : false;
+   var deliveryByWebtorrent = streamInformationObject.magnetURI ? true : false;
+   var MAGNET_URI = streamInformationObject.magnetURI;
+   var PATH_TO_VIDEO_FILE = streamInformationObject.XHRPath || "Wayne";
+   var SIZE_OF_VIDEO_FILE = streamInformationObject.videoFileSize;
    
 
-   var DOWNLOAD_FROM_SERVER_TIME_RANGE = options.downloadFromServerTimeRange || 5; // in seconds
-   var UPLOAD_LIMIT = options.uploadLimit || 2; // multiplied by number of downloaded bytes
-   var ADDITION_TO_UPLOAD_LIMIT = options.additionToUploadLimit || 5000; // amount of byte added to upload limit
-   var XHR_REQUEST_SIZE = options.xhrRequestSize || 50000; // in byte
-   var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = options.thresholdForReturningAnswerStream || 500000; // in byte
+   var DOWNLOAD_FROM_SERVER_TIME_RANGE = streamInformationObject.downloadFromServerTimeRange || 5; // in seconds
+   var UPLOAD_LIMIT = streamInformationObject.uploadLimit || 2; // multiplied by number of downloaded bytes
+   var ADDITION_TO_UPLOAD_LIMIT = streamInformationObject.additionToUploadLimit || 5000; // amount of byte added to upload limit
+   var XHR_REQUEST_SIZE = streamInformationObject.xhrRequestSize || 50000; // in byte
+   var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = streamInformationObject.thresholdForReturningAnswerStream || 500000; // in byte
 
-   var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = options.checkIfBufferFullEnoughInterval || 300; // in miliseconds
-   var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = options.checkIfAnswerstreamReadyInterval || 200; // in miliseconds
-   var UPDATE_CHART_INTERVAL = options.updateChartInterval || 1000; // in miliseconds
-   var CHOKE_IF_NECESSARY_INTERVAL = options.chokeIfNecessaryInterval || 500; // in miliseconds
+   var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = streamInformationObject.checkIfBufferFullEnoughInterval || 300; // in miliseconds
+   var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = streamInformationObject.checkIfAnswerstreamReadyInterval || 200; // in miliseconds
+   var UPDATE_CHART_INTERVAL = streamInformationObject.updateChartInterval || 1000; // in miliseconds
+   var CHOKE_IF_NECESSARY_INTERVAL = streamInformationObject.chokeIfNecessaryInterval || 500; // in miliseconds
    
    
    var myVideo = document.getElementById("myVideo");
