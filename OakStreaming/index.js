@@ -380,8 +380,11 @@ module.exports = function(groupId){
 
               req = http.get({
                   path: thisRequest.self.path,
+                  hostname: 'localhost',
+                  port: 8080,
+                  path: "/example.mp4",
                   headers: {
-                      range: 'bytes=' + reqStart + '-' + (reqEnd - 1)
+                      range: 'bytes=' + 0 + '-' + theVideoFileSize
                   }
               }, function (res) {
                   var contentRange = res.headers['content-range'];

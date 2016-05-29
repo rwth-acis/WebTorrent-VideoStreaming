@@ -12,4 +12,10 @@ document.body = document.createElement("body");
 
 var para = document.createElement("video");
 para.id = "myVideo";
+para.style.display = "none";
+document.body.appendChild(para);
+
+para = document.createElement("p");
+para.id = "WebTorrent-received";
+para.style.display = "none";
 document.body.appendChild(para);
