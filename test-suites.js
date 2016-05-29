@@ -23,18 +23,6 @@ describe("Testing if streamVideo method", function(){
          myStreaming.streamVideo(res, {XHRPath : "example.mp4"}, callback);
       });
    }, 15000); 
-   
-   /*
-   it("seeds the passed video file successfully", function(callback){
-      var webTorrentClient = new WebTorrent();
-      webTorrentClient.add("magnet:?xt=urn:btih:1b5169e27e943cd615b1e10ba98e9e4a0b2086b8&dn=example.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io", {}, function(){
-         torrent.on('done', function(){
-            torrent.destroy();
-            callback();
-         });
-      });
-   }, 15000);
-   */
 });
 
 describe("Testing if loadVideo method", function(){
@@ -61,7 +49,7 @@ describe("Testing if loadVideo method", function(){
             }
          }, function (res) {  
                myStreaming.streamVideo(res, {XHRPath : "example.mp4"}, function(streamInformationObject){
-                  myStreaming2.loadVideo(streamInformationObject, done);  
+               myStreaming2.loadVideo(streamInformationObject, done);  
                });
          });
       }, 15000);  
@@ -87,7 +75,7 @@ describe("Testing if loadVideo method", function(){
          });
       }, 20000);  
 
-      it("with one seeder and two downloader", function(done){
+      it("with one seeder and two downloaders", function(done){
          expect(true).toBe(true);
          var numberOfCompletedDownloads = 0;
          
