@@ -6,7 +6,7 @@ var readableStream = require('readable-stream');
 var videostream = require('../videostream.js');
 var WebTorrent = require('webtorrent');
 
-module.exports = function(groupId){
+module.exports.lib = function(groupId){
    this.groupId = groupId;
    this.peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);
    this.knownPeers = [];
@@ -34,6 +34,7 @@ module.exports = function(groupId){
       var PATH_TO_VIDEO_FILE = options.XHRPath || "Wayne";
       var SIZE_OF_VIDEO_FILE = options.videoFileSize;
       
+ 
       var DOWNLOAD_FROM_SERVER_TIME_RANGE = options.downloadFromServerTimeRange || 5; // in seconds
       var UPLOAD_LIMIT = options.uploadLimit || 2; // multiplied by number of downloaded bytes
       var ADDITION_TO_UPLOAD_LIMIT = options.additionToUploadLimit || 5000; // amount of byte added to upload limit
@@ -44,6 +45,7 @@ module.exports = function(groupId){
       var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = options.checkIfAnswerstreamReadyInterval || 200; // in miliseconds
       var UPDATE_CHART_INTERVAL = options.updateChartInterval || 1000; // in miliseconds
       var CHOKE_IF_NECESSARY_INTERVAL = options.chokeIfNecessaryInterval || 500; // in miliseconds
+      
       
       var myVideo = document.getElementById("myVideo");
       var theCoolCounter = 0;
@@ -69,7 +71,7 @@ module.exports = function(groupId){
       }
       util.inherits(MyReadableStream, Readable);
       MyReadableStream.prototype._read = function(size){};
-
+      
       if(deliveryByWebtorrent){
          var client = new WebTorrent();
          client.add(MAGNET_URI, function (torrent){
@@ -98,7 +100,7 @@ module.exports = function(groupId){
             }
          });
       }
-
+      
       var file = function (path) {
          this.path = path;
       }

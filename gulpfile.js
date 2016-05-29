@@ -15,6 +15,7 @@ var connect = require('gulp-connect');
 //var reporters = require('jasmine-reporters');
 var jasmineBrowser = require('gulp-jasmine-browser');
 var cors = require('cors');
+var WebTorrent = require("webtorrent");
 
 
 /*
@@ -137,4 +138,4 @@ gulp.task('watch', function(){
 });
 
 
-gulp.task('default', ['browserify', 'browserify2', 'tests', 'connect', 'watch']);
+gulp.task('default', ['browserify', 'connect', 'browserify2', 'tests', 'watch']);

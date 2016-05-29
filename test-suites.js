@@ -22,7 +22,7 @@ describe("Testing if streamVideo method", function(){
       }, function (res) {
          myStreaming.streamVideo(res, {XHRPath : "example.mp4"}, callback);
       });
-   }, 30000); 
+   }, 15000); 
    
    /*
    it("seeds the passed video file successfully", function(callback){
@@ -39,30 +39,79 @@ describe("Testing if streamVideo method", function(){
 
 describe("Testing if loadVideo method", function(){
    var myStreaming = new OakStreaming(42);
+   var myStreaming2 = new OakStreaming(42);
+   var myStreaming3 = new OakStreaming(42);
    
    it("loads the video fast enough via server delivery", function(done){
-      expect(true).toBe(true);
-      myStreaming.loadVideo({XHRPath : "example.mp4", videoFileSize : theVideoFileSize}, done);
-   }, 11000);
+      expect(true).toBe(true); // necessary because Jasmine wants at least one expect per it.
+      myStreaming.loadVideo({XHRPath : "example2.mp4", videoFileSize : theVideoFileSize}, done);
+   }, 10000);
    
    
-   it("loads the video fast enough via WebTorrent delivery", function(done){
-      expect(true).toBe(true);
-      req = http.get({
-         hostname: 'localhost',
-         port: 8080,
-         path: "/example.mp4",
-         headers: {
-             range: 'bytes=' + 0 + '-' + theVideoFileSize
-         }
-      }, function (res) {
-         var webTorrentClient = new WebTorrent();
-         webTorrentClient.seed(res, {}, function onSeed (torrent){
-            myStreaming.loadVideo({magnetURI : torrent.magnetURI, videoFileSize : theVideoFileSize}, done);            
+   describe("loads the video fast enough via WebTorrent delivery", function(){
+      it("with one seeder and one downloader", function(done){
+         expect(true).toBe(true);
+         
+         req = http.get({
+            hostname: 'localhost',
+            port: 8080,
+            path: "/example.mp4",
+            headers: {
+                range: 'bytes=' + 0 + '-' + theVideoFileSize
+            }
+         }, function (res) {  
+               myStreaming.streamVideo(res, {XHRPath : "example.mp4"}, function(streamInformationObject){
+                  myStreaming2.loadVideo(streamInformationObject, done);  
+               });
          });
-      });
-   }, 20000);
-   
+      }, 15000);  
+      
+      it("with two seeders and one downloader", function(done){
+         expect(true).toBe(true);
+         
+         function callback(streamInformationObject){
+            myStreaming2.loadVideo(streamInformationObject, function(){
+               myStreaming3.loadVideo(streamInformationObject, done);
+            });
+         }
+         
+         req = http.get({
+            hostname: 'localhost',
+            port: 8080,
+            path: "/example.mp4",
+            headers: {
+                range: 'bytes=' + 0 + '-' + theVideoFileSize
+            }
+         }, function (res) {  
+               myStreaming.streamVideo(res, {XHRPath : "example.mp4"}, callback);
+         });
+      }, 20000);  
+
+      it("with one seeder and two downloader", function(done){
+         expect(true).toBe(true);
+         var numberOfCompletedDownloads = 0;
+         
+         function checkIfSpecFinished(){
+            if(++numberOfCompletedDownloads >= 2){
+               done();
+            }
+         }       
+         function callback(streamInformationObject){
+            myStreaming2.loadVideo(streamInformationObject, checkIfSpecFinished); 
+            myStreaming3.loadVideo(streamInformationObject, checkIfSpecFinished);
+         }       
+         req = http.get({
+            hostname: 'localhost',
+            port: 8080,
+            path: "/example.mp4",
+            headers: {
+                range: 'bytes=' + 0 + '-' + theVideoFileSize
+            }
+         }, function (res) {  
+               myStreaming.streamVideo(res, {XHRPath : "example.mp4"}, callback);
+         });
+      }, 20000);    
+   });
    
    it("loads the video fast enough via peer-assisted delivery", function(done){
       expect(true).toBe(true);
@@ -76,7 +125,7 @@ describe("Testing if loadVideo method", function(){
       }, function (res) {
          var webTorrentClient = new WebTorrent();
          webTorrentClient.seed(res, function onSeed (torrent){
-            myStreaming.loadVideo({XHRPath: "example.mp4", magnetURI : torrent.magnetURI, videoFileSize : theVideoFileSize}, done);            
+            myStreaming.loadVideo({XHRPath: "example3.mp4", magnetURI : torrent.magnetURI, videoFileSize : theVideoFileSize}, done);            
          });
       });
    }, 20000);

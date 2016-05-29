@@ -5,3 +5,4 @@ browserified/
 .idea/
 test-results/
 node_modules/
+testsuites-build/
