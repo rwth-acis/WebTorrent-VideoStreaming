@@ -4,14 +4,15 @@ var theVideoFileSize = 788493;
 describe("Testing if streamVideo method", function(){
    var myStreaming = new OakStreaming();
       
-   it("creates streamInformationObject correctly",  function(done){
-      var theTorrent;
-      
+   it("creates streamInformationObject correctly",  function(done){ 
+      jasmine.clock().install();
       function callback (streamInformationObject){
-         theTorrent.destroy();
+         console.log("callback from streamVideo is executed");
+         window.testTorrent.destroy();
          //expect(streamInformationObject.magnetURI).toMatch("magnet:?xt=urn:btih:1b5169e27e943cd615b1e10ba98e9e4a0b2086b8&dn=example.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io");
          expect(streamInformationObject.videoFileSize).toEqual(theVideoFileSize);
          expect(streamInformationObject.XHRPath).toMatch("example.mp4");
+         jasmine.clock().uninstall();
          done();
       }
       req = http.get({
@@ -22,7 +23,8 @@ describe("Testing if streamVideo method", function(){
              range: 'bytes=' + 0 + '-' + theVideoFileSize
          }
       }, function (res) {
-         theTorrent = myStreaming.streamVideo(res, {XHRPath : "example.mp4"}, callback);
+         window.testTorrent = myStreaming.streamVideo(res, {XHRPath : "example.mp4"}, callback);
+         jasmine.clock().tick(42);
       });
    }, 15000); 
 });

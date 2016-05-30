@@ -48,11 +48,12 @@ var WebTorrent = require('webtorrent');
  * @param {string} options.XHRPath - The path that will be used for the XML HTTP Request (XHR). If the option object or this property of the option object is undefined, no video data will be requested from the server.
  * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated StreamInformationObject at the end of the execution of streamVideo.
  */
-function streamVideo(videoFile, options, callback){
+function streamVideo(videoFile, options, callback){ 
    var webTorrentClient = new WebTorrent();
+   console.log("streamVideo is executed");
    webTorrentClient.seed(videoFile, function(torrent){
       var streamInformationObject = {};
-      //console.log("Video file was seeded");
+      console.log("Video file was seeded");
       //streamInformationObject.torrent = torrent;
       streamInformationObject.magnetURI = torrent.magnetURI;
       streamInformationObject.videoFileSize = torrent.files[0].length;
@@ -74,12 +75,13 @@ function streamVideo(videoFile, options, callback){
  * @param {OakStreaming~loadedVideoFinished} callback - This callback gets called when the video has been loaded entirely into the buffer of the video player.
  */
 function loadVideo(streamInformationObject, callback){
+   console.log("Version BAM 2");
    //console.log("I entered this.loadVideo");
    //console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
    var deliveryByServer = streamInformationObject.XHRPath ? true : false;
    var deliveryByWebtorrent = streamInformationObject.magnetURI ? true : false;
    var MAGNET_URI = streamInformationObject.magnetURI;
-   var PATH_TO_VIDEO_FILE = streamInformationObject.XHRPath || "Wayne";
+   var PATH_TO_VIDEO_FILE = streamInformationObject.XHRPath;
    var SIZE_OF_VIDEO_FILE = streamInformationObject.videoFileSize;
    
 
@@ -153,6 +155,9 @@ function loadVideo(streamInformationObject, callback){
       this.path = path;
    }
    file.prototype.createReadStream = function (opts){
+      if(opts.start > SIZE_OF_VIDEO_FILE){
+         return new MultiStream(function (cb){cb(null,null);});
+      }
       inCritical = true;
       var videostreamRequestNumber = ++globalvideostreamRequestNumber;
       //console.log(consoleCounter++ + " called createreadStream " + videostreamRequestNumber);
@@ -171,7 +176,7 @@ function loadVideo(streamInformationObject, callback){
             if(thisRequest.answerStream.push(chunk.slice(thisRequest.start-thisRequest.oldStartWebTorrent, chunk.length))){
                thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
             } else {
-               thisRequest.answerStream.push(null);
+               //thisRequest.answerStream.push(null);
 
                if (thisRequest.webTorrentStream) {
                   thisRequest.webTorrentStream.pause();
@@ -196,6 +201,8 @@ function loadVideo(streamInformationObject, callback){
       if(theTorrent && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
          if(webTorrentFile){
             ////console.log("after new videostreamRequest creating a corresponding webtorrent stream");
+            console.log("opts.start: " + opts.start);
+            console.log("webTorrentFile.length: " + webTorrentFile.length);
             var webTorrentStream = webTorrentFile.createReadStream({"start" : opts.start, "end" : webTorrentFile.length-1});
             //webTorrentStream.pause();
             thisRequest.webTorrentStream = webTorrentStream;
@@ -244,14 +251,14 @@ function loadVideo(streamInformationObject, callback){
       return multi;
    };
 
-   function ceckIfAnswerStreamReady(thisRequest) {
+   function ceckIfAnswerStreamReady(thisRequest){
        ////console.log("At the beginning of thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
        ////console.log("In ceckIfAnswerStreamReady of videostreamRequest number " + thisRequest.readStreamNumber +  ". thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream + "     thisRequest.currentCB: " + thisRequest.currentCB);
        if (thisRequest.currentCB && ((thisRequest.bytesInAnswerStream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM) || (thisRequest.start >= SIZE_OF_VIDEO_FILE))) {
            ////console.log("answerStream from videostream Request number " + thisRequest.readStreamNumber + " and CB number " + thisRequest.CBNumber + " gets returned");
          // //console.log("Returing answerStream out of ceckIfAnswerStreamReady()");
 
-           thisRequest.answerStream.push(null);
+           //thisRequest.answerStream.push(null);
 
            if (thisRequest.webTorrentStream){
                thisRequest.webTorrentStream.pause();
@@ -270,9 +277,7 @@ function loadVideo(streamInformationObject, callback){
                  callback();
               };
            }
-           return true;
        }
-       return false;
    }
 
        function chokeIfNecessary() {
@@ -327,7 +332,7 @@ function loadVideo(streamInformationObject, callback){
            setTimeout(frequentlyCeckIfAnswerStreamReady, CHECK_IF_ANSWERSTREAM_READY_INTERVAL);
        }
 
-       function checkIfBufferFullEnough() {
+       function checkIfBufferFullEnough(){
            if(videoCompletelyLoaded){
               return;
            }
@@ -394,7 +399,7 @@ function loadVideo(streamInformationObject, callback){
                        thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
                    } else {
                       // //console.log("push returned false");
-                       thisRequest.answerStream.push(null);
+                      // thisRequest.answerStream.push(null);
 
                        if (thisRequest.webTorrentStream) {
                            thisRequest.webTorrentStream.pause();
