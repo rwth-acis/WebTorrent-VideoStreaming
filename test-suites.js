@@ -2,14 +2,16 @@ var theVideoFileSize = 788493;
 
 
 describe("Testing if streamVideo method", function(){
-   var myStreaming = new OakStreaming(42);
+   var myStreaming = new OakStreaming();
       
    it("creates streamInformationObject correctly",  function(done){
+      var theTorrent;
+      
       function callback (streamInformationObject){
+         theTorrent.destroy();
          //expect(streamInformationObject.magnetURI).toMatch("magnet:?xt=urn:btih:1b5169e27e943cd615b1e10ba98e9e4a0b2086b8&dn=example.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io");
          expect(streamInformationObject.videoFileSize).toEqual(theVideoFileSize);
          expect(streamInformationObject.XHRPath).toMatch("example.mp4");
-         streamInformationObject.torrent.destroy();
          done();
       }
       req = http.get({
@@ -20,15 +22,15 @@ describe("Testing if streamVideo method", function(){
              range: 'bytes=' + 0 + '-' + theVideoFileSize
          }
       }, function (res) {
-         myStreaming.streamVideo(res, {XHRPath : "example.mp4"}, callback);
+         theTorrent = myStreaming.streamVideo(res, {XHRPath : "example.mp4"}, callback);
       });
    }, 15000); 
 });
 
 describe("Testing if loadVideo method", function(){
-   var myStreaming = new OakStreaming(42);
-   var myStreaming2 = new OakStreaming(42);
-   var myStreaming3 = new OakStreaming(42);
+   var myStreaming = new OakStreaming();
+   var myStreaming2 = new OakStreaming();
+   var myStreaming3 = new OakStreaming();
    
    it("loads the video fast enough via server delivery", function(done){
       expect(true).toBe(true); // necessary because Jasmine wants at least one expect per it.

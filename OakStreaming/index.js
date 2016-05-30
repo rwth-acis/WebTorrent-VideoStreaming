@@ -53,12 +53,13 @@ function streamVideo(videoFile, options, callback){
    webTorrentClient.seed(videoFile, function(torrent){
       var streamInformationObject = {};
       //console.log("Video file was seeded");
-      streamInformationObject.torrent = torrent;
+      //streamInformationObject.torrent = torrent;
       streamInformationObject.magnetURI = torrent.magnetURI;
       streamInformationObject.videoFileSize = torrent.files[0].length;
       streamInformationObject.XHRPath = options.XHRPath;
       //console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
-      callback(streamInformationObject);
+      setTimeout(function(){callback(streamInformationObject);},0);
+      return torrent;
    });   
 };
 
@@ -433,7 +434,7 @@ function loadVideo(streamInformationObject, callback){
                port: 8080,
                path: "/example.mp4",
                headers: {
-                   range: 'bytes=' + 0 + '-' + theVideoFileSize
+                   range: 'bytes=' + 0 + '-' + SIZE_OF_VIDEO_FILE
                }
            }, function (res) {
                var contentRange = res.headers['content-range'];
@@ -457,7 +458,7 @@ function loadVideo(streamInformationObject, callback){
    });
    //console.log("I call Videostream constructor");
    videostream(new file(PATH_TO_VIDEO_FILE), video);
-};   
+};
 
 
 function addPeer(simplePeerInstance, options){

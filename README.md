@@ -10,6 +10,8 @@ Peer-assisted delivery denotes a hybrid between peer-to-peer and server delivery
 2. Install development dependencies: run ```npm install``` in the project folder
 3. Run ```gulp``` in the project folder
 4. Now a Web server delivers a exemplary Web application which uses the library on http://localhost:8080
+5. After gulp has ran successfully, the Jasmine test suites results can be seen by visiting the URL http://localhost:8888
+
 
 
 ## Usage of the exemplary Web application
@@ -18,4 +20,5 @@ Peer-assisted delivery denotes a hybrid between peer-to-peer and server delivery
 
 
 ## Addional information
-The program code of the library itself is located in the OakStreaming folder.
+The program code of the library itself is located in the *OakStreaming* folder.
+The JSDoc documentation of the API can be find in the *out* folder.
