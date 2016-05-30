@@ -1,7 +1,7 @@
 # WebTorrent-VideoStreaming
 
 ## General information
-This project is a JavaScript library for easily integrating peer-assisted streaming into an existing website.
+This project is a JavaScript library which enables to easily integrate peer-assisted streaming into a Web page.
 Peer-assisted delivery denotes a hybrid between peer-to-peer and server delivery.
 
 

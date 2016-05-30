@@ -25,22 +25,10 @@ var WebTorrent = require('webtorrent');
  
  
  /**
- * Wash the shirt.
- * @alias module:my/shirt.wash
+ * This JavaScript library enables to easily integrate peer-assisted streaming into a Web page. Peer-assisted delivery denotes a hybrid between peer-to-peer and server delivery.
+ * @alias module:OakStreaming
  */
 
- /**
- * Set the shoe's color. Use {@link Shoe#setSize} to set the shoe size.
- *
- * @param {string} color - The shoe's color.
- */
- 
- /**
- * Set the color and type of the shoelaces.
- *
- * @param {LACE_COLORS} color - The shoelace color.
- * @param {LACE_TYPES} type - The type of shoelace.
- */
  
  /**
   @typedef StreamInformationObject
@@ -49,13 +37,19 @@ var WebTorrent = require('webtorrent');
   @property {number} videoFileSize - The size in byte of the video file that was passed as an argument.
   @property {string} XHRPath - The path that will be used for the XML HTTP Request (XHR). If this property is undefined, no video data will be requested from the server.
  /
+ 
+/**
+ * This callback is displayed as part of the Requester class.
+ * @callback OakStreaming~requestCallback
+ * @param {StreamInformationObject} An object which can be passed as an argument to the loadVideo method of another client/peer to download the video.
+ */ 
 
 /**
  * Streams a video file to all other clients.
  * @param {W3C File object} [videoFile] - The video file that should be streamed to the other clients/peers.
  * @param {object} [options] - Options for the creation of the StreamInformationObject that gets passed as an argument to the callback function.
  * @param {string} options.XHRPath - The path that will be used for the XML HTTP Request (XHR). If the option object or this property of the option object is undefined, no video data will be requested from the server.
- * @param {requestCallback} cb - The callback that handles the response. The callback gets called with the generated @see StreamInformationObject as argument which can be passed as a argument to the loadVideo method of another client/peer to download the video.
+ * @param {OakStreaming~streamVideoFinished} callback - The callback that handles the response. 
  */
 function streamVideo(videoFile, options, callback){
    var webTorrentClient = new WebTorrent();
@@ -72,7 +66,27 @@ function streamVideo(videoFile, options, callback){
 };
 
 
-function loadVideo(streamInformationObject, doneLoadingVideo){
+
+
+/**
+  @typedef StreamInformationObject
+  @type {object}
+  @property {string} magnetURI - Magnet URI of the torrent. If this property is undefined, no video data will be requested from the WebTorrent network.
+  @property {number} videoFileSize - The size in byte of the video file that was passed as an argument.
+  @property {string} XHRPath - The path that will be used for the XML HTTP Request (XHR). If this property is undefined, no video data will be requested from the server.
+/
+
+/**
+ * This callback is displayed as part of the Requester class.
+ * @callback OakStreaming~loadedVideoCallback
+ */ 
+ 
+/**
+ * Streams a video file to all other clients.
+ * @param {StreamInformationObject} [streamInformationObject] - The video file that should be streamed to the other clients/peers.
+ * @param {OakStreaming~loadedVideoFinished} callback - This callback gets called when the video is completely loaded into the buffer of the video player.
+ */
+function loadVideo(streamInformationObject, callback){
    //console.log("I entered this.loadVideo");
    //console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
    var deliveryByServer = streamInformationObject.XHRPath ? true : false;
@@ -264,9 +278,9 @@ function loadVideo(streamInformationObject, doneLoadingVideo){
            ////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
            theCallbackFunction(null, res);
            if(thisRequest.start >= SIZE_OF_VIDEO_FILE){
-              if(doneLoadingVideo){
+              if(callback){
                  videoCompletelyLoaded = true;
-                 doneLoadingVideo();
+                 callback();
               };
            }
            return true;
