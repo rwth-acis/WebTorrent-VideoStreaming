@@ -1,4 +1,32 @@
-var http = require('http');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: index.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: index.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>var http = require('http');
 var MultiStream = require('multistream');
 var util = require('util');
 var Readable = require('stream').Readable;
@@ -133,7 +161,7 @@ function loadVideo(streamInformationObject, callback){
             }
          });
 
-         for(var i=0, length=videostreamRequestHandlers.length; i<length; i++){
+         for(var i=0, length=videostreamRequestHandlers.length; i&lt;length; i++){
             var thisRequest = videostreamRequestHandlers[i];
             if(thisRequest.currentCB !== null){
                ////console.log("In onTorrent nachträglich webtorrent stream erzeugen  thisRequest.start: " + thisRequest.start);
@@ -165,7 +193,7 @@ function loadVideo(streamInformationObject, callback){
       util.inherits(MyWriteableStream, readableStream.Writable);
       MyWriteableStream.prototype._write = function(chunk, encoding, done){
          //console.log("MyWriteableStream _write is called");
-         if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
+         if(thisRequest.start-thisRequest.oldStartWebTorrent &lt; chunk.length){
             ////console.log("MyWriteableStream _write: pushing received data in answerStream")
             if(thisRequest.answerStream.push(chunk.slice(thisRequest.start-thisRequest.oldStartWebTorrent, chunk.length))){
                thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
@@ -192,7 +220,7 @@ function loadVideo(streamInformationObject, callback){
       thisRequest.collectorStreamForWebtorrent = new MyWriteableStream();
       videostreamRequestHandlers.push(thisRequest);
 
-      if(theTorrent && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
+      if(theTorrent &amp;&amp; theTorrent.uploaded &lt;= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
          if(webTorrentFile){
             ////console.log("after new videostreamRequest creating a corresponding webtorrent stream");
             var webTorrentStream = webTorrentFile.createReadStream({"start" : opts.start, "end" : webTorrentFile.length-1});
@@ -203,7 +231,7 @@ function loadVideo(streamInformationObject, callback){
             //webTorrentStream.resume();
             /*
             webTorrentStream.on('data', (chunk) => {
-               if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
+               if(thisRequest.start-thisRequest.oldStartWebTorrent &lt; chunk.length){
                   var videoDataBuffer = Buffer.allocUnsafe(chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent));
                   thisRequest.answerStream.push(videoDataBuffer.fill(chunk, thisRequest.start-thisRequest.oldStartWebTorrent, chunk.length));
                   thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
@@ -218,7 +246,7 @@ function loadVideo(streamInformationObject, callback){
 
       var multi = new MultiStream(function (cb){
          thisRequest.CBNumber++;
-         if(theCoolCounter<20){
+         if(theCoolCounter&lt;20){
             //console.log(consoleCounter++ + "    " + thisRequest.CBNumber + ". call of function(cb) from " + videostreamRequestNumber);
             ////console.log(consoleCounter++ + "    start: " + thisRequest.start);
          }
@@ -235,7 +263,7 @@ function loadVideo(streamInformationObject, callback){
             //thisRequest.webTorrentStream.resume();
          }
 
-         if(deliveryByServer && inCritical && !thisRequest.XHRConducted){
+         if(deliveryByServer &amp;&amp; inCritical &amp;&amp; !thisRequest.XHRConducted){
             conductXHR(thisRequest);
          }
       });
@@ -246,7 +274,7 @@ function loadVideo(streamInformationObject, callback){
    function ceckIfAnswerStreamReady(thisRequest) {
        ////console.log("At the beginning of thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
        ////console.log("In ceckIfAnswerStreamReady of videostreamRequest number " + thisRequest.readStreamNumber +  ". thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream + "     thisRequest.currentCB: " + thisRequest.currentCB);
-       if (thisRequest.currentCB && ((thisRequest.bytesInAnswerStream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM) || (thisRequest.start >= SIZE_OF_VIDEO_FILE))) {
+       if (thisRequest.currentCB &amp;&amp; ((thisRequest.bytesInAnswerStream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM) || (thisRequest.start >= SIZE_OF_VIDEO_FILE))) {
            ////console.log("answerStream from videostream Request number " + thisRequest.readStreamNumber + " and CB number " + thisRequest.CBNumber + " gets returned");
          // //console.log("Returing answerStream out of ceckIfAnswerStreamReady()");
 
@@ -275,8 +303,8 @@ function loadVideo(streamInformationObject, callback){
    }
 
        function chokeIfNecessary() {
-           if (theTorrent && theTorrent.uploaded >= theTorrent.downloaded * UPLOAD_LIMIT + ADDITION_TO_UPLOAD_LIMIT) {
-               for (var i = 0, length = wires.length; i < length; i++) {
+           if (theTorrent &amp;&amp; theTorrent.uploaded >= theTorrent.downloaded * UPLOAD_LIMIT + ADDITION_TO_UPLOAD_LIMIT) {
+               for (var i = 0, length = wires.length; i &lt; length; i++) {
                    //console.log("I choked a peer");
                    wires[i].choke();
                }
@@ -320,7 +348,7 @@ function loadVideo(streamInformationObject, callback){
          if(videoCompletelyLoaded){
             return;
          }
-           for (var i = 0, length = videostreamRequestHandlers.length; i < length; i++) {
+           for (var i = 0, length = videostreamRequestHandlers.length; i &lt; length; i++) {
                ceckIfAnswerStreamReady(videostreamRequestHandlers[i]);
            }
            setTimeout(frequentlyCeckIfAnswerStreamReady, CHECK_IF_ANSWERSTREAM_READY_INTERVAL);
@@ -332,18 +360,18 @@ function loadVideo(streamInformationObject, callback){
            }
            var timeRanges = document.querySelector('video').buffered;
            inCritical = true;
-           for (var i = 0, length = timeRanges.length; i < length; i++) {
+           for (var i = 0, length = timeRanges.length; i &lt; length; i++) {
                ////console.log("Time range number " + i + ": start(" + timeRanges.start(i) + ") end(" + timeRanges.end(i) + ")");
-               if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)) {
+               if (myVideo.currentTime >= timeRanges.start(i) &amp;&amp; myVideo.currentTime &lt;= timeRanges.end(i)) {
                    if (timeRanges.end(i) - myVideo.currentTime >= DOWNLOAD_FROM_SERVER_TIME_RANGE) {
                        inCritical = false;
                        ////console.log("I set inCritical to false");
                    }
                }
            }
-           if (deliveryByServer && inCritical) {
-               for (var j = 0, length = videostreamRequestHandlers.length; j < length; j++) {
-                   if (videostreamRequestHandlers[j].currentCB !== null && videostreamRequestHandlers[j].XHRConducted === false) {
+           if (deliveryByServer &amp;&amp; inCritical) {
+               for (var j = 0, length = videostreamRequestHandlers.length; j &lt; length; j++) {
+                   if (videostreamRequestHandlers[j].currentCB !== null &amp;&amp; videostreamRequestHandlers[j].XHRConducted === false) {
                        conductXHR(videostreamRequestHandlers[j]);
                    }
                }
@@ -356,29 +384,29 @@ function loadVideo(streamInformationObject, callback){
            var reqStart = thisRequest.start;
            var reqEnd = reqStart + XHR_REQUEST_SIZE;
 
-           if (thisRequest.end >= 0 && reqEnd > thisRequest.end) {
+           if (thisRequest.end >= 0 &amp;&amp; reqEnd > thisRequest.end) {
                reqEnd = thisRequest.end;
            }
            if (reqStart >= reqEnd) {
                req = null;
                return thisRequest.currentCB(null, null);
            }
-           if (consoleCounter < 10000000) {
+           if (consoleCounter &lt; 10000000) {
                //////console.log(consoleCounter++ + "  videoStream " + thisRequest.readStreamNumber + "  CB number " + thisRequest.CBNumber + "    reqStart: " + reqStart);
                //////console.log(consoleCounter++ + "  Multistream " + thisRequest.readStreamNumber + "   CB number " + thisRequest.CBNumber + "    reqEnd: " + reqEnd);
            }
 
            var XHRDataHandler = function (chunk) {
                //////console.log("TypeOf chunk: " + typeof chunk);
-               if (consoleCounter < 1000000000) {
+               if (consoleCounter &lt; 1000000000) {
                    //////console.log(consoleCounter++, "BAM In XHRDataHandler from readStream ", thisRequest.readStreamNumber, "and thisRequestCBNumber", thisRequest.CBNumber);
                    //////console.log(consoleCounter++, "chunk.length: ", chunk.length);
                    //////console.log("thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
                    //////console.log("thisRequest.answerStream: " + thisRequest.answerStream);
                    //////console.log("thisRequest.start: " + thisRequest.start);
                }
-               if (thisRequest.start - thisRequest.oldStartServer < chunk.length) {
-                   if (consoleCounter < 100000000) {
+               if (thisRequest.start - thisRequest.oldStartServer &lt; chunk.length) {
+                   if (consoleCounter &lt; 100000000) {
                        /*
                        //console.log("add data to answerStream");
                        //console.log("chunk.length: " + chunk.length);
@@ -410,7 +438,7 @@ function loadVideo(streamInformationObject, callback){
                }
                thisRequest.oldStartServer += chunk.length;
                bytesReceivedFromServer += chunk.length;
-               if (consoleCounter < 10000000000) {
+               if (consoleCounter &lt; 10000000000) {
                    //////console.log("After putting in answerStream - thisRequest.start: " + thisRequest.start);
                    //////console.log("After putting in answerStream - thisRequest.oldStartServer: " + thisRequest.oldStartServer);
                    //////console.log("After putting in answerStream - thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
@@ -418,7 +446,7 @@ function loadVideo(streamInformationObject, callback){
            }
 
            var XHREnd = function () {
-               if (consoleCounter < 1000000000000) {
+               if (consoleCounter &lt; 1000000000000) {
                    //////console.log("XHREnd from videostreamRequest number " + thisRequest.readStreamNumber);
                }
                thisRequest.XHRConducted = false;
@@ -467,4 +495,26 @@ function addPeer(simplePeerInstance, options){
 function on(type, callback){
    // call callback when event of type "type" happend
    // bisher nur das event "foundNewPeerViaTracker" geplant
-}
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-OakStreaming.html">OakStreaming</a></li></ul><h3>Classes</h3><ul><li><a href="module-OakStreaming-OakStreaming.html">OakStreaming</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Mon May 30 2016 13:03:33 GMT+0200 (W. Europe Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
