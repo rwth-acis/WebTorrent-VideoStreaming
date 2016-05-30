@@ -51,7 +51,7 @@ var WebTorrent = require('webtorrent');
 function streamVideo(videoFile, options, callback){ 
    var webTorrentClient = new WebTorrent();
    console.log("streamVideo is executed");
-   webTorrentClient.seed(videoFile, function(torrent){
+   webTorrentClient.seed(videoFile, {announceList: [["wss://localhost:8081"]]}, function(torrent){
       var streamInformationObject = {};
       console.log("Video file was seeded");
       //streamInformationObject.torrent = torrent;
