@@ -18,7 +18,7 @@
     "mediasource": "^2.0.0",
     "mp4-box-encoding": "^1.1.1",
     "mp4-stream": "^2.0.0",
-    "multistream": "^2.0.5",
+    "multistream": "^2.0.4",
     "pump": "^1.0.1",
     "range-slice-stream": "^1.0.0",
     "readable-stream": "^2.1.2",
@@ -49,6 +49,7 @@
     "jasmine-reporters": "^2.1.1",
     "jsdoc": "^3.4.0",
     "lodash.assign": "^4.0.9",
+    "readable-stream": "^2.1.2",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "watchify": "^3.7.0"
