@@ -97,15 +97,18 @@ gulp.task('minify_index.html', function(){
 });
 */
 
+
 //start web server
 gulp.task('connect', function(){
    connect.server({
-      root : "./build",
-      middleware : function(connect, opts) {
+      root: "./build",
+      middleware : function(connect, opts){
          return [cors()];
       }
    });
 });
+
+
 
 /* War nicht die Jasmine-browser variante
 //Run Jasmine tests
@@ -129,7 +132,7 @@ gulp.task('tests', ['browserify2'], function() {
 
 //Watch Task
 // Watches JS
-gulp.task('watch', function(){
+gulp.task('watch', ['tests', 'connect'], function(){
    gulp.watch('./index.js', ['browserify']);
    gulp.watch('./test-suites.js', ['browserify2', 'tests']);
   // gulp.watch('./index.html', ['minify_index.html']);
