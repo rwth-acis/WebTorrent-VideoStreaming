@@ -48,7 +48,7 @@ var WebTorrent = require('webtorrent');
  * @param {string} options.XHRPath - The path that will be used for the XML HTTP Request (XHR). If the option object or this property of the option object is undefined, no video data will be requested from the server.
  * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated StreamInformationObject at the end of the execution of streamVideo.
  */
-function streamVideo(videoFile, options, callback){ 
+function streamVideo(videoFile, options, callback, test){ 
    var webTorrentClient = new WebTorrent();
    console.log("streamVideo is executed");
    console.log("videoFile: " + videoFile);
@@ -62,8 +62,10 @@ function streamVideo(videoFile, options, callback){
       streamInformationObject.videoFileSize = torrent.files[0].length;
       streamInformationObject.XHRPath = options.XHRPath;
       //console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
+      if(test){
+         torrent.destroy();
+      }
       setTimeout(function(){callback(streamInformationObject);},0);
-      return torrent;
    });   
 };
 

@@ -6,10 +6,9 @@ describe("Testing if streamVideo method", function(){
       
    it("creates streamInformationObject correctly",  function(done){ 
       //jasmine.clock().install();
-      var testTorrent;
+      
       function callback (streamInformationObject){
          console.log("callback from streamVideo is executed");
-         testTorrent.destroy();
          //expect(streamInformationObject.magnetURI).toMatch("magnet:?xt=urn:btih:1b5169e27e943cd615b1e10ba98e9e4a0b2086b8&dn=example.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io");
          expect(streamInformationObject.videoFileSize).toEqual(theVideoFileSize);
          expect(streamInformationObject.XHRPath).toMatch("/example.mp4");
@@ -31,7 +30,7 @@ describe("Testing if streamVideo method", function(){
          res.on('end', function(){
             console.log("I received end signal from XHR for the first spec");
          });
-         var testTorrent = myStreaming.streamVideo(res, {XHRPath : "/example.mp4"}, callback);
+         testTorrent = myStreaming.streamVideo(res, {XHRPath : "/example.mp4"}, callback, "called from a test function");
          //jasmine.clock().tick(42);
       });
    }, 30000); 
