@@ -11,7 +11,7 @@ describe("Testing if streamVideo method", function(){
          window.testTorrent.destroy();
          //expect(streamInformationObject.magnetURI).toMatch("magnet:?xt=urn:btih:1b5169e27e943cd615b1e10ba98e9e4a0b2086b8&dn=example.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io");
          expect(streamInformationObject.videoFileSize).toEqual(theVideoFileSize);
-         expect(streamInformationObject.XHRPath).toMatch("example.mp4");
+         expect(streamInformationObject.XHRPath).toMatch("/example.mp4");
          jasmine.clock().uninstall();
          done();
       }
@@ -20,13 +20,20 @@ describe("Testing if streamVideo method", function(){
          port: 8080,
          path: "/example.mp4",
          headers: {
-             range: 'bytes=' + 0 + '-' + theVideoFileSize
+             range: 'bytes=' + 0 + '-' + theVideoFileSize-1
          }
-      }, function (res) {
-         window.testTorrent = myStreaming.streamVideo(res, {XHRPath : "example.mp4"}, callback);
-         jasmine.clock().tick(42);
+      }, function (res){
+            res.on("data", function(chunk){
+               console.log("I received a chunk from server in first sec");
+               console.log("chunk.length: " + chunk.length);
+            });
+            res.on("end", function(){
+               console.log("First sepc end of stream from server");
+            });
+            window.testTorrent = myStreaming.streamVideo(res, {XHRPath : "/example.mp4"}, callback);
+            jasmine.clock().tick(42);
       });
-   }, 15000); 
+   }, 30000); 
 });
 
 describe("Testing if loadVideo method", function(){
@@ -36,7 +43,7 @@ describe("Testing if loadVideo method", function(){
    
    it("loads the video fast enough via server delivery", function(done){
       expect(true).toBe(true); // necessary because Jasmine wants at least one expect per it.
-      myStreaming.loadVideo({XHRPath : "example2.mp4", videoFileSize : theVideoFileSize}, done);
+      myStreaming.loadVideo({XHRPath : "/example2.mp4", videoFileSize : theVideoFileSize}, done);
    }, 10000);
    
    
@@ -49,10 +56,10 @@ describe("Testing if loadVideo method", function(){
             port: 8080,
             path: "/example.mp4",
             headers: {
-                range: 'bytes=' + 0 + '-' + theVideoFileSize
+                range: 'bytes=' + 0 + '-' + theVideoFileSize-1
             }
          }, function (res) {  
-               myStreaming.streamVideo(res, {XHRPath : "example.mp4"}, function(streamInformationObject){
+               myStreaming.streamVideo(res, {XHRPath : "/example.mp4"}, function(streamInformationObject){
                myStreaming2.loadVideo(streamInformationObject, done);  
                });
          });
@@ -72,10 +79,10 @@ describe("Testing if loadVideo method", function(){
             port: 8080,
             path: "/example.mp4",
             headers: {
-                range: 'bytes=' + 0 + '-' + theVideoFileSize
+                range: 'bytes=' + 0 + '-' + theVideoFileSize-1
             }
          }, function (res) {  
-               myStreaming.streamVideo(res, {XHRPath : "example.mp4"}, callback);
+               myStreaming.streamVideo(res, {XHRPath : "/example.mp4"}, callback);
          });
       }, 20000);  
 
@@ -97,10 +104,10 @@ describe("Testing if loadVideo method", function(){
             port: 8080,
             path: "/example.mp4",
             headers: {
-                range: 'bytes=' + 0 + '-' + theVideoFileSize
+                range: 'bytes=' + 0 + '-' + theVideoFileSize-1
             }
          }, function (res) {  
-               myStreaming.streamVideo(res, {XHRPath : "example.mp4"}, callback);
+               myStreaming.streamVideo(res, {XHRPath : "/example.mp4"}, callback);
          });
       }, 20000);    
    });
@@ -112,12 +119,12 @@ describe("Testing if loadVideo method", function(){
          port: 8080,
          path: "/example.mp4",
          headers: {
-             range: 'bytes=' + 0 + '-' + theVideoFileSize
+             range: 'bytes=' + 0 + '-' + theVideoFileSize-1
          }
       }, function (res) {
          var webTorrentClient = new WebTorrent();
          webTorrentClient.seed(res, function onSeed (torrent){
-            myStreaming.loadVideo({XHRPath: "example3.mp4", magnetURI : torrent.magnetURI, videoFileSize : theVideoFileSize}, done);            
+            myStreaming.loadVideo({XHRPath: "/example3.mp4", magnetURI : torrent.magnetURI, videoFileSize : theVideoFileSize}, done);            
          });
       });
    }, 20000);

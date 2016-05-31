@@ -51,9 +51,12 @@ var WebTorrent = require('webtorrent');
 function streamVideo(videoFile, options, callback){ 
    var webTorrentClient = new WebTorrent();
    console.log("streamVideo is executed");
-   webTorrentClient.seed(videoFile, {announceList: [["wss://localhost:8081"]]}, function(torrent){
-      var streamInformationObject = {};
+   console.log("videoFile: " + videoFile);
+   console.log("options: " + options);
+   console.log("callback: " + callback);
+   webTorrentClient.seed(videoFile, {announceList: [["ws://localhost:8081"],["wss://tracker.webtorrent.io"]]}, function(torrent){
       console.log("Video file was seeded");
+      var streamInformationObject = {};
       //streamInformationObject.torrent = torrent;
       streamInformationObject.magnetURI = torrent.magnetURI;
       streamInformationObject.videoFileSize = torrent.files[0].length;
@@ -75,7 +78,7 @@ function streamVideo(videoFile, options, callback){
  * @param {OakStreaming~loadedVideoFinished} callback - This callback gets called when the video has been loaded entirely into the buffer of the video player.
  */
 function loadVideo(streamInformationObject, callback){
-   console.log("Version BAM 2");
+   console.log("Version BAM 3");
    //console.log("I entered this.loadVideo");
    //console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
    var deliveryByServer = streamInformationObject.XHRPath ? true : false;
@@ -437,9 +440,8 @@ function loadVideo(streamInformationObject, callback){
                path: thisRequest.self.path,
                hostname: 'localhost',
                port: 8080,
-               path: "/example.mp4",
                headers: {
-                   range: 'bytes=' + 0 + '-' + SIZE_OF_VIDEO_FILE
+                   range: 'bytes=' + 0 + '-' + SIZE_OF_VIDEO_FILE-1
                }
            }, function (res) {
                var contentRange = res.headers['content-range'];
