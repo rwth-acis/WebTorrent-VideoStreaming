@@ -15,7 +15,7 @@ var WebTorrent = require('webtorrent');
  
  /**
  * Creates a new OakStreaming instance which has the methods streamVideo, loadVideo, addPeer and on.
- * @class
+ * @constructor
  */ 
 function OakStreaming(){
    this.peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);
@@ -67,7 +67,7 @@ function streamVideo(videoFile, options, callback, destroyTorrent){
          delete webTorrentClient;
       }
       setTimeout(function(){callback(streamInformationObject);},0);
-   });   
+   });  
 };
 
 
@@ -140,8 +140,8 @@ function loadVideo(streamInformationObject, callback){
          for(var i=0, length=videostreamRequestHandlers.length; i<length; i++){
             var thisRequest = videostreamRequestHandlers[i];
             if(thisRequest.currentCB !== null){
-              console.log("In onTorrent nachträglich webtorrent stream erzeugen  thisRequest.start: " + thisRequest.start);
-              console.log("In onTorrent  webTorrentFile.length: " + webTorrentFile.length);
+               console.log("In onTorrent nachträglich webtorrent stream erzeugen  thisRequest.start: " + thisRequest.start);
+               console.log("In onTorrent  webTorrentFile.length: " + webTorrentFile.length);
                thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : webTorrentFile.length-1});
                //thisRequest.webTorrentStream.pause();
                thisRequest.oldStartWebTorrent = thisRequest.start;
@@ -208,23 +208,9 @@ function loadVideo(streamInformationObject, callback){
          console.log("opts.start: " + opts.start);
          console.log("webTorrentFile.length: " + webTorrentFile.length);
          var webTorrentStream = webTorrentFile.createReadStream({"start" : opts.start, "end" : webTorrentFile.length-1});
-         //webTorrentStream.pause();
          thisRequest.webTorrentStream = webTorrentStream;
          thisRequest.oldStartWebTorrent = opts.start;
          webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
-         //webTorrentStream.resume();
-         /*
-         webTorrentStream.on('data', (chunk) => {
-            if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
-               var videoDataBuffer = Buffer.allocUnsafe(chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent));
-               thisRequest.answerStream.push(videoDataBuffer.fill(chunk, thisRequest.start-thisRequest.oldStartWebTorrent, chunk.length));
-               thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
-               thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
-            }
-            thisRequest.oldStartWebTorrent += chunk.length;
-            ceckIfAnswerStreamReady(thisRequest);
-         });
-         */
       }
 
       var multi = new MultiStream(function (cb){
@@ -242,10 +228,8 @@ function loadVideo(streamInformationObject, callback){
             console.log("After new Multistream. thisRequest.start: " + thisRequest.start);
             console.log("webTorrentFile.length: " + webTorrentFile.length);
             thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : webTorrentFile.length-1});
-            //thisRequest.webTorrentStream.pause();
             thisRequest.oldStartWebTorrent = thisRequest.start;
             thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
-            //thisRequest.webTorrentStream.resume();
          }
 
          if(deliveryByServer && inCritical && !thisRequest.XHRConducted){
@@ -259,210 +243,206 @@ function loadVideo(streamInformationObject, callback){
    function ceckIfAnswerStreamReady(thisRequest){
        //////console.log("At the beginning of thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
        //////console.log("In ceckIfAnswerStreamReady of videostreamRequest number " + thisRequest.readStreamNumber +  ". thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream + "     thisRequest.currentCB: " + thisRequest.currentCB);
-       if (thisRequest.currentCB && ((thisRequest.bytesInAnswerStream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM) || (thisRequest.start >= SIZE_OF_VIDEO_FILE))) {
-           //////console.log("answerStream from videostream Request number " + thisRequest.readStreamNumber + " and CB number " + thisRequest.CBNumber + " gets returned");
+      if (thisRequest.currentCB && ((thisRequest.bytesInAnswerStream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM) || (thisRequest.start >= SIZE_OF_VIDEO_FILE))) {
+         //////console.log("answerStream from videostream Request number " + thisRequest.readStreamNumber + " and CB number " + thisRequest.CBNumber + " gets returned");
          // ////console.log("Returing answerStream out of ceckIfAnswerStreamReady()");
-
-           thisRequest.answerStream.push(null);
-
-           if (thisRequest.webTorrentStream){
-               thisRequest.webTorrentStream.pause();
-           }
-           thisRequest.bytesInAnswerStream = 0;
-           var res = thisRequest.answerStream;
-           thisRequest.answerStream = new MyReadableStream({highWaterMark: 50000000});
-           var theCallbackFunction = thisRequest.currentCB;
-           thisRequest.currentCB = null;
-
-           //////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
-           theCallbackFunction(null, res);
-           if(thisRequest.start >= SIZE_OF_VIDEO_FILE){
-              if(callback){
-                 videoCompletelyLoaded = true;
-                 callback();
-              };
-           }
-       }
+         thisRequest.answerStream.push(null);
+         if (thisRequest.webTorrentStream){
+            thisRequest.webTorrentStream.pause();
+         }
+         thisRequest.bytesInAnswerStream = 0;
+         var res = thisRequest.answerStream;
+         thisRequest.answerStream = new MyReadableStream({highWaterMark: 50000000});
+         var theCallbackFunction = thisRequest.currentCB;
+         thisRequest.currentCB = null;
+         //////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
+         theCallbackFunction(null, res);
+         if(thisRequest.start >= SIZE_OF_VIDEO_FILE){
+            if(callback){
+               videoCompletelyLoaded = true;
+               callback();
+            };
+         }
+      }
    }
 
-       function chokeIfNecessary() {
-           if (theTorrent && theTorrent.uploaded >= theTorrent.downloaded * UPLOAD_LIMIT + ADDITION_TO_UPLOAD_LIMIT) {
-               for (var i = 0, length = wires.length; i < length; i++){
-                   console.log("I choked a peer");
-                   wires[i].choke();
-               }
-               if(theTorrent.progress >= 1){
-                  theTorrent.destroy();
-                  delete webTorrentClient;
-                  endStreaming = true;
-                  return;
-               }
-           }
-           setTimeout(chokeIfNecessary, CHOKE_IF_NECESSARY_INTERVAL);
-       }
-
-       function updateChart() {
-             if(endStreaming){
-                return;
-             }
-           if (theTorrent) {
-               document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer;
-           }
-           setTimeout(updateChart, UPDATE_CHART_INTERVAL);
-       }
-       
-       function VideostreamRequestHandler(readStreamNumber, opts, end, self) {
-           this.readStreamNumber = readStreamNumber;
-           this.opts = opts;
-           this.start = opts.start;
-           this.oldStartWebTorrent = 42;
-           this.oldStartServer = 42;
-           this.currentCB = null;
-           this.CBNumber = 0;
-           this.webTorrentStream = null;
-           this.answerStream = new MyReadableStream({highWaterMark: 50000000});
-           this.bytesInAnswerStream = 0;
-           this.collectorStreamForWebtorrent = null;
-           this.XHRConducted = false;
-           this.end = end;
-           this.self = self;
-       }
-
-       function frequentlyCeckIfAnswerStreamReady() {
-         if(videoCompletelyLoaded){
+   function chokeIfNecessary() {
+      if (theTorrent && theTorrent.uploaded >= theTorrent.downloaded * UPLOAD_LIMIT + ADDITION_TO_UPLOAD_LIMIT) {
+         for (var i = 0, length = wires.length; i < length; i++){
+            console.log("I choked a peer");
+            wires[i].choke();
+         }
+         if(theTorrent.progress >= 1){
+            theTorrent.destroy();
+            delete webTorrentClient;
+            endStreaming = true;
             return;
          }
-           for (var i = 0, length = videostreamRequestHandlers.length; i < length; i++) {
-               ceckIfAnswerStreamReady(videostreamRequestHandlers[i]);
-           }
-           setTimeout(frequentlyCeckIfAnswerStreamReady, CHECK_IF_ANSWERSTREAM_READY_INTERVAL);
-       }
+      }
+      setTimeout(chokeIfNecessary, CHOKE_IF_NECESSARY_INTERVAL);
+   }
 
-       function checkIfBufferFullEnough(){
-           if(videoCompletelyLoaded){
-              return;
-           }
-           var timeRanges = document.querySelector('video').buffered;
-           inCritical = true;
-           for (var i = 0, length = timeRanges.length; i < length; i++) {
-               //////console.log("Time range number " + i + ": start(" + timeRanges.start(i) + ") end(" + timeRanges.end(i) + ")");
-               if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)) {
-                   if (timeRanges.end(i) - myVideo.currentTime >= DOWNLOAD_FROM_SERVER_TIME_RANGE) {
-                       inCritical = false;
-                       //////console.log("I set inCritical to false");
-                   }
-               }
-           }
-           if (deliveryByServer && inCritical) {
-               for (var j = 0, length = videostreamRequestHandlers.length; j < length; j++) {
-                   if (videostreamRequestHandlers[j].currentCB !== null && videostreamRequestHandlers[j].XHRConducted === false) {
-                       conductXHR(videostreamRequestHandlers[j]);
-                   }
-               }
-           }
-           setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
-       }
+   function updateChart() {
+      if(endStreaming){
+         return;
+      }
+      if (theTorrent) {
+         document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer;
+      }
+      setTimeout(updateChart, UPDATE_CHART_INTERVAL);
+   }
+    
+   function VideostreamRequestHandler(readStreamNumber, opts, end, self) {
+      this.readStreamNumber = readStreamNumber;
+      this.opts = opts;
+      this.start = opts.start;
+      this.oldStartWebTorrent = 42;
+      this.oldStartServer = 42;
+      this.currentCB = null;
+      this.CBNumber = 0;
+      this.webTorrentStream = null;
+      this.answerStream = new MyReadableStream({highWaterMark: 50000000});
+      this.bytesInAnswerStream = 0;
+      this.collectorStreamForWebtorrent = null;
+      this.XHRConducted = false;
+      this.end = end;
+      this.self = self;
+   }
 
-       function conductXHR(thisRequest) {
-          if(thisRequest.currentCB === null){
-             return;
-          }
-           thisRequest.XHRConducted = true;
-           var reqStart = thisRequest.start;
-           var reqEnd = reqStart + XHR_REQUEST_SIZE;
+   function frequentlyCeckIfAnswerStreamReady() {
+      if(videoCompletelyLoaded){
+         return;
+      }
+      for (var i = 0, length = videostreamRequestHandlers.length; i < length; i++) {
+         ceckIfAnswerStreamReady(videostreamRequestHandlers[i]);
+      }
+     setTimeout(frequentlyCeckIfAnswerStreamReady, CHECK_IF_ANSWERSTREAM_READY_INTERVAL);
+   }
 
-           if (thisRequest.end >= 0 && reqEnd > thisRequest.end) {
-               reqEnd = thisRequest.end;
-           }
-           /* glaube ich unnötiger und/oder gefährlicher müll
-           if (reqStart >= reqEnd) {
-               req = null;
-               return thisRequest.currentCB(null, null);
-           }
-           */
-           if (consoleCounter < 10000000) {
-               ////////console.log(consoleCounter++ + "  videoStream " + thisRequest.readStreamNumber + "  CB number " + thisRequest.CBNumber + "    reqStart: " + reqStart);
-               ////////console.log(consoleCounter++ + "  Multistream " + thisRequest.readStreamNumber + "   CB number " + thisRequest.CBNumber + "    reqEnd: " + reqEnd);
-           }
+   function checkIfBufferFullEnough(){
+      if(videoCompletelyLoaded){
+         return;
+      }
+      var timeRanges = document.querySelector('video').buffered;
+      inCritical = true;
+      for (var i = 0, length = timeRanges.length; i < length; i++) {
+         //////console.log("Time range number " + i + ": start(" + timeRanges.start(i) + ") end(" + timeRanges.end(i) + ")");
+         if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)) {
+            if (timeRanges.end(i) - myVideo.currentTime >= DOWNLOAD_FROM_SERVER_TIME_RANGE) {
+               inCritical = false;
+               //////console.log("I set inCritical to false");
+               }
+            }
+         }
+      if (deliveryByServer && inCritical) {
+         for (var j = 0, length = videostreamRequestHandlers.length; j < length; j++) {
+               if (videostreamRequestHandlers[j].currentCB !== null && videostreamRequestHandlers[j].XHRConducted === false) {
+                  conductXHR(videostreamRequestHandlers[j]);
+               }
+            }
+         }
+     setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
+   }
 
-           var XHRDataHandler = function (chunk) {
-               if(thisRequest.currentCB === null){
-                  thisRequest.oldStartServer += chunk.length;
-                  bytesReceivedFromServer += chunk.length;
-                  return;
-               }
-               ////////console.log("TypeOf chunk: " + typeof chunk);
-               if (consoleCounter < 1000000000) {
-                   ////////console.log(consoleCounter++, "BAM In XHRDataHandler from readStream ", thisRequest.readStreamNumber, "and thisRequestCBNumber", thisRequest.CBNumber);
-                   ////////console.log(consoleCounter++, "chunk.length: ", chunk.length);
-                   ////////console.log("thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
-                   ////////console.log("thisRequest.answerStream: " + thisRequest.answerStream);
-                   ////////console.log("thisRequest.start: " + thisRequest.start);
-               }
-               if (thisRequest.start - thisRequest.oldStartServer < chunk.length) {
-                   if (consoleCounter < 100000000) {
-                       /*
-                       ////console.log("add data to answerStream");
-                       ////console.log("chunk.length: " + chunk.length);
-                       ////console.log("thisRequest.start: " + thisRequest.start);
-                       ////console.log("thisRequest.oldStartServer: " + thisRequest.oldStartServer);
-                       ////console.log("thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
-                       ////console.log("length of slice: " + (chunk.slice(thisRequest.start - thisRequest.oldStartServer, chunk.length)).length);
-                       */
-                   }
-                   if (thisRequest.answerStream.push(chunk.slice(thisRequest.start - thisRequest.oldStartServer, chunk.length))) {
-                      // ////console.log("push returned true");
-                       thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
-                   } else {
-                      // ////console.log("push returned false");
-                       thisRequest.answerStream.push(null);
+   function conductXHR(thisRequest) {
+      if(thisRequest.currentCB === null){
+         return;
+      }
+      thisRequest.XHRConducted = true;
+      var reqStart = thisRequest.start;
+      var reqEnd = reqStart + XHR_REQUEST_SIZE;
 
-                       if (thisRequest.webTorrentStream) {
-                           thisRequest.webTorrentStream.pause();
-                       }
-                       thisRequest.bytesInAnswerStream = 0;
-                       var res = thisRequest.answerStream;
-                       thisRequest.answerStream = new MyReadableStream({highWaterMark: 50000000});
-                       var theCallbackFunction = thisRequest.currentCB;
-                       thisRequest.currentCB = null;
-                       //////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
-                       theCallbackFunction(null, res);
-                   }
-                   thisRequest.start += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
-               }
-               thisRequest.oldStartServer += chunk.length;
-               bytesReceivedFromServer += chunk.length;
-               if (consoleCounter < 10000000000) {
-                   ////////console.log("After putting in answerStream - thisRequest.start: " + thisRequest.start);
-                   ////////console.log("After putting in answerStream - thisRequest.oldStartServer: " + thisRequest.oldStartServer);
-                   ////////console.log("After putting in answerStream - thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
-               }
-           }
+      if (thisRequest.end >= 0 && reqEnd > thisRequest.end) {
+         reqEnd = thisRequest.end;
+      }
+      /* glaube ich unnötiger und/oder gefährlicher müll
+      if (reqStart >= reqEnd) {
+      req = null;
+      return thisRequest.currentCB(null, null);
+      }
+      */
+      if (consoleCounter < 10000000) {
+         ////////console.log(consoleCounter++ + "  videoStream " + thisRequest.readStreamNumber + "  CB number " + thisRequest.CBNumber + "    reqStart: " + reqStart);
+         ////////console.log(consoleCounter++ + "  Multistream " + thisRequest.readStreamNumber + "   CB number " + thisRequest.CBNumber + "    reqEnd: " + reqEnd);
+      }
 
-           var XHREnd = function () {
-               if (consoleCounter < 1000000000000) {
-                   ////////console.log("XHREnd from videostreamRequest number " + thisRequest.readStreamNumber);
+      var XHRDataHandler = function (chunk) {
+         if(thisRequest.currentCB === null){
+            thisRequest.oldStartServer += chunk.length;
+            bytesReceivedFromServer += chunk.length;
+            return;
+         }
+         ////////console.log("TypeOf chunk: " + typeof chunk);
+         if (consoleCounter < 1000000000) {
+            ////////console.log(consoleCounter++, "BAM In XHRDataHandler from readStream ", thisRequest.readStreamNumber, "and thisRequestCBNumber", thisRequest.CBNumber);
+            ////////console.log(consoleCounter++, "chunk.length: ", chunk.length);
+            ////////console.log("thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
+            ////////console.log("thisRequest.answerStream: " + thisRequest.answerStream);
+            ////////console.log("thisRequest.start: " + thisRequest.start);
+         }
+         if (thisRequest.start - thisRequest.oldStartServer < chunk.length) {
+            if (consoleCounter < 100000000) {
+               /*
+               ////console.log("add data to answerStream");
+               ////console.log("chunk.length: " + chunk.length);
+               ////console.log("thisRequest.start: " + thisRequest.start);
+               ////console.log("thisRequest.oldStartServer: " + thisRequest.oldStartServer);
+               ////console.log("thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
+               ////console.log("length of slice: " + (chunk.slice(thisRequest.start - thisRequest.oldStartServer, chunk.length)).length);
+               */
+            }
+            if (thisRequest.answerStream.push(chunk.slice(thisRequest.start - thisRequest.oldStartServer, chunk.length))) {
+               // ////console.log("push returned true");
+               thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
+            } else {
+               // ////console.log("push returned false");
+               thisRequest.answerStream.push(null);
+               if (thisRequest.webTorrentStream) {
+                  thisRequest.webTorrentStream.pause();
                }
-               thisRequest.XHRConducted = false;
-           }
+               thisRequest.bytesInAnswerStream = 0;
+               var res = thisRequest.answerStream;
+               thisRequest.answerStream = new MyReadableStream({highWaterMark: 50000000});
+               var theCallbackFunction = thisRequest.currentCB;
+               thisRequest.currentCB = null;
+               //////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
+               theCallbackFunction(null, res);
+            }
+            thisRequest.start += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
+         }
+            thisRequest.oldStartServer += chunk.length;
+            bytesReceivedFromServer += chunk.length;
+            if (consoleCounter < 10000000000) {
+               ////////console.log("After putting in answerStream - thisRequest.start: " + thisRequest.start);
+               ////////console.log("After putting in answerStream - thisRequest.oldStartServer: " + thisRequest.oldStartServer);
+               ////////console.log("After putting in answerStream - thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
+            }
+      }
 
-           thisRequest.oldStartServer = reqStart;
-           ////////console.log("At htto.get   reqStart: " + reqStart + "     reqEnd: " + reqEnd);
+      var XHREnd = function () {
+         if (consoleCounter < 1000000000000) {
+            ////////console.log("XHREnd from videostreamRequest number " + thisRequest.readStreamNumber);
+         }
+         thisRequest.XHRConducted = false;
+      }
 
-           req = http.get({
-               path: thisRequest.self.path,
-               hostname: 'localhost',
-               port: 8080,
-               headers: {
-                   range: 'bytes=' + 0 + '-' + SIZE_OF_VIDEO_FILE-1
-               }
-           }, function (res) {
-               ////////console.log("I return currentCB with http response stream");
-               //////////console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thisCBNumber);
-               res.on('end', XHREnd);
-               res.on('data', XHRDataHandler);
-           });
-       }
+      thisRequest.oldStartServer = reqStart;
+      ////////console.log("At htto.get   reqStart: " + reqStart + "     reqEnd: " + reqEnd);
+
+      req = http.get({
+            path: thisRequest.self.path,
+            hostname: 'localhost',
+            port: 8080,
+            headers: {
+               range: 'bytes=' + 0 + '-' + SIZE_OF_VIDEO_FILE-1
+            }
+        }, function (res) {
+            ////////console.log("I return currentCB with http response stream");
+            //////////console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thisCBNumber);
+            res.on('end', XHREnd);
+            res.on('data', XHRDataHandler);
+         });
+      }
    chokeIfNecessary();
    updateChart();
    frequentlyCeckIfAnswerStreamReady();
