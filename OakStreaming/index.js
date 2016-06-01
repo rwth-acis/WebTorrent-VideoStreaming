@@ -17,7 +17,7 @@ var WebTorrent = require('webtorrent');
  * Creates a new OakStreaming instance which has the methods streamVideo, loadVideo, addPeer and on.
  * @class
  */ 
- function OakStreaming(){
+function OakStreaming(){
    this.peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);
    this.knownPeers = [];
    
@@ -140,8 +140,8 @@ function loadVideo(streamInformationObject, callback){
          for(var i=0, length=videostreamRequestHandlers.length; i<length; i++){
             var thisRequest = videostreamRequestHandlers[i];
             if(thisRequest.currentCB !== null){
-               //////console.log("In onTorrent nachträglich webtorrent stream erzeugen  thisRequest.start: " + thisRequest.start);
-               //////console.log("In onTorrent  webTorrentFile.length: " + webTorrentFile.length);
+              console.log("In onTorrent nachträglich webtorrent stream erzeugen  thisRequest.start: " + thisRequest.start);
+              console.log("In onTorrent  webTorrentFile.length: " + webTorrentFile.length);
                thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : webTorrentFile.length-1});
                //thisRequest.webTorrentStream.pause();
                thisRequest.oldStartWebTorrent = thisRequest.start;
@@ -160,9 +160,9 @@ function loadVideo(streamInformationObject, callback){
          return (new MultiStream(function (cb){cb(null,null);}));
       }
       inCritical = true;
-      ////console.log(consoleCounter++ + " called createreadStream " + videostreamRequestNumber);
-      //////console.log(consoleCounter++ + " opts.start: " + opts.start);
-      //////console.log(consoleCounter++ + " opts.end: " + opts.end);
+      console.log(consoleCounter++ + " called createreadStream ");
+      console.log(consoleCounter++ + " opts.start: " + opts.start);
+      console.log(consoleCounter++ + " opts.end: " + opts.end);
       var end;
       if(opts.end && !isNaN(opts.end)){
          end = SIZE_OF_VIDEO_FILE;
@@ -206,8 +206,8 @@ function loadVideo(streamInformationObject, callback){
       if(theTorrent && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
          if(webTorrentFile){
             //////console.log("after new videostreamRequest creating a corresponding webtorrent stream");
-            //console.log("opts.start: " + opts.start);
-            //console.log("webTorrentFile.length: " + webTorrentFile.length);
+            console.log("opts.start: " + opts.start);
+            console.log("webTorrentFile.length: " + webTorrentFile.length);
             var webTorrentStream = webTorrentFile.createReadStream({"start" : opts.start, "end" : webTorrentFile.length-1});
             //webTorrentStream.pause();
             thisRequest.webTorrentStream = webTorrentStream;
@@ -241,6 +241,8 @@ function loadVideo(streamInformationObject, callback){
             thisRequest.webTorrentStream.resume();
          } else if(webTorrentFile){
             //////console.log("New cb function was called and I subsequently create a new torrentStream for it because non existed before for this videostreamRequest");
+            console.log("After new Multistream. thisRequest.start: " + thisRequest.start);
+            console.log("webTorrentFile.length: " + webTorrentFile.length);
             thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : webTorrentFile.length-1});
             //thisRequest.webTorrentStream.pause();
             thisRequest.oldStartWebTorrent = thisRequest.start;
@@ -287,8 +289,8 @@ function loadVideo(streamInformationObject, callback){
 
        function chokeIfNecessary() {
            if (theTorrent && theTorrent.uploaded >= theTorrent.downloaded * UPLOAD_LIMIT + ADDITION_TO_UPLOAD_LIMIT) {
-               for (var i = 0, length = wires.length; i < length; i++) {
-                   ////console.log("I choked a peer");
+               for (var i = 0, length = wires.length; i < length; i++){
+                   console.log("I choked a peer");
                    wires[i].choke();
                }
                if(theTorrent.progress >= 1){
@@ -364,6 +366,9 @@ function loadVideo(streamInformationObject, callback){
        }
 
        function conductXHR(thisRequest) {
+          if(thisRequest.currentCB === null){
+             return;
+          }
            thisRequest.XHRConducted = true;
            var reqStart = thisRequest.start;
            var reqEnd = reqStart + XHR_REQUEST_SIZE;
@@ -371,16 +376,23 @@ function loadVideo(streamInformationObject, callback){
            if (thisRequest.end >= 0 && reqEnd > thisRequest.end) {
                reqEnd = thisRequest.end;
            }
+           /* glaube ich unnötiger und/oder gefährlicher müll
            if (reqStart >= reqEnd) {
                req = null;
                return thisRequest.currentCB(null, null);
            }
+           */
            if (consoleCounter < 10000000) {
                ////////console.log(consoleCounter++ + "  videoStream " + thisRequest.readStreamNumber + "  CB number " + thisRequest.CBNumber + "    reqStart: " + reqStart);
                ////////console.log(consoleCounter++ + "  Multistream " + thisRequest.readStreamNumber + "   CB number " + thisRequest.CBNumber + "    reqEnd: " + reqEnd);
            }
 
            var XHRDataHandler = function (chunk) {
+               if(thisRequest.currentCB === null){
+                  thisRequest.oldStartServer += chunk.length;
+                  bytesReceivedFromServer += chunk.length;
+                  return;
+               }
                ////////console.log("TypeOf chunk: " + typeof chunk);
                if (consoleCounter < 1000000000) {
                    ////////console.log(consoleCounter++, "BAM In XHRDataHandler from readStream ", thisRequest.readStreamNumber, "and thisRequestCBNumber", thisRequest.CBNumber);
