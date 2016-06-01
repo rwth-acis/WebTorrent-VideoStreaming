@@ -115,6 +115,8 @@ function loadVideo(streamInformationObject, callback){
    var videoCompletelyLoaded = false;
    var endStreaming = false;
    var webTorrentClient = null;
+   var bytesTakenFromWebTorrent = 0;
+   var bytesTakenFromServer = 0;
    
 
    function MyReadableStream(options){
@@ -170,14 +172,15 @@ function loadVideo(streamInformationObject, callback){
          end = SIZE_OF_VIDEO_FILE;
       }
       var thisRequest = new VideostreamRequestHandler(++globalvideostreamRequestNumber, opts, end, this);
-      var MyWriteableStream = function(){
-         readableStream.Writable.call(this);
+      var MyWriteableStream = function(highWaterMark){
+         readableStream.Writable.call(this, highWaterMark);
       };
       util.inherits(MyWriteableStream, readableStream.Writable);
       MyWriteableStream.prototype._write = function(chunk, encoding, done){
          ////console.log("MyWriteableStream _write is called");
          if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
             //////console.log("MyWriteableStream _write: pushing received data in answerStream")
+            bytesTakenFromWebTorrent += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
             if(thisRequest.answerStream.push(chunk.slice(thisRequest.start-thisRequest.oldStartWebTorrent, chunk.length))){
                thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
             } else {
@@ -200,7 +203,7 @@ function loadVideo(streamInformationObject, callback){
          //ceckIfAnswerStreamReady(thisRequest);
          done();
       };
-      thisRequest.collectorStreamForWebtorrent = new MyWriteableStream();
+      thisRequest.collectorStreamForWebtorrent = new MyWriteableStream({highWaterMark: 50000000});
       videostreamRequestHandlers.push(thisRequest);
 
       if(webTorrentFile && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
@@ -287,7 +290,7 @@ function loadVideo(streamInformationObject, callback){
          return;
       }
       if (theTorrent) {
-         document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer;
+         document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer + "\n Bytes taken from server delivery: " + bytesTakenFromServer + "\n Bytes taken from WebTorrent delivery: " + bytesTakenFromWebTorrent;
       }
       setTimeout(updateChart, UPDATE_CHART_INTERVAL);
    }
@@ -307,6 +310,8 @@ function loadVideo(streamInformationObject, callback){
       this.XHRConducted = false;
       this.end = end;
       this.self = self;
+      this.bytesTakenFromWebTorrent = 0;
+      this.bytesTakenFromServer = 0;
    }
 
    function frequentlyCeckIfAnswerStreamReady() {
@@ -391,6 +396,7 @@ function loadVideo(streamInformationObject, callback){
                ////console.log("length of slice: " + (chunk.slice(thisRequest.start - thisRequest.oldStartServer, chunk.length)).length);
                */
             }
+            bytesTakenFromServer += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
             if (thisRequest.answerStream.push(chunk.slice(thisRequest.start - thisRequest.oldStartServer, chunk.length))) {
                // ////console.log("push returned true");
                thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
