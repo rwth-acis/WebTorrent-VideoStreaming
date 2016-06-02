@@ -186,6 +186,11 @@ function loadVideo(streamInformationObject, callback){
             } else {
                if(thisRequest.currentCB === null){
                   thisRequest.webTorrentStream.pause();
+                  thisRequest.noMoreData = true;
+                  thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
+                  thisRequest.oldStartWebTorrent += chunk.length;
+                  done();
+                  return;
                }
                thisRequest.answerStream.push(null);
 
@@ -226,20 +231,23 @@ function loadVideo(streamInformationObject, callback){
             //////console.log(consoleCounter++ + "    start: " + thisRequest.start);
          }
          thisRequest.currentCB = cb;
+         thisRequest.noMoreData = false;
+         
+         if(!ceckIfAnswerStreamReady(thisRequest)){
+            if(thisRequest.webTorrentStream){
+               thisRequest.webTorrentStream.resume();
+            } else if(webTorrentFile){
+               //////console.log("New cb function was called and I subsequently create a new torrentStream for it because non existed before for this videostreamRequest");
+               console.log("After new Multistream. thisRequest.start: " + thisRequest.start);
+               console.log("webTorrentFile.length: " + webTorrentFile.length);
+               thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : webTorrentFile.length-1});
+               thisRequest.oldStartWebTorrent = thisRequest.start;
+               thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
+            }
 
-         if(thisRequest.webTorrentStream){
-            thisRequest.webTorrentStream.resume();
-         } else if(webTorrentFile){
-            //////console.log("New cb function was called and I subsequently create a new torrentStream for it because non existed before for this videostreamRequest");
-            console.log("After new Multistream. thisRequest.start: " + thisRequest.start);
-            console.log("webTorrentFile.length: " + webTorrentFile.length);
-            thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : webTorrentFile.length-1});
-            thisRequest.oldStartWebTorrent = thisRequest.start;
-            thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
-         }
-
-         if(deliveryByServer && inCritical && !thisRequest.XHRConducted){
-            conductXHR(thisRequest);
+            if(deliveryByServer && inCritical && !thisRequest.XHRConducted){
+               conductXHR(thisRequest);
+            }
          }
       });
       //////console.log(consoleCounter++ + " terminate createReadStream");
@@ -269,7 +277,9 @@ function loadVideo(streamInformationObject, callback){
                callback();
             };
          }
+         return true;
       }
+      return false;
    }
 
    function chokeIfNecessary(){
@@ -407,6 +417,7 @@ function loadVideo(streamInformationObject, callback){
             } else {
                if(thisRequest.currentCB === null){
                   thisRequest.noMoreData = true;
+                  thisRequest.webTorrentStream.pause();
                   thisRequest.oldStartServer += chunk.length;
                   bytesReceivedFromServer += chunk.length;
                   return;
