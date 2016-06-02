@@ -268,12 +268,6 @@ function loadVideo(streamInformationObject, callback){
          thisRequest.currentCB = null;
          //////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
          theCallbackFunction(null, res);
-         if(thisRequest.start >= SIZE_OF_VIDEO_FILE){
-            videoCompletelyLoaded = true;
-            if(callback){
-               callback();
-            };
-         }
          return true;
       }
       return false;
@@ -340,6 +334,12 @@ function loadVideo(streamInformationObject, callback){
          return;
       }
       var timeRanges = document.querySelector('video').buffered;
+      if((timeRanges.start(i) <= 0 && timeRanges.end(i) >= SIZE_OF_VIDEO_FILE-1) || (theTorrent && theTorrent.progress >= 1)){
+         videoCompletelyLoaded = true;
+         if(callback){
+            callback();
+         }
+      }
       inCritical = true;
       for (var i = 0, length = timeRanges.length; i < length; i++) {
          //////console.log("Time range number " + i + ": start(" + timeRanges.start(i) + ") end(" + timeRanges.end(i) + ")");
