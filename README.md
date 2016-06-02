@@ -18,7 +18,7 @@ Peer-assisted delivery denotes a hybrid between peer-to-peer and server delivery
 ## Usage of the exemplary Web application
 1. Open the Web application in several browser tabs.
 2. Choose via the *Choose File* button a video file, e.g. the *example.mp4* file in the project folder, that should be streamed to all browser tabs that currently visit the same URL.<br />
-When the video file (identical content and file name) also lays in the *build* folder, the video will be streamed via peer-assisted delivery. Otherwise, the video will be streamed purely peer-to-perr.
+When the video file (identical content and file name) also lays in the *build* folder, the video will be streamed via peer-assisted delivery. Otherwise, the video will be streamed purely peer-to-peer.
 
 
 ## Addional information

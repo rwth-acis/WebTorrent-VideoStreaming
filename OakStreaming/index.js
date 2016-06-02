@@ -11,8 +11,8 @@ var WebTorrent = require('webtorrent');
  */
 
 module.exports = OakStreaming;
- 
- 
+
+
  /**
  * Creates a new OakStreaming instance which has the methods streamVideo, loadVideo, addPeer and on.
  * @constructor
