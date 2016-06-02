@@ -41,7 +41,7 @@ Y({
 });
 
 window.handleFiles = function(files){
-   streamSource = true;
+   streamSource = true;+
    myStreaming.streamVideo(files[0], {XHRPath : "/" + files[0].name}, function(streamInformationObject){
       console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
       theSharedMap.set("streamInformationObject", streamInformationObject);

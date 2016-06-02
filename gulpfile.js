@@ -11,8 +11,6 @@ var assign = require('lodash.assign');
 var uglify = require('gulp-uglify');
 var htmlmin = require('gulp-htmlmin');
 var connect = require('gulp-connect');
-//var jasmine = require('gulp-jasmine');
-//var reporters = require('jasmine-reporters');
 var jasmineBrowser = require('gulp-jasmine-browser');
 var cors = require('cors');
 
@@ -25,11 +23,11 @@ gulp.task('html', function (){
 
 // add custom browserify options here
 var customOpts = {
-  entries: ['./index.js'],
+  entries: ['./test_app.js'],
   debug: true
 };
 var customOpts2 = {
-  entries: ['./test-help.js'],
+  entries: ['./Jasmine_testsuites_help.js'],
   debug: true
 };
 var opts = assign({}, watchify.args, customOpts);
@@ -50,15 +48,15 @@ b2.on('log', gutil.log);
 function bundle2(){
   return b2.bundle()
     .on('error', gutil.log.bind(gutil, 'Browserify Error'))
-    .pipe(source('./test-help.js'))
-    .pipe(gulp.dest('./testsuites-build/'));
+    .pipe(source('./Jasmine_testsuites_help.js'))
+    .pipe(gulp.dest('./Jasmine_testsuites_build/'));
 }
 
 function bundle() {
   return b.bundle()
     // log errors if they happen
     .on('error', gutil.log.bind(gutil, 'Browserify Error'))
-    .pipe(source('index.js'))
+    .pipe(source('test_app.js'))
     // optional, remove if you don't need to buffer file contents
     //.pipe(buffer())
     // optional, remove if you dont want sourcemaps
@@ -125,7 +123,7 @@ gulp.src('./testsuites-build/test-suites.js')
 */
 
 gulp.task('tests', ['browserify2'], function() {
-  return gulp.src(['./testsuites-build/test-help.js', './test-suites.js'])
+  return gulp.src(['./Jasmine_testsuites_build/Jasmine_testsuites_help.js', './Jasmine_testsuites.js'])
     .pipe(jasmineBrowser.specRunner())
     .pipe(jasmineBrowser.server({port: 8888}));
 });
@@ -133,8 +131,8 @@ gulp.task('tests', ['browserify2'], function() {
 //Watch Task
 // Watches JS
 gulp.task('watch', ['tests', 'connect'], function(){
-   gulp.watch('./index.js', ['browserify']);
-   gulp.watch('./test-suites.js', ['browserify2', 'tests']);
+   gulp.watch('./test_app.js', ['browserify']);
+   gulp.watch('./Jasmine_testsuites.js', ['browserify2', 'tests']);
   // gulp.watch('./index.html', ['minify_index.html']);
 });
 

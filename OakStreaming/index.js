@@ -3,14 +3,14 @@ var MultiStream = require('multistream');
 var util = require('util');
 var Readable = require('stream').Readable;
 var readableStream = require('readable-stream');
-var videostream = require('../videostream.js');
+var Videostream = require('videostream');
 var WebTorrent = require('webtorrent');
 
  /**
  * @module OakStreaming
  */
 
- module.exports = OakStreaming;
+module.exports = OakStreaming;
  
  
  /**
@@ -469,7 +469,7 @@ function loadVideo(streamInformationObject, callback){
       console.error(video.error);
    });
    ////console.log("I call Videostream constructor");
-   videostream(new file(PATH_TO_VIDEO_FILE), video);
+   Videostream(new file(PATH_TO_VIDEO_FILE), video);
 };
 
 

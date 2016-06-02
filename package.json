@@ -25,6 +25,7 @@
     "steam": "^1.4.0",
     "stream": "0.0.2",
     "util": "^0.10.3",
+    "videostream": "^2.3.0",
     "webtorrent": "^0.91.4",
     "y-array": "^9.0.3",
     "y-map": "^9.0.3",
