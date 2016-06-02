@@ -1,8 +1,6 @@
 .DS_Store
-build/
 sintel.mp4
-browserified/
-.idea/
-test-results/
+Jasmine_testsuites_build/
 node_modules/
-testsuites-build/
+build/index.html
+build.example_application.js

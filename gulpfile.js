@@ -12,6 +12,7 @@ var uglify = require('gulp-uglify');
 var htmlmin = require('gulp-htmlmin');
 var connect = require('gulp-connect');
 var jasmineBrowser = require('gulp-jasmine-browser');
+var rename = require("gulp-rename");
 var cors = require('cors');
 
 /*
@@ -23,7 +24,7 @@ gulp.task('html', function (){
 
 // add custom browserify options here
 var customOpts = {
-  entries: ['./test_app.js'],
+  entries: ['./example_application.js'],
   debug: true
 };
 var customOpts2 = {
@@ -56,7 +57,8 @@ function bundle() {
   return b.bundle()
     // log errors if they happen
     .on('error', gutil.log.bind(gutil, 'Browserify Error'))
-    .pipe(source('test_app.js'))
+    .pipe(source('example_application.js'))
+    //.pipe(rename("example_application_temp.js")) own work
     // optional, remove if you don't need to buffer file contents
     //.pipe(buffer())
     // optional, remove if you dont want sourcemaps
@@ -72,28 +74,27 @@ function errorLog(error){
    this.emit('end');
 }
 
-/* Commented out for debugging
+/* Takes to long for developement. Therefore commented out till deployment. Didn't work when commented out.
 // Uglifies output of browserify
-gulp.task('uglify_bundle', function(){
-   return gulp.src('./browserfied/index.js')
+gulp.task('uglify_example_app.js', ['browserify2'], function(){
+   return gulp.src('./build/example_application_temp.js')
    .pipe(uglify())
    //.on('error', errorLog)
-   .pipe(gulp.dest('./build'));
+   .pipe(rename("example_application.js"))
+   .pipe(gulp.dest('./build/'));
    console.log("Uglified bundle");
 });
 */
 
-
-/* Commented out for debugging
 // Uglifies index.html
-gulp.task('minify_index.html', function(){
-   gulp.src('./index.html')
+gulp.task('minify_example_app.html', ['browserify2'], function(){
+   gulp.src('./example_application.html')
    .pipe(htmlmin({collapseWhitespace: true}))
    .on('error', errorLog)
-   .pipe(gulp.dest('./build'));
-   console.log("uglified index.html");
+   .pipe(rename("index.html"))
+   .pipe(gulp.dest('./build/'));
+   console.log("uglified example_application.html");
 });
-*/
 
 
 //start web server
@@ -131,10 +132,11 @@ gulp.task('tests', ['browserify2'], function() {
 //Watch Task
 // Watches JS
 gulp.task('watch', ['tests', 'connect'], function(){
-   gulp.watch('./test_app.js', ['browserify']);
+   gulp.watch('./example_application.js', ['browserify']);
    gulp.watch('./Jasmine_testsuites.js', ['browserify2', 'tests']);
+   gulp.watch('./index.html', ['minify_example_app.html']);
   // gulp.watch('./index.html', ['minify_index.html']);
 });
 
 
-gulp.task('default', ['browserify', 'connect', 'browserify2', 'tests', 'watch']);
+gulp.task('default', ['browserify', 'connect', 'browserify2', 'minify_example_app.html', 'tests', 'watch']);
