@@ -34,14 +34,14 @@ Y({
       console.log(event);
       if(!streamSource){
          console.log("Video gets loaded");
-         myStreaming.loadVideo(theSharedMap.getPrimitive("streamInformationObject"));
+         myStreaming.loadVideo(theSharedMap.getPrimitive("streamInformationObject", function(){console.log("All video data has been received")}));
          console.log("After myStreaming.loadVideo(..) in myMap.observe(..)");
       }
   });
 });
 
 window.handleFiles = function(files){
-   streamSource = true;+
+   streamSource = true;
    myStreaming.streamVideo(files[0], {XHRPath : "/" + files[0].name}, function(streamInformationObject){
       console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
       theSharedMap.set("streamInformationObject", streamInformationObject);
