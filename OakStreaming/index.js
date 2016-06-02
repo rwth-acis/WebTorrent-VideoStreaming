@@ -81,7 +81,7 @@ function streamVideo(videoFile, options, callback, destroyTorrent){
  * @param {OakStreaming~loadedVideoFinished} callback - This callback gets called when the video has been loaded entirely into the buffer of the video player.
  */
 function loadVideo(streamInformationObject, callback){
-   console.log("tree");
+   console.log("apple");
    ////console.log("I entered this.loadVideo");
    ////console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
    var deliveryByServer = streamInformationObject.XHRPath ? true : false;
@@ -184,6 +184,9 @@ function loadVideo(streamInformationObject, callback){
             if(thisRequest.answerStream.push(chunk.slice(thisRequest.start-thisRequest.oldStartWebTorrent, chunk.length))){
                thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
             } else {
+               if(thisRequest.currentCB === null){
+                  thisRequest.webTorrentStream.pause();
+               }
                thisRequest.answerStream.push(null);
 
                if (thisRequest.webTorrentStream) {
@@ -269,7 +272,7 @@ function loadVideo(streamInformationObject, callback){
       }
    }
 
-   function chokeIfNecessary() {
+   function chokeIfNecessary(){
       if (theTorrent && theTorrent.uploaded >= theTorrent.downloaded * UPLOAD_LIMIT + ADDITION_TO_UPLOAD_LIMIT) {
          for (var i = 0, length = wires.length; i < length; i++){
             console.log("I choked a peer");
@@ -285,7 +288,7 @@ function loadVideo(streamInformationObject, callback){
       setTimeout(chokeIfNecessary, CHOKE_IF_NECESSARY_INTERVAL);
    }
 
-   function updateChart() {
+   function updateChart(){
       if(endStreaming){
          return;
       }
@@ -312,6 +315,7 @@ function loadVideo(streamInformationObject, callback){
       this.self = self;
       this.bytesTakenFromWebTorrent = 0;
       this.bytesTakenFromServer = 0;
+      this.noMoreData = false;
    }
 
    function frequentlyCeckIfAnswerStreamReady() {
@@ -372,7 +376,7 @@ function loadVideo(streamInformationObject, callback){
       }
 
       var XHRDataHandler = function (chunk) {
-         if(thisRequest.currentCB === null){
+         if(thisRequest.noMoreData){
             thisRequest.oldStartServer += chunk.length;
             bytesReceivedFromServer += chunk.length;
             return;
@@ -401,6 +405,12 @@ function loadVideo(streamInformationObject, callback){
                // ////console.log("push returned true");
                thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
             } else {
+               if(thisRequest.currentCB === null){
+                  thisRequest.noMoreData = true;
+                  thisRequest.oldStartServer += chunk.length;
+                  bytesReceivedFromServer += chunk.length;
+                  return;
+               }
                // ////console.log("push returned false");
                thisRequest.answerStream.push(null);
                if (thisRequest.webTorrentStream) {
