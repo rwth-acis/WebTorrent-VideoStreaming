@@ -145,10 +145,8 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
                console.log("In onTorrent nachträglich webtorrent stream erzeugen  thisRequest.start: " + thisRequest.start);
                console.log("In onTorrent  webTorrentFile.length: " + webTorrentFile.length);
                thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : webTorrentFile.length-1});
-               //thisRequest.webTorrentStream.pause();
                thisRequest.oldStartWebTorrent = thisRequest.start;
                thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
-               //thisRequest.webTorrentStream.resume();
             }
          }
       });
@@ -185,7 +183,9 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
                thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
             } else {
                if(thisRequest.currentCB === null){
-                  thisRequest.webTorrentStream.pause();
+                  if(thisRequest.webTorrentStream){
+                     thisRequest.webTorrentStream.pause();
+                  }
                   thisRequest.noMoreData = true;
                   thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
                   thisRequest.oldStartWebTorrent += chunk.length;
@@ -421,7 +421,9 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             } else {
                if(thisRequest.currentCB === null){
                   thisRequest.noMoreData = true;
-                  thisRequest.webTorrentStream.pause();
+                  if(thisRequest.webTorrentStream){
+                     thisRequest.webTorrentStream.pause();
+                  }
                   thisRequest.start += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
                   thisRequest.oldStartServer += chunk.length;
                   bytesReceivedFromServer += chunk.length;
