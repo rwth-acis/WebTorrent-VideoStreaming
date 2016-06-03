@@ -88,6 +88,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var deliveryByServer = streamInformationObject.XHRPath ? true : false;
    var deliveryByWebtorrent = streamInformationObject.magnetURI ? true : false;
    var MAGNET_URI = streamInformationObject.magnetURI;
+   console.log("streamInformationObject.XHRPath: " + streamInformationObject.XHRPath);
    var PATH_TO_VIDEO_FILE = streamInformationObject.XHRPath;
    var SIZE_OF_VIDEO_FILE = streamInformationObject.videoFileSize;
    
@@ -477,7 +478,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             hostname: 'localhost',
             port: 8080,
             headers: {
-               range: 'bytes=' + 0 + '-' + SIZE_OF_VIDEO_FILE-1
+               range: 'bytes=' + reqStart + '-' + (reqEnd-1)
             }
         }, function (res) {
             ////////console.log("I return currentCB with http response stream");
