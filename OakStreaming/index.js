@@ -81,7 +81,7 @@ function streamVideo(videoFile, options, callback, destroyTorrent){
  * @param {OakStreaming~loadedVideoFinished} callback - This callback gets called when the video has been loaded entirely into the buffer of the video player.
  */
 function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
-   console.log("bear");
+   console.log("leopard");
    
    ////console.log("I entered this.loadVideo");
    ////console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
@@ -96,8 +96,8 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var DOWNLOAD_FROM_SERVER_TIME_RANGE = streamInformationObject.downloadFromServerTimeRange || 5; // in seconds
    var UPLOAD_LIMIT = streamInformationObject.uploadLimit || 2; // multiplied by number of downloaded bytes
    var ADDITION_TO_UPLOAD_LIMIT = streamInformationObject.additionToUploadLimit || 5000; // amount of byte added to upload limit
-   var XHR_REQUEST_SIZE = streamInformationObject.xhrRequestSize || 20000; // in byte
-   var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = streamInformationObject.thresholdForReturningAnswerStream || 100000; // in byte
+   var XHR_REQUEST_SIZE = streamInformationObject.xhrRequestSize || 50000; // in byte
+   var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = streamInformationObject.thresholdForReturningAnswerStream || 50000; // in byte
 
    var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = streamInformationObject.checkIfBufferFullEnoughInterval || 300; // in miliseconds
    var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = streamInformationObject.checkIfAnswerstreamReadyInterval || 200; // in miliseconds
@@ -127,6 +127,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    util.inherits(MyReadableStream, readableStream.Readable);
    MyReadableStream.prototype._read = function(size){};
    
+   /*
    if(deliveryByWebtorrent){
       webTorrentClient = new WebTorrent();
       webTorrentClient.add(MAGNET_URI, function (torrent){
@@ -153,7 +154,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          }
       });
    }
-   
+   */
    var file = function (path) {
       this.path = path;
    }
@@ -215,8 +216,8 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
 
       if(webTorrentFile && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
          //////console.log("after new videostreamRequest creating a corresponding webtorrent stream");
-         console.log("opts.start: " + opts.start);
-         console.log("webTorrentFile.length: " + webTorrentFile.length);
+         //console.log("opts.start: " + opts.start);
+         //console.log("webTorrentFile.length: " + webTorrentFile.length);
          var webTorrentStream = webTorrentFile.createReadStream({"start" : opts.start, "end" : webTorrentFile.length-1});
          thisRequest.webTorrentStream = webTorrentStream;
          thisRequest.oldStartWebTorrent = opts.start;
@@ -224,6 +225,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       }
 
       var multi = new MultiStream(function (cb){
+         console.log("ReadableStream request number " +thisRequest.readStreamNumber + "    does a cb request");
          thisRequest.CBNumber++;
          if(consoleCounter<20){
             ////console.log(consoleCounter++ + "    " + thisRequest.CBNumber + ". call of function(cb) from " + videostreamRequestNumber);
@@ -232,13 +234,17 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          thisRequest.currentCB = cb;
          thisRequest.noMoreData = false;
          
+         if (thisRequest.start >= SIZE_OF_VIDEO_FILE) {
+            return cb(null, null);
+         }
+      
          if(!ceckIfAnswerStreamReady(thisRequest)){
             if(thisRequest.webTorrentStream){
                thisRequest.webTorrentStream.resume();
             } else if(webTorrentFile){
                //////console.log("New cb function was called and I subsequently create a new torrentStream for it because non existed before for this videostreamRequest");
-               console.log("After new Multistream. thisRequest.start: " + thisRequest.start);
-               console.log("webTorrentFile.length: " + webTorrentFile.length);
+               //console.log("After new Multistream. thisRequest.start: " + thisRequest.start);
+               //console.log("webTorrentFile.length: " + webTorrentFile.length);
                thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : webTorrentFile.length-1});
                thisRequest.oldStartWebTorrent = thisRequest.start;
                thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
@@ -393,6 +399,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       }
 
       var XHRDataHandler = function (chunk) {
+         console.log("ReadableStream request number " + thisRequest.readStreamNumber + " received a chunk of length " + chunk.length);
          if(thisRequest.noMoreData){
             thisRequest.oldStartServer += chunk.length;
             bytesReceivedFromServer += chunk.length;
@@ -453,7 +460,8 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          }
       }
 
-      var XHREnd = function () {
+      var XHREnd = function (){
+          console.log("ReadableStream request number " + thisRequest.readStreamNumber + " XHREnd");
          if (consoleCounter < 1000000000000){
             ////////console.log("XHREnd from videostreamRequest number " + thisRequest.readStreamNumber);
          }
