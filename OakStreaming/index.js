@@ -80,8 +80,8 @@ function streamVideo(videoFile, options, callback, destroyTorrent){
  * @param {StreamInformationObject} streamInformationObject - This object contains all data that is needed to initiate loading the video from other peers and/or a Web server. StreamInformationObjects can be created by the {@link streamVideo|streamVideo} method.
  * @param {OakStreaming~loadedVideoFinished} callback - This callback gets called when the video has been loaded entirely into the buffer of the video player.
  */
-function loadVideo(streamInformationObject, callback){
-   console.log("apple");
+function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
+   console.log("elefant");
    ////console.log("I entered this.loadVideo");
    ////console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
    var deliveryByServer = streamInformationObject.XHRPath ? true : false;
@@ -275,15 +275,15 @@ function loadVideo(streamInformationObject, callback){
 
    function chokeIfNecessary(){
       if (theTorrent && theTorrent.uploaded >= theTorrent.downloaded * UPLOAD_LIMIT + ADDITION_TO_UPLOAD_LIMIT) {
-         for (var i = 0, length = wires.length; i < length; i++){
-            console.log("I choked a peer");
-            wires[i].choke();
-         }
-         if(theTorrent.progress >= 1){
+         if(videoCompletelyLoaded){
             theTorrent.destroy();
             delete webTorrentClient;
             endStreaming = true;
             return;
+         }
+         for (var i = 0, length = wires.length; i < length; i++){
+            console.log("I choked a peer");
+            wires[i].choke();
          }
       }
       setTimeout(chokeIfNecessary, CHOKE_IF_NECESSARY_INTERVAL);
@@ -334,10 +334,18 @@ function loadVideo(streamInformationObject, callback){
          return;
       }
       var timeRanges = document.querySelector('video').buffered;
-      if((timeRanges.start(i) <= 0 && timeRanges.end(i) >= SIZE_OF_VIDEO_FILE-1) || (theTorrent && theTorrent.progress >= 1)){
-         videoCompletelyLoaded = true;
-         if(callback){
-            callback();
+      if(TimeRanges.length >= 1){
+         if(timeRanges.start(0) <= 0 && timeRanges.end(0) >= SIZE_OF_VIDEO_FILE-1){
+            videoCompletelyLoaded = true;
+            if(callback){
+               callback();                 
+            }
+            if(endIfVideoLoaded){
+               theTorrent.destroy();
+               delete webTorrentClient;
+               endStreaming = true;
+               return;                  
+            } 
          }
       }
       inCritical = true;
@@ -347,17 +355,17 @@ function loadVideo(streamInformationObject, callback){
             if (timeRanges.end(i) - myVideo.currentTime >= DOWNLOAD_FROM_SERVER_TIME_RANGE) {
                inCritical = false;
                //////console.log("I set inCritical to false");
-               }
             }
          }
+      }
       if (deliveryByServer && inCritical) {
          for (var j = 0, length = videostreamRequestHandlers.length; j < length; j++) {
-               if (videostreamRequestHandlers[j].currentCB !== null && videostreamRequestHandlers[j].XHRConducted === false) {
-                  conductXHR(videostreamRequestHandlers[j]);
-               }
+            if (videostreamRequestHandlers[j].currentCB !== null && videostreamRequestHandlers[j].XHRConducted === false) {
+               conductXHR(videostreamRequestHandlers[j]);
             }
          }
-     setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
+      }
+      setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
    }
 
    function conductXHR(thisRequest) {
@@ -415,6 +423,7 @@ function loadVideo(streamInformationObject, callback){
                if(thisRequest.currentCB === null){
                   thisRequest.noMoreData = true;
                   thisRequest.webTorrentStream.pause();
+                  thisRequest.start += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
                   thisRequest.oldStartServer += chunk.length;
                   bytesReceivedFromServer += chunk.length;
                   return;
@@ -444,7 +453,6 @@ function loadVideo(streamInformationObject, callback){
          if (consoleCounter < 1000000000000){
             ////////console.log("XHREnd from videostreamRequest number " + thisRequest.readStreamNumber);
          }
-         thisRequest.XHRConducted = false;
          thisRequest.answerStream.push(null);
          thisRequest.bytesInAnswerStream = 0;
          var res = thisRequest.answerStream;
@@ -452,9 +460,10 @@ function loadVideo(streamInformationObject, callback){
          var theCallbackFunction = thisRequest.currentCB;
          thisRequest.currentCB = null;
          //////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
+         thisRequest.XHRConducted = false;
          theCallbackFunction(null, res);
       }
-
+      
       thisRequest.oldStartServer = reqStart;
       ////////console.log("At htto.get   reqStart: " + reqStart + "     reqEnd: " + reqEnd);
 

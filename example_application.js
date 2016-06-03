@@ -34,7 +34,7 @@ Y({
       console.log(event);
       if(!streamSource){
          console.log("Video gets loaded");
-         myStreaming.loadVideo(theSharedMap.getPrimitive("streamInformationObject", function(){console.log("All video data has been received")}));
+         myStreaming.loadVideo(theSharedMap.getPrimitive("streamInformationObject"), function(){console.log("All video data has been received");});
          console.log("After myStreaming.loadVideo(..) in myMap.observe(..)");
       }
   });
