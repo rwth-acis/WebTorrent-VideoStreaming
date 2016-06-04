@@ -175,39 +175,51 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       }
       var thisRequest = new VideostreamRequestHandler(++globalvideostreamRequestNumber, opts, end, this);
       var MyWriteableStream = function(highWaterMark){
-         readableStream.Writable.call(this, highWaterMark);
+         readableStream.Writable.call(this, highWaterMark);    
       };
       util.inherits(MyWriteableStream, readableStream.Writable);
       MyWriteableStream.prototype._write = function(chunk, encoding, done){
          ////console.log("MyWriteableStream _write is called");
+         thisRequest.oldStartWebTorrent += chunk.length;
+         
          if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
             //////console.log("MyWriteableStream _write: pushing received data in answerStream")
             bytesTakenFromWebTorrent += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
-            if(thisRequest.answerStream.push(chunk.slice(thisRequest.start-thisRequest.oldStartWebTorrent, chunk.length))){
-               thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
+            thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
+            var streamHasMemoryLeft = thisRequest.answerStream.push(chunk.slice(thisRequest.start-thisRequest.oldStartWebTorrent, chunk.length));
+            thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
+            
+            if(streamHasMemoryLeft){            
+               if(thisRequest.currentCB !== null && thisRequest.start >= SIZE_OF_VIDEO_FILE){
+                  var theCallbackFunction = thisRequest.currentCB;
+                  thisRequest.currentCB = null;
+                  thisRequest.answerStream.push(null);
+                  thisRequest.bytesInAnswerStream = 0;
+                  var res = thisRequest.answerStream;
+                  thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
+                  //////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
+                  theCallbackFunction(null, res);
+               }
             } else {
                if(thisRequest.currentCB === null){
                   if(thisRequest.webTorrentStream){
                      thisRequest.webTorrentStream.pause();
                   }
                   thisRequest.noMoreData = true;
-                  thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
-                  thisRequest.oldStartWebTorrent += chunk.length;
                   done();
                   return;
+               } else {
+                  var theCallbackFunction = thisRequest.currentCB;
+                  thisRequest.currentCB = null;
+                  thisRequest.answerStream.push(null);
+                  thisRequest.bytesInAnswerStream = 0;
+                  var res = thisRequest.answerStream;
+                  thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
+                  //////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
+                  theCallbackFunction(null, res);
                }
-               thisRequest.answerStream.push(null);
-               thisRequest.bytesInAnswerStream = 0;
-               var res = thisRequest.answerStream;
-               thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
-               var theCallbackFunction = thisRequest.currentCB;
-               thisRequest.currentCB = null;
-               //////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
-               theCallbackFunction(null, res);
             }
-            thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
          }
-         thisRequest.oldStartWebTorrent += chunk.length;
          //ceckIfAnswerStreamReady(thisRequest);
          done();
       };
@@ -265,6 +277,8 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       if (thisRequest.currentCB && ((thisRequest.bytesInAnswerStream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM) || (thisRequest.start >= SIZE_OF_VIDEO_FILE))) {
          //////console.log("answerStream from videostream Request number " + thisRequest.readStreamNumber + " and CB number " + thisRequest.CBNumber + " gets returned");
          // ////console.log("Returing answerStream out of ceckIfAnswerStreamReady()");
+         var theCallbackFunction = thisRequest.currentCB;
+         thisRequest.currentCB = null;
          thisRequest.answerStream.push(null);
          if (thisRequest.webTorrentStream){
             thisRequest.webTorrentStream.pause();
@@ -272,8 +286,6 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          thisRequest.bytesInAnswerStream = 0;
          var res = thisRequest.answerStream;
          thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
-         var theCallbackFunction = thisRequest.currentCB;
-         thisRequest.currentCB = null;
          //////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
          theCallbackFunction(null, res);
          return true;
@@ -399,64 +411,45 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       }
 
       var XHRDataHandler = function (chunk) {
+         thisRequest.oldStartServer += chunk.length;
+         bytesReceivedFromServer += chunk.length;
          console.log("ReadableStream request number " + thisRequest.readStreamNumber + " received a chunk of length " + chunk.length);
          if(thisRequest.noMoreData){
-            thisRequest.oldStartServer += chunk.length;
-            bytesReceivedFromServer += chunk.length;
             return;
          }
-         ////////console.log("TypeOf chunk: " + typeof chunk);
-         if (consoleCounter < 1000000000) {
-            ////////console.log(consoleCounter++, "BAM In XHRDataHandler from readStream ", thisRequest.readStreamNumber, "and thisRequestCBNumber", thisRequest.CBNumber);
-            ////////console.log(consoleCounter++, "chunk.length: ", chunk.length);
-            ////////console.log("thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
-            ////////console.log("thisRequest.answerStream: " + thisRequest.answerStream);
-            ////////console.log("thisRequest.start: " + thisRequest.start);
-         }
-         if (thisRequest.start - thisRequest.oldStartServer < chunk.length) {
-            if (consoleCounter < 100000000) {
-               /*
-               ////console.log("add data to answerStream");
-               ////console.log("chunk.length: " + chunk.length);
-               ////console.log("thisRequest.start: " + thisRequest.start);
-               ////console.log("thisRequest.oldStartServer: " + thisRequest.oldStartServer);
-               ////console.log("thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
-               ////console.log("length of slice: " + (chunk.slice(thisRequest.start - thisRequest.oldStartServer, chunk.length)).length);
-               */
-            }
+         if (thisRequest.start - thisRequest.oldStartServer < chunk.length) {         
             bytesTakenFromServer += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
-            if (thisRequest.answerStream.push(chunk.slice(thisRequest.start - thisRequest.oldStartServer, chunk.length))) {
-               // ////console.log("push returned true");
-               thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
-            } else {
-               if(thisRequest.currentCB === null){
+            thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
+            thisRequest.start += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
+            var StreamHasMemoryLeft = (thisRequest.answerStream.push(chunk.slice(thisRequest.start - thisRequest.oldStartServer, chunk.length)));
+            
+            if(!StreamHasMemoryLeft){
+               if(thisRequest.currentCB !== null){
+                  var theCallbackFunction = thisRequest.currentCB;
+                  thisRequest.currentCB = null;
+                  thisRequest.answerStream.push(null);
+                  thisRequest.bytesInAnswerStream = 0;
+                  var res = thisRequest.answerStream;
+                  thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
+                  theCallbackFunction(null, res); 
+               } else {
                   thisRequest.noMoreData = true;
                   if(thisRequest.webTorrentStream){
                      thisRequest.webTorrentStream.pause();
                   }
-                  thisRequest.start += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
-                  thisRequest.oldStartServer += chunk.length;
-                  bytesReceivedFromServer += chunk.length;
-                  return;
+                  return; 
                }
-               // ////console.log("push returned false");
-               thisRequest.answerStream.push(null);
-               thisRequest.bytesInAnswerStream = 0;
-               var res = thisRequest.answerStream;
-               thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
-               var theCallbackFunction = thisRequest.currentCB;
-               thisRequest.currentCB = null;
-               //////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
-               theCallbackFunction(null, res);
-            }
-            thisRequest.start += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
-         }
-         thisRequest.oldStartServer += chunk.length;
-         bytesReceivedFromServer += chunk.length;
-         if (consoleCounter < 10000000000) {
-            ////////console.log("After putting in answerStream - thisRequest.start: " + thisRequest.start);
-            ////////console.log("After putting in answerStream - thisRequest.oldStartServer: " + thisRequest.oldStartServer);
-            ////////console.log("After putting in answerStream - thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
+            } else {
+               if (thisRequest.start >= SIZE_OF_VIDEO_FILE && thisRequest.currentCB !== null){
+                  var theCallbackFunction = thisRequest.currentCB;
+                  thisRequest.currentCB = null;
+                  thisRequest.answerStream.push(null);
+                  thisRequest.bytesInAnswerStream = 0;
+                  var res = thisRequest.answerStream;
+                  thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
+                  theCallbackFunction(null, res); 
+               }
+            }                    
          }
       }
 
