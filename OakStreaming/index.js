@@ -539,7 +539,8 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
 }
 
 
-function addPeer(simplePeerInstance, options, callback){
+function addSimplePeerInstance(simplePeerInstance, options, callback){
+   // The method add a simplePeer to the WebTorrent swarm instance 
    if(theTorrent){
       if(theTorrent.infoHash){
          theTorrent.addPeer(simplePeerInstance);
@@ -550,43 +551,51 @@ function addPeer(simplePeerInstance, options, callback){
    } else {
       peersToAdd.push(simplePeerInstance);
    }
-   // add a peer manually to the WebTorrent swarm instance of all clients/peers in the group
 }
 
 
-function WebTorrentPeer()
+var simplePeerCreationCounter = 0;
+var connectionsWaitingForSignalingData = [];
+
 
 function createSignalingData(signalingData, callback){
+    var oakNumber;
    if(signalingData){
       var myPeer = new SimplePeer({initiator: false, tickle: false});
       myPeer.on('signal', function (answerSignalingData) {
+         answerSignalingData.oaknumber = oakNumber;
          callback(answerSignalingData);
       })
+      oakNumber = answerSignalingData.oakNumber;
+      delete answerSignalingData.oakNumber;    
       myPeer.signal(signalingData);
       myPeer.on('connect', function(){
          if(callback){
-            addPeer(myPeer, function(){callback();});
+            addSimplePeerInstance(myPeer, function(){callback();});
          } else {
-            addPeer(myPeer, function(){});            
+            addSimplePeerInstance(myPeer, function(){});            
          }
       });
    } else {
       var myPeer = new SimplePeer({initiator: true, tickle: false});
       myPeer.on('signal', function (signalingData){
+         signalingData.oakNumber = ++simplePeerCreationCounter;
+         connectionsWaitingForSignalingData[simplePeerCreationCounter] = myPeer;
          callback(signalingData);
       });
       myPeer.on('connect', function (){
+         //should be enhanced to automatically build peer connections to every peer the opposite peer is connected to.
          if(callback){
-            addPeer(myPeer, function(){callback();});
+            addSimplePeerInstance(myPeer, function(){callback();});
          } else {
-            addPeer(myPeer, function(){});            
+            addSimplePeerInstance(myPeer, function(){});            
          }
       });
    }
 }
 
-function processSignalingData(signalingData){
-   
+function processSignalingResponse(signalingData, callback){
+   var signalingData.
 }
 
 function on(type, callback){
