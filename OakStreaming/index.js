@@ -5,6 +5,7 @@ var util = require('util');
 var readableStream = require('readable-stream');
 var Videostream = require('videostream');
 var WebTorrent = require('webtorrent');
+var SimplePeer = require('simple-peer');
 
 
  /**
@@ -55,13 +56,14 @@ function streamVideo(videoFile, options, callback, destroyTorrent){
    //console.log("videoFile: " + videoFile);
    //console.log("options: " + options);
    //console.log("callback: " + callback);
-   webTorrentClient.seed(videoFile, {announceList: [["ws://localhost:8081"],["wss://tracker.webtorrent.io"]]}, function(torrent){
+   webTorrentClient.seed(videoFile, {announceList: options.webTorrentTrackers}, function(torrent){
       //console.log("Video file was seeded");
       var streamInformationObject = {};
       //streamInformationObject.torrent = torrent;
       streamInformationObject.magnetURI = torrent.magnetURI;
       streamInformationObject.videoFileSize = torrent.files[0].length;
       streamInformationObject.XHRPath = options.XHRPath;
+      streamInformationObject.torrentFile = torrent.torrentFile;
       ////console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
       if(destroyTorrent === 6257923579344){
          torrent.destroy();
@@ -87,12 +89,13 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    ////console.log("I entered this.loadVideo");
    ////console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
    var deliveryByServer = streamInformationObject.XHRPath ? true : false;
-   var deliveryByWebtorrent = streamInformationObject.magnetURI ? true : false;
+   var webTorrentTrackers = streamInformationObject.webTorrentTrackers ? true : false;
+   //var deliveryByWebtorrent = streamInformationObject.magnetURI ? true : false;
    var MAGNET_URI = streamInformationObject.magnetURI;
    console.log("streamInformationObject.XHRPath: " + streamInformationObject.XHRPath);
    var PATH_TO_VIDEO_FILE = streamInformationObject.XHRPath;
    var SIZE_OF_VIDEO_FILE = streamInformationObject.videoFileSize;
-   
+   var THE_TORRENT = streamInformationObject.torrentFile;
 
    var DOWNLOAD_FROM_SERVER_TIME_RANGE = streamInformationObject.downloadFromServerTimeRange || 5; // in seconds
    var UPLOAD_LIMIT = streamInformationObject.uploadLimit || 2; // multiplied by number of downloaded bytes
@@ -110,7 +113,6 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var consoleCounter = 0;
    var globalvideostreamRequestNumber = 0;
    var bytesReceivedFromServer = 0;
-   var theTorrent;
    var webTorrentFile;
    var videostreamRequestHandlers = [];
    var inCritical = true;
@@ -120,6 +122,8 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var webTorrentClient = null;
    var bytesTakenFromWebTorrent = 0;
    var bytesTakenFromServer = 0;
+   var theTorrent;
+   var peersToAdd = [];
    
 
    function MyReadableStream(options){
@@ -131,9 +135,15 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
   
    if(deliveryByWebtorrent){
       webTorrentClient = new WebTorrent();
-      webTorrentClient.add(MAGNET_URI, function (torrent){
-         ////console.log("torrent meta data ready");
+      webTorrentClient.add(THE_TORRENT, function (torrent){
+         ////console.log("torrent meta data ready");         
          theTorrent = torrent;
+         
+         for(var i=0, length= peersToAdd.length; i<length; i++){
+            theTorrent.addPeer(peersToAdd[i]);            
+         }
+         peersToAdd = [];
+         
          webTorrentFile = torrent.files[0];
 
          torrent.on('wire', function (wire){
@@ -529,8 +539,54 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
 }
 
 
-function addPeer(simplePeerInstance, options){
+function addPeer(simplePeerInstance, options, callback){
+   if(theTorrent){
+      if(theTorrent.infoHash){
+         theTorrent.addPeer(simplePeerInstance);
+         callback();
+      } else {
+         theTorrent.on('infoHash', function() {theTorrent.addPeer(simplePeerInstance); callback();});
+      }
+   } else {
+      peersToAdd.push(simplePeerInstance);
+   }
    // add a peer manually to the WebTorrent swarm instance of all clients/peers in the group
+}
+
+
+function WebTorrentPeer()
+
+function createSignalingData(signalingData, callback){
+   if(signalingData){
+      var myPeer = new SimplePeer({initiator: false, tickle: false});
+      myPeer.on('signal', function (answerSignalingData) {
+         callback(answerSignalingData);
+      })
+      myPeer.signal(signalingData);
+      myPeer.on('connect', function(){
+         if(callback){
+            addPeer(myPeer, function(){callback();});
+         } else {
+            addPeer(myPeer, function(){});            
+         }
+      });
+   } else {
+      var myPeer = new SimplePeer({initiator: true, tickle: false});
+      myPeer.on('signal', function (signalingData){
+         callback(signalingData);
+      });
+      myPeer.on('connect', function (){
+         if(callback){
+            addPeer(myPeer, function(){callback();});
+         } else {
+            addPeer(myPeer, function(){});            
+         }
+      });
+   }
+}
+
+function processSignalingData(signalingData){
+   
 }
 
 function on(type, callback){

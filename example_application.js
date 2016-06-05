@@ -42,7 +42,7 @@ Y({
 
 window.handleFiles = function(files){
    streamSource = true;
-   myStreaming.streamVideo(files[0], {XHRPath : "/" + files[0].name}, function(streamInformationObject){
+   myStreaming.streamVideo(files[0], {XHRPath : "/" + files[0].name, webTorrentTrackers: [["ws://localhost:8081"],["wss://tracker.webtorrent.io"]]}, function(streamInformationObject){
       console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
       theSharedMap.set("streamInformationObject", streamInformationObject);
    });
