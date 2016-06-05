@@ -180,7 +180,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       }
       */
       var MyWriteableStream = function(highWaterMark){
-         readableStream.Writable.call(this, highWaterMark);    
+         readableStream.Writable.call(this, highWaterMark);
       };
       util.inherits(MyWriteableStream, readableStream.Writable);
       MyWriteableStream.prototype._write = function(chunk, encoding, done){
@@ -193,14 +193,14 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
             
             if(streamHasMemoryLeft){            
-               if(thisRequest.currentCB !== null && thisRequest.start >= thisRequest.end){
+               if(thisRequest.currentCB !== null && thisRequest.start >= SIZE_OF_VIDEO_FILE){
                   var theCallbackFunction = thisRequest.currentCB;
                   thisRequest.currentCB = null;
                   thisRequest.answerStream.push(null);
                   thisRequest.bytesInAnswerStream = 0;
                   var res = thisRequest.answerStream;
                   thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
-                  //////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
+                  console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
                   theCallbackFunction(null, res);
                }
             } else {
@@ -216,7 +216,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
                   thisRequest.bytesInAnswerStream = 0;
                   var res = thisRequest.answerStream;
                   thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
-                  //////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
+                  console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
                   theCallbackFunction(null, res);
                }
             }
@@ -241,13 +241,13 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       var multi = new MultiStream(function (cb){
          thisRequest.end = thisRequest.opts.end ? (thisRequest.opts.end + 1) : thisRequest.fileSize;
          console.log("ReadableStream request number " + thisRequest.readStreamNumber + "    does a cb request");
-        /*
-        if(thisRequest.start >= thisRequest.end){
-            console.log("new cb but with thisRequest.start >= thisRequest.end for readStreamRequest number " + thisRequest.readStreamNumber);            
+        
+         if(thisRequest.end >= 0 && thisRequest.start >= thisRequest.end){
+            console.log("called cb(null,null) from " + thisRequest.readStreamNumber); 
+            thisRequest.req = null;
             return cb(null, null);
          }
-         */
-         
+        
          thisRequest.CBNumber++;
          if(consoleCounter<20){
             ////console.log(consoleCounter++ + "    " + thisRequest.CBNumber + ". call of function(cb) from " + videostreamRequestNumber);
@@ -287,7 +287,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    function ceckIfAnswerStreamReady(thisRequest){
        //////console.log("At the beginning of thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
        //////console.log("In ceckIfAnswerStreamReady of videostreamRequest number " + thisRequest.readStreamNumber +  ". thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream + "     thisRequest.currentCB: " + thisRequest.currentCB);
-      if (thisRequest.currentCB && ((thisRequest.bytesInAnswerStream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM) || (thisRequest.start >= thisRequest.end))){
+      if (thisRequest.currentCB && ((thisRequest.bytesInAnswerStream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM) || (thisRequest.start >= SIZE_OF_VIDEO_FILE))){
          //////console.log("answerStream from videostream Request number " + thisRequest.readStreamNumber + " and CB number " + thisRequest.CBNumber + " gets returned");
          // ////console.log("Returing answerStream out of ceckIfAnswerStreamReady()");
          var theCallbackFunction = thisRequest.currentCB;
@@ -299,7 +299,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          thisRequest.bytesInAnswerStream = 0;
          var res = thisRequest.answerStream;
          thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
-         //////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
+         console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
          theCallbackFunction(null, res);
          return true;
       }
@@ -335,7 +335,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    function VideostreamRequestHandler(readStreamNumber, opts, self) {
       this.readStreamNumber = readStreamNumber;
       this.opts = opts;
-      this.start = opts.start;
+      this.start = opts.start || 0;
       this.oldStartWebTorrent = -42;
       this.oldStartServer = -42;
       this.currentCB = null;
@@ -416,6 +416,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       }
       if (reqStart >= reqEnd) {
          thisRequest.req = null;
+         console.log("called cb(null,null)");
          return thisRequest.currentCB(null, null);
       }
 
@@ -437,12 +438,12 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             thisRequest.oldStartServer += chunk.length;
             return;
          }
-         if (thisRequest.start - thisRequest.oldStartServer < chunk.length) {         
+         if (thisRequest.start - thisRequest.oldStartServer < chunk.length){         
             bytesTakenFromServer += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
             thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
-            thisRequest.start += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
-            var StreamHasMemoryLeft = thisRequest.answerStream.push(chunk.slice(thisRequest.start - thisRequest.oldStartServer, chunk.length));
-            
+            var myBuffer = chunk.slice(thisRequest.start - thisRequest.oldStartServer, chunk.length);
+            console.log("In XHRDataHandler   myBuffer.length: " + myBuffer.length);
+            var StreamHasMemoryLeft = thisRequest.answerStream.push(myBuffer);         
             if(!StreamHasMemoryLeft){
                if(thisRequest.currentCB !== null){
                   var theCallbackFunction = thisRequest.currentCB;
@@ -451,6 +452,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
                   thisRequest.bytesInAnswerStream = 0;
                   var res = thisRequest.answerStream;
                   thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
+                  console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
                   theCallbackFunction(null, res); 
                } else {
                   thisRequest.noMoreData = true;
@@ -459,17 +461,19 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
                   }
                }
             } else {
-               if (thisRequest.start >= thisRequest.end && thisRequest.currentCB !== null){
+               if (thisRequest.start >= SIZE_OF_VIDEO_FILE && thisRequest.currentCB !== null){
                   var theCallbackFunction = thisRequest.currentCB;
                   thisRequest.currentCB = null;
                   thisRequest.answerStream.push(null);
                   thisRequest.bytesInAnswerStream = 0;
                   var res = thisRequest.answerStream;
                   thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
+                  console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
                   theCallbackFunction(null, res);
                }
             }                    
          }
+         thisRequest.start += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
          thisRequest.oldStartServer += chunk.length;
       }
 
@@ -485,7 +489,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
             var theCallbackFunction = thisRequest.currentCB;
             thisRequest.currentCB = null;
-            //////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
+            console.log("XHREnd: called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
             theCallbackFunction(null, res);
          }
          thisRequest.XHRConducted = false;
