@@ -47,7 +47,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
       
       function streamWhenConnectionEstablished(){
          if(twoPeersAreConnected){
-            testTorrent = myStreaming1.streamVideo(res, {}, callback, 6257923579344);
+            testTorrent = myStreaming1.streamVideo(res, {webTorrentTrackers: [["ws://localhost:8081"]]}, callback, 6257923579344);
          } else {
             setTimeout(streamWhenConnectionEstablished, 500);
          }
@@ -125,7 +125,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
       
       function streamWhenConnectionEstablished(res){
          if(threePeersAreConnected){
-            myStreaming3.streamVideo(res, {}, callback, 6257923579344);
+            myStreaming3.streamVideo(res, {webTorrentTrackers: [["ws://localhost:8081"]]}, callback, 6257923579344);
          } else {
          setTimeout(function (){streamWhenConnectionEstablished(res);}, 500);
          }
@@ -152,11 +152,8 @@ describe("Testing if streamVideo method", function(){
    it("creates streamInformationObject correctly",  function(done){ 
       
       function callback (streamInformationObject){
-         //console.log("callback from streamVideo is executed");
-         //expect(streamInformationObject.magnetURI).toMatch("magnet:?xt=urn:btih:1b5169e27e943cd615b1e10ba98e9e4a0b2086b8&dn=example.mp4&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&tr=wss%3A%2F%2Ftracker.webtorrent.io");
          expect(streamInformationObject.videoFileSize).toEqual(theVideoFileSize);
          expect(streamInformationObject.XHRPath).toMatch("/example.mp4");
-         //jasmine.clock().uninstall();
          done();
       }
       http.get({
@@ -167,7 +164,7 @@ describe("Testing if streamVideo method", function(){
             range: 'bytes=' + 0 + '-' + theVideoFileSize-1
          }
       }, function (res){
-         testTorrent = myStreaming.streamVideo(res, {XHRPath : "/example.mp4"}, callback, 6257923579344);
+         testTorrent = myStreaming.streamVideo(res, {XHRPath : "/example.mp4", webTorrentTrackers: [["ws://localhost:8081"]]}, callback, 6257923579344);
       });
    }, 30000); 
 });
@@ -194,7 +191,7 @@ describe("Testing if loadVideo method", function(){
                 range: 'bytes=' + 0 + '-' + theVideoFileSize-1
             }
          }, function (res) {  
-               myStreaming.streamVideo(res, {XHRPath : "/example.mp4"}, function(streamInformationObject){
+               myStreaming.streamVideo(res, {webTorrentTrackers: [["ws://localhost:8081"]]}, function(streamInformationObject){
                   myStreaming2.loadVideo(streamInformationObject, done);  
                });
          });
@@ -217,7 +214,7 @@ describe("Testing if loadVideo method", function(){
                 range: 'bytes=' + 0 + '-' + theVideoFileSize-1
             }
          }, function (res) {  
-               myStreaming.streamVideo(res, {XHRPath : "/example.mp4"}, callback);
+               myStreaming.streamVideo(res, {webTorrentTrackers: [["ws://localhost:8081"]]}, callback);
          });
       }, 20000);  
 
@@ -242,7 +239,7 @@ describe("Testing if loadVideo method", function(){
                 range: 'bytes=' + 0 + '-' + theVideoFileSize-1
             }
          }, function (res) {  
-               myStreaming.streamVideo(res, {XHRPath : "/example.mp4"}, callback);
+               myStreaming.streamVideo(res, {webTorrentTrackers: [["ws://localhost:8081"]]}, callback);
          });
       }, 20000);    
    });
@@ -259,7 +256,7 @@ describe("Testing if loadVideo method", function(){
       }, function (res) {
          var webTorrentClient = new WebTorrent();
          webTorrentClient.seed(res, function onSeed (torrent){
-            myStreaming.loadVideo({XHRPath: "/example3.mp4", magnetURI : torrent.magnetURI, videoFileSize : theVideoFileSize}, done);            
+            myStreaming.loadVideo({XHRPath: "/example3.mp4", torrentFile : torrent.torrentFile, webTorrentTrackers: [["ws://localhost:8081"]], videoFileSize : theVideoFileSize}, done);            
          });
       });
    }, 20000);

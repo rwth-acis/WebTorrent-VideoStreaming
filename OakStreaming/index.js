@@ -66,6 +66,8 @@ function streamVideo(videoFile, options, callback, destroyTorrent){
       streamInformationObject.videoFileSize = torrent.files[0].length;
       streamInformationObject.XHRPath = options.XHRPath;
       streamInformationObject.torrentFile = torrent.torrentFile;
+      streamInformationObject.webTorrentTrackers = options.webTorrentTrackers;
+      
       //////console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
       if(destroyTorrent === 6257923579344){
          torrent.destroy();
