@@ -2,18 +2,22 @@ var theVideoFileSize = 788493;
 
 
 describe("Testing if manuallyAddingPeer methods", function(){
-   var myStreaming = new OakStreaming();
+   var myStreaming1 = new OakStreaming();
    var myStreaming2 = new OakStreaming();
-   var receivedCallbacks = 0;
-   var peersAreConnected = false;
+   var myStreaming3 = new OakStreaming();
+   
+   var twoPeersAreConnected = false;
+   var threePeersAreConnected = false;
    var theTorrent;
    
    it("can establish a WebTorrent connection between two OakStreaming instances", function(done){
+      var receivedCallbacks = 0;
+         
       expect(true).toBe(true); // every Jasmine it has to have an expect expression
             
-      myStreaming.forTesting_connectedToNewWebTorrentPeer(function(){
+      myStreaming1.forTesting_connectedToNewWebTorrentPeer(function(){
          if(receivedCallbacks === 1){
-            peersAreConnected = true;
+            twoPeersAreConnected = true;
             done();
          } else {
             receivedCallbacks++;
@@ -21,20 +25,20 @@ describe("Testing if manuallyAddingPeer methods", function(){
       });
       myStreaming2.forTesting_connectedToNewWebTorrentPeer(function(){
          if(receivedCallbacks === 1){
-            peersAreConnected = true;            
+            twoPeersAreConnected = true;            
             done();
          } else {
             receivedCallbacks++;
          }
       });      
-      myStreaming.createSignalingData(function(signalingData){
+      myStreaming1.createSignalingData(function(signalingData){
          myStreaming2.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-            myStreaming.processSignalingResponse(signalingDataResponse);
+            myStreaming1.processSignalingResponse(signalingDataResponse);
          });
       });
-   });
+   }, 5000);
    
-   it("can successfully connect OakStreaming instances for streaming", function(done){
+   it("can successfully connect two OakStreaming instances for streaming", function(done){
       expect(true).toBe(true); // every Jasmine it has to have an expect expression   
       
       function callback(streamInformationObject){
@@ -42,8 +46,8 @@ describe("Testing if manuallyAddingPeer methods", function(){
       }
       
       function streamWhenConnectionEstablished(){
-         if(peersAreConnected){
-            testTorrent = myStreaming.streamVideo(res, {XHRPath : "/example.mp4"}, callback, 6257923579344);
+         if(twoPeersAreConnected){
+            testTorrent = myStreaming1.streamVideo(res, {}, callback, 6257923579344);
          } else {
             setTimeout(streamWhenConnectionEstablished, 500);
          }
@@ -61,46 +65,84 @@ describe("Testing if manuallyAddingPeer methods", function(){
       });
    }, 30000);
    
-   it("can establish a WebTorrent connection between two OakStreaming instances", function(done){
+   it("can automatically establish a WebTorrent connections between three OakStreaming instances", function(done){
+      expect(true).toBe(true); // every Jasmine it has to have an expect expression
       
+      var receivedCallbacks = 0;
+            
+      myStreaming1.forTesting_connectedToNewWebTorrentPeer(function(){
+         if(receivedCallbacks === 6){
+            threePeersAreConnected = true;
+            done();
+         } else {
+            receivedCallbacks++;
+         }
+      });
+      myStreaming2.forTesting_connectedToNewWebTorrentPeer(function(){
+         if(receivedCallbacks === 6){
+            threePeersAreConnected = true;            
+            done();
+         } else {
+            receivedCallbacks++;
+         }
+      });
+      myStreaming3.forTesting_connectedToNewWebTorrentPeer(function(){
+         if(receivedCallbacks === 6){
+            threePeersAreConnected = true;            
+            done();
+         } else {
+            receivedCallbacks++;
+         }
+      });      
+      myStreaming2.createSignalingData(function(signalingData){
+         myStreaming3.createSignalingDataResponse(signalingData, function(signalingDataResponse){
+            myStreaming2.processSignalingResponse(signalingDataResponse);
+         });
+      });
       
-   },10000);
+   },20000);
+   
+   it("can successfully connect three OakStreaming instances for streaming", function(done){
+      expect(true).toBe(true); // every Jasmine it has to have an expect expression   
+      var oneStreamingCompleted = false;
+      
+      function callback(streamInformationObject){
+         myStreaming1.loadVideo(streamInformationObject, function(){
+            if(oneStreamingCompleted){
+               done();
+            } else {
+               oneStreamingCompleted = true;
+            }
+         }, true);
+         myStreaming2.loadVideo(streamInformationObject,  function(){
+            if(oneStreamingCompleted){
+               done();
+            } else {
+               oneStreamingCompleted = true;
+            }
+         }, true);
+      }
+      
+      function streamWhenConnectionEstablished(res){
+         if(threePeersAreConnected){
+            myStreaming3.streamVideo(res, {}, callback, 6257923579344);
+         } else {
+         setTimeout(function (){streamWhenConnectionEstablished(res);}, 500);
+         }
+      }
+      
+      http.get({
+         hostname: 'localhost',
+         port: 8080,
+         path: '/example.mp4',
+         headers: {
+            range: 'bytes=' + 0 + '-' + theVideoFileSize-1
+         }
+      }, function (res){
+            streamWhenConnectionEstablished(res);
+      });
+   }, 30000);
 }   
-
-function createSignalingData(callback){
-   var myPeer = new SimplePeer({initiator: true, tickle: false});
-   myPeer.on('signal', function (signalingData){
-      signalingData.oakNumber = ++simplePeerCreationCounter;
-      connectionsWaitingForSignalingData[simplePeerCreationCounter] = myPeer;
-      callback(signalingData);
-   });
-}
-
-function createSignalingDataResponse(signalingData, callback){
-   var oakNumber;
-   var myPeer = new SimplePeer({initiator: false, tickle: false});
-   myPeer.on('signal', function (answerSignalingData){
-      answerSignalingData.oaknumber = oakNumber;
-      callback(answerSignalingData);
-   });
-   oakNumber = answerSignalingData.oakNumber;
-   delete answerSignalingData.oakNumber;    
-   myPeer.signal(signalingData);
-   myPeer.on('connect', function(){
-      addSimplePeerInstance(myPeer);
-   });
-}
-
-function processSignalingResponse(signalingData){
-   var oakNumber = signalingData.oakNumber;
-   delete signalingData.oakNumber;
-   myPeer.on('connect', function (){
-      console.log('CONNECT');
-      addSimplePeerInstance(myPeer);
-      delete connectionsWaitingForSignalingData[oakNumber];    
-   });
-   myPeer.signal(signalingData);  
-}
 
 
 
