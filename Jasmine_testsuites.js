@@ -1,12 +1,71 @@
 var theVideoFileSize = 788493;
 
 
-describe("Testing the manuallyAddingPeer methods", function(){
+describe("Testing if manuallyAddingPeer methods", function(){
    var myStreaming = new OakStreaming();
-   if("", function(){
-      myStreaming.createSignalingData()
+   var myStreaming2 = new OakStreaming();
+   var receivedCallbacks = 0;
+   var peersAreConnected = false;
+   var theTorrent;
+   
+   it("can establish a WebTorrent connection between two OakStreaming instances", function(done){
+      expect(true).toBe(true); // every Jasmine it has to have an expect expression
+            
+      myStreaming.forTesting_connectedToNewWebTorrentPeer(function(){
+         if(receivedCallbacks === 1){
+            peersAreConnected = true;
+            done();
+         } else {
+            receivedCallbacks++;
+         }
+      });
+      myStreaming2.forTesting_connectedToNewWebTorrentPeer(function(){
+         if(receivedCallbacks === 1){
+            peersAreConnected = true;            
+            done();
+         } else {
+            receivedCallbacks++;
+         }
+      });      
+      myStreaming.createSignalingData(function(signalingData){
+         myStreaming2.createSignalingDataResponse(signalingData, function(signalingDataResponse){
+            myStreaming.processSignalingResponse(signalingDataResponse);
+         });
+      });
    });
-});
+   
+   it("can successfully connect OakStreaming instances for streaming", function(done){
+      expect(true).toBe(true); // every Jasmine it has to have an expect expression   
+      
+      function callback(streamInformationObject){
+         myStreaming2.loadVideo(streamInformationObject, done, true);
+      }
+      
+      function streamWhenConnectionEstablished(){
+         if(peersAreConnected){
+            testTorrent = myStreaming.streamVideo(res, {XHRPath : "/example.mp4"}, callback, 6257923579344);
+         } else {
+            setTimeout(streamWhenConnectionEstablished, 500);
+         }
+      }
+      
+      http.get({
+         hostname: 'localhost',
+         port: 8080,
+         path: '/example.mp4',
+         headers: {
+            range: 'bytes=' + 0 + '-' + theVideoFileSize-1
+         }
+      }, function (res){
+            streamWhenConnectionEstablished();
+      });
+   }, 30000);
+   
+   it("can establish a WebTorrent connection between two OakStreaming instances", function(done){
+      
+      
+   },10000);
+}   
 
 function createSignalingData(callback){
    var myPeer = new SimplePeer({initiator: true, tickle: false});
@@ -32,7 +91,7 @@ function createSignalingDataResponse(signalingData, callback){
    });
 }
 
-function processSignalingResponse(signalingData, callback){
+function processSignalingResponse(signalingData){
    var oakNumber = signalingData.oakNumber;
    delete signalingData.oakNumber;
    myPeer.on('connect', function (){
@@ -49,7 +108,6 @@ describe("Testing if streamVideo method", function(){
    var myStreaming = new OakStreaming();
       
    it("creates streamInformationObject correctly",  function(done){ 
-      //jasmine.clock().install();
       
       function callback (streamInformationObject){
          //console.log("callback from streamVideo is executed");
@@ -67,15 +125,7 @@ describe("Testing if streamVideo method", function(){
             range: 'bytes=' + 0 + '-' + theVideoFileSize-1
          }
       }, function (res){
-         res.on("data", function(chunk){
-            //console.log("I received a chunk from server in first sec");
-            //console.log("chunk.length: " + chunk.length);
-         });
-         res.on('end', function(){
-            //console.log("I received end signal from XHR for the first spec");
-         });
          testTorrent = myStreaming.streamVideo(res, {XHRPath : "/example.mp4"}, callback, 6257923579344);
-         //jasmine.clock().tick(42);
       });
    }, 30000); 
 });
@@ -89,8 +139,7 @@ describe("Testing if loadVideo method", function(){
       expect(true).toBe(true); // necessary because Jasmine wants at least one expect per it.
       myStreaming.loadVideo({XHRPath : "/example2.mp4", videoFileSize : theVideoFileSize}, done);
    }, 10000);
-   
-   
+     
    describe("loads the video fast enough via WebTorrent delivery", function(){
       it("with one seeder and one downloader", function(done){
          expect(true).toBe(true);
@@ -107,7 +156,7 @@ describe("Testing if loadVideo method", function(){
                   myStreaming2.loadVideo(streamInformationObject, done);  
                });
          });
-      }, 15000);  
+      }, 15000); 
       
       it("with two seeders and one downloader", function(done){
          expect(true).toBe(true);
@@ -157,7 +206,7 @@ describe("Testing if loadVideo method", function(){
    });
    
    it("loads the video fast enough via peer-assisted delivery", function(done){
-      expect(true).toBe(true);
+      expect(true).toBe(true); // every Jasmine it has to have an expect expression
       req = http.get({
          hostname: 'localhost',
          port: 8080,

@@ -26,8 +26,9 @@ function OakStreaming(){
    
    this.streamVideo = streamVideo; 
    this.loadVideo = loadVideo;
-   this.addPeer = function(){};  
+   this.addSimplePeerInstance = function(){}; 
    this.on = function(){};
+   this.forTesting_connectedToNewWebTorrentPeer = function(){};
 }
 
  
@@ -151,6 +152,12 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          
          webTorrentFile = torrent.files[0];
 
+         var forTesting_connectedToNewWebTorrentPeer = function(callback){
+            torrent.on('wire', function(wire){
+               callback();
+            };
+         };
+         
          torrent.on('wire', function (wire){
             wires.push(wire);
             if(!window.firstWire){
