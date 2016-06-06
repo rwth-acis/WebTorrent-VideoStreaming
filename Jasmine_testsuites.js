@@ -1,6 +1,50 @@
 var theVideoFileSize = 788493;
 
 
+describe("Testing the manuallyAddingPeer methods", function(){
+   var myStreaming = new OakStreaming();
+   if("", function(){
+      myStreaming.createSignalingData()
+   });
+});
+
+function createSignalingData(callback){
+   var myPeer = new SimplePeer({initiator: true, tickle: false});
+   myPeer.on('signal', function (signalingData){
+      signalingData.oakNumber = ++simplePeerCreationCounter;
+      connectionsWaitingForSignalingData[simplePeerCreationCounter] = myPeer;
+      callback(signalingData);
+   });
+}
+
+function createSignalingDataResponse(signalingData, callback){
+   var oakNumber;
+   var myPeer = new SimplePeer({initiator: false, tickle: false});
+   myPeer.on('signal', function (answerSignalingData){
+      answerSignalingData.oaknumber = oakNumber;
+      callback(answerSignalingData);
+   });
+   oakNumber = answerSignalingData.oakNumber;
+   delete answerSignalingData.oakNumber;    
+   myPeer.signal(signalingData);
+   myPeer.on('connect', function(){
+      addSimplePeerInstance(myPeer);
+   });
+}
+
+function processSignalingResponse(signalingData, callback){
+   var oakNumber = signalingData.oakNumber;
+   delete signalingData.oakNumber;
+   myPeer.on('connect', function (){
+      console.log('CONNECT');
+      addSimplePeerInstance(myPeer);
+      delete connectionsWaitingForSignalingData[oakNumber];    
+   });
+   myPeer.signal(signalingData);  
+}
+
+
+
 describe("Testing if streamVideo method", function(){
    var myStreaming = new OakStreaming();
       
@@ -60,7 +104,7 @@ describe("Testing if loadVideo method", function(){
             }
          }, function (res) {  
                myStreaming.streamVideo(res, {XHRPath : "/example.mp4"}, function(streamInformationObject){
-               myStreaming2.loadVideo(streamInformationObject, done);  
+                  myStreaming2.loadVideo(streamInformationObject, done);  
                });
          });
       }, 15000);  
