@@ -151,8 +151,8 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          theTorrent = torrent;
          
          for(var j=0, length= peersToAdd.length; j<length; j++){
-            theTorrent.addPeer(peersToAdd[j].[0]);
-            (peersToAdd[j].[1])();
+            theTorrent.addPeer(peersToAdd[j][0]);
+            (peersToAdd[j][1])();
          } 
          
          webTorrentFile = torrent.files[0];
@@ -597,8 +597,9 @@ function createSignalingDataResponse(signalingData, callback){
       callback(answerSignalingData);
    });
    oakNumber = signalingData.oakNumber;
-   delete signalingData.oakNumber;    
+   delete signalingData.oakNumber;
    myPeer.signal(signalingData);
+   
    myPeer.on('connect', function(){
       addSimplePeerInstance(myPeer);
    });
@@ -606,14 +607,15 @@ function createSignalingDataResponse(signalingData, callback){
 
 function processSignalingResponse(signalingData, callback){
    var oakNumber = signalingData.oakNumber;
+   console.log("In processSingalingResponse   oakNumber: " + oakNumber);
    delete signalingData.oakNumber;
-   connectionsWaitingForSignalingData[oakNumber].on('connect', function (){
+   (connectionsWaitingForSignalingData[oakNumber]).on('connect', function (){
       console.log('CONNECT');
       addSimplePeerInstance(connectionsWaitingForSignalingData[oakNumber]);
       delete connectionsWaitingForSignalingData[oakNumber];
-      callback();      
+      callback();
    });
-   connectionsWaitingForSignalingData[oakNumber].signal(signalingData);  
+   connectionsWaitingForSignalingData[oakNumber].signal(signalingData);
 }
 
 function on(type, callback){
