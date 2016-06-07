@@ -22,16 +22,15 @@ module.exports = OakStreaming;
  */ 
 function OakStreaming(){
    this.peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);
-   this.knownPeers = [];
    
-   this.streamVideo = streamVideo; 
+   this.streamVideo = streamVideo;
    this.loadVideo = loadVideo;
    this.addSimplePeerInstance = function(){}; 
-   this.on = function(){};
-   this.forTesting_connectedToNewWebTorrentPeer = function(){};
    this.createSignalingData = createSignalingData;
    this.createSignalingDataResponse = createSignalingDataResponse;
    this.processSignalingResponse = processSignalingResponse;
+   this.on = function(){};
+   this.forTesting_connectedToNewWebTorrentPeer = function(){};
 }
 
  
@@ -76,12 +75,12 @@ function streamVideo(videoFile, options, callback, isItATest, destroyTorrent){
          if(destroyTorrent){
             torrent.destroy();
             delete webTorrentClient;
-         } else {
-            return torrent;
          }
+         setTimeout(function(){callback(streamInformationObject, torrent);},0);
+      } else {
+         setTimeout(function(){callback(streamInformationObject);},0);
       }
-      setTimeout(function(){callback(streamInformationObject, torrent);},0);
-   });  
+   });
 }
 
 

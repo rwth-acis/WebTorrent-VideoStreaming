@@ -36,7 +36,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
             myStreaming1.processSignalingResponse(signalingDataResponse);
          });
       });
-   }, 10000);
+   }, 20000);
    
    it("can successfully connect two OakStreaming instances for streaming", function(done){
       expect(true).toBe(true); // every Jasmine spec has to have an expect expression
@@ -102,7 +102,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
          });
       });
       
-   }, 20000);
+   }, 25000);
    
    it("can successfully connect three OakStreaming instances for streaming", function(done){
       expect(true).toBe(true); // every Jasmine spec has to have an expect expression   
@@ -117,19 +117,19 @@ describe("Testing if manuallyAddingPeer methods", function(){
             } else {
                oneStreamingCompleted = true;
             }
-         }, true);
+         }, false);
          myStreaming2.loadVideo(streamInformationObject,  function(){
             if(oneStreamingCompleted){
                testTorrent.destroy(done);
             } else {
                oneStreamingCompleted = true;
             }
-         }, true);
+         }, false);
       }
       
       function streamWhenConnectionEstablished(res){
          if(threePeersAreConnected){
-            myStreaming3.streamVideo(res, {webTorrentTrackers: [["ws://localhost:8081"]]}, callback, "It's a test", true);
+            myStreaming3.streamVideo(res, {webTorrentTrackers: [["ws://localhost:8081"]]}, callback, "It's a test", false);
          } else {
             setTimeout(function (){streamWhenConnectionEstablished(res);}, 500);
          }
@@ -147,7 +147,6 @@ describe("Testing if manuallyAddingPeer methods", function(){
       });
    }, 30000);
 });   
-
 
 
 describe("Testing if streamVideo method", function(){
