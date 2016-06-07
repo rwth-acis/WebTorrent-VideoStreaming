@@ -29,6 +29,9 @@ function OakStreaming(){
    this.addSimplePeerInstance = function(){}; 
    this.on = function(){};
    this.forTesting_connectedToNewWebTorrentPeer = function(){};
+   this.createSignalingData = createSignalingData;
+   this.createSignalingDataResponse = createSignalingDataResponse;
+   this.processSignalingResponse = processSignalingResponse;
 }
 
  
@@ -52,7 +55,7 @@ function OakStreaming(){
  * @param {string} options.XHRPath - The path that will be used for the XML HTTP Request (XHR). If the option object or this property of the option object is undefined, no video data will be requested from the server.
  * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated StreamInformationObject at the end of the execution of streamVideo.
  */
-function streamVideo(videoFile, options, callback, destroyTorrent){ 
+function streamVideo(videoFile, options, callback, isItATest, destroyTorrent){ 
    var webTorrentClient = new WebTorrent();
    ////console.log("streamVideo is executed");
    ////console.log("videoFile: " + videoFile);
@@ -69,11 +72,15 @@ function streamVideo(videoFile, options, callback, destroyTorrent){
       streamInformationObject.webTorrentTrackers = options.webTorrentTrackers;
       
       //////console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
-      if(destroyTorrent === 6257923579344){
-         torrent.destroy();
-         delete webTorrentClient;
+      if(isItATest === "It's a test"){
+         if(destroyTorrent){
+            torrent.destroy();
+            delete webTorrentClient;
+         } else {
+            return torrent;
+         }
       }
-      setTimeout(function(){callback(streamInformationObject);},0);
+      setTimeout(function(){callback(streamInformationObject, torrent);},0);
    });  
 }
 
@@ -157,7 +164,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          var forTesting_connectedToNewWebTorrentPeer = function(callback){
             torrent.on('wire', function(wire){
                callback();
-            };
+            });
          };
          
          torrent.on('wire', function (wire){
