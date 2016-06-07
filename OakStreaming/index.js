@@ -106,7 +106,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    //console.log("streamInformationObject.XHRPath: " + streamInformationObject.XHRPath);
    var PATH_TO_VIDEO_FILE = streamInformationObject.XHRPath;
    var SIZE_OF_VIDEO_FILE = streamInformationObject.videoFileSize;
-   var THE_TORRENT = streamInformationObject.torrentFile;
+   var THE_RECEIVED_TORRENT_FILE = streamInformationObject.torrentFile;
 
    var DOWNLOAD_FROM_SERVER_TIME_RANGE = streamInformationObject.downloadFromServerTimeRange || 5; // in seconds
    var UPLOAD_LIMIT = streamInformationObject.uploadLimit || 2; // multiplied by number of downloaded bytes
@@ -135,7 +135,6 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var bytesTakenFromServer = 0;
    var theTorrent;
    var peersToAdd = [];
-   var bam = true;
    
 
    function MyReadableStream(options){
@@ -147,16 +146,14 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
   
    if(deliveryByWebtorrent){
       webTorrentClient = new WebTorrent();
-      webTorrentClient.add(THE_TORRENT, function (torrent){
+      webTorrentClient.add(THE_RECEIVED_TORRENT_FILE, function (torrent){
          //////console.log("torrent meta data ready");         
          theTorrent = torrent;
          
-         /* Kommt später wieder rein
-         for(var i=0, length= peersToAdd.length; i<length; i++){
-            theTorrent.addPeer(peersToAdd[i]);
-         }
-         peersToAdd = [];
-         */
+         for(var j=0, length= peersToAdd.length; j<length; j++){
+            theTorrent.addPeer(peersToAdd[j].[0]);
+            (peersToAdd[j].[1])();
+         } 
          
          webTorrentFile = torrent.files[0];
 
@@ -215,10 +212,6 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       };
       util.inherits(MyWriteableStream, readableStream.Writable);
       MyWriteableStream.prototype._write = function(chunk, encoding, done){
-         if(bam){
-            console.log(theTorrent);
-            bam = false;
-         }
          //////console.log("MyWriteableStream _write is called");       
          if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
             ////////console.log("MyWriteableStream _write: pushing received data in answerStream")
@@ -405,15 +398,15 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       if(TimeRanges.length >= 1){
          if(timeRanges.start(0) <= 0 && timeRanges.end(0) >= SIZE_OF_VIDEO_FILE-1){
             videoCompletelyLoaded = true;
-            if(callback){
-               callback();                 
-            }
             if(endIfVideoLoaded){
                theTorrent.destroy();
                delete webTorrentClient;
                endStreaming = true;
-               return;                  
+               return;                 
             } 
+            if(callback){
+               callback();                 
+            }
          }
       }
       inCritical = true;
@@ -576,7 +569,10 @@ function addSimplePeerInstance(simplePeerInstance, options, callback){
          theTorrent.on('infoHash', function() {theTorrent.addPeer(simplePeerInstance); callback();});
       }
    } else {
-      peersToAdd.push(simplePeerInstance);
+      var pair = [];
+      pair.push(simplePeerInstance);
+      pair.push(callback);
+      peersToAdd.push(pair);
    }
 }
 
@@ -600,8 +596,8 @@ function createSignalingDataResponse(signalingData, callback){
       answerSignalingData.oaknumber = oakNumber;
       callback(answerSignalingData);
    });
-   oakNumber = answerSignalingData.oakNumber;
-   delete answerSignalingData.oakNumber;    
+   oakNumber = signalingData.oakNumber;
+   delete signalingData.oakNumber;    
    myPeer.signal(signalingData);
    myPeer.on('connect', function(){
       addSimplePeerInstance(myPeer);
@@ -611,12 +607,13 @@ function createSignalingDataResponse(signalingData, callback){
 function processSignalingResponse(signalingData, callback){
    var oakNumber = signalingData.oakNumber;
    delete signalingData.oakNumber;
-   myPeer.on('connect', function (){
+   connectionsWaitingForSignalingData[oakNumber].on('connect', function (){
       console.log('CONNECT');
-      addSimplePeerInstance(myPeer);
-      delete connectionsWaitingForSignalingData[oakNumber];    
+      addSimplePeerInstance(connectionsWaitingForSignalingData[oakNumber]);
+      delete connectionsWaitingForSignalingData[oakNumber];
+      callback();      
    });
-   myPeer.signal(signalingData);  
+   connectionsWaitingForSignalingData[oakNumber].signal(signalingData);  
 }
 
 function on(type, callback){

@@ -44,7 +44,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
       
       function callback(streamInformationObject, torrent){
          testTorrent = torrent;
-         myStreaming2.loadVideo(streamInformationObject, function(){testTorrent.destroy(done);}, false);
+         myStreaming2.loadVideo(streamInformationObject, function(){testTorrent.destroy(done);}, true);
       }
       
       function streamWhenConnectionEstablished(res){
@@ -117,14 +117,14 @@ describe("Testing if manuallyAddingPeer methods", function(){
             } else {
                oneStreamingCompleted = true;
             }
-         }, false);
+         }, true);
          myStreaming2.loadVideo(streamInformationObject,  function(){
             if(oneStreamingCompleted){
                testTorrent.destroy(done);
             } else {
                oneStreamingCompleted = true;
             }
-         }, false);
+         }, true);
       }
       
       function streamWhenConnectionEstablished(res){
@@ -184,7 +184,7 @@ describe("Testing if loadVideo method", function(){
      
    describe("loads the video fast enough via WebTorrent delivery", function(){
       it("with one seeder and one downloader", function(done){
-         expect(true).toBe(true);
+         expect(true).toBe(true); // every Jasmine spec has to have an expect expression
          
          req = http.get({
             hostname: 'localhost',
@@ -201,7 +201,7 @@ describe("Testing if loadVideo method", function(){
       }, 15000); 
       
       it("with two seeders and one downloader", function(done){
-         expect(true).toBe(true);
+         expect(true).toBe(true); // every Jasmine spec has to have an expect expression
          
          function callback(streamInformationObject){
             myStreaming2.loadVideo(streamInformationObject, function(){
@@ -222,7 +222,7 @@ describe("Testing if loadVideo method", function(){
       }, 20000);  
 
       it("with one seeder and two downloaders", function(done){
-         expect(true).toBe(true);
+         expect(true).toBe(true); // every Jasmine spec has to have an expect expression
          var numberOfCompletedDownloads = 0;
          
          function checkIfSpecFinished(){
