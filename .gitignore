@@ -3,4 +3,5 @@ sintel.mp4
 Jasmine_testsuites_build/
 node_modules/
 build/index.html
-build.example_application.js
+build/example_application.js
+Jasmine_testsuites_build/Jasmine_testsuites_help.js
