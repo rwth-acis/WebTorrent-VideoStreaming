@@ -12,7 +12,6 @@ var ut_pex = require('ut_pex');
  /**
  * @module OakStreaming
  */
- 
 module.exports = OakStreaming;
 
 
@@ -22,15 +21,55 @@ module.exports = OakStreaming;
  */ 
 function OakStreaming(){
    this.peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);
-   
+   this.simplePeerCreationCounter = 1;
+   this.connectionsWaitingForSignalingData = [];
+    
    this.streamVideo = streamVideo;
    this.loadVideo = loadVideo;
    this.addSimplePeerInstance = function(){}; 
-   this.createSignalingData = createSignalingData;
-   this.createSignalingDataResponse = createSignalingDataResponse;
-   this.processSignalingResponse = processSignalingResponse;
    this.on = function(){};
    this.forTesting_connectedToNewWebTorrentPeer = function(){};
+   this.horst1 = horst1;
+   this.horst2 = horst2;
+   this.horst3 = horst3;
+   
+   this.createSignalingData = function (callback){
+      var oakNumber = this.simplePeerCreationCounter;
+      this.connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({initiator: true, tickle: false});
+      this.simplePeerCreationCounter++;
+      this.connectionsWaitingForSignalingData[oakNumber].on('signal', function (signalingData){
+         signalingData.oakNumber = oakNumber;
+         callback(signalingData);
+      });
+   };
+   
+   this.createSignalingDataResponse = function (signalingData, callback){
+      var oakNumber = signalingData.oakNumber;
+      delete signalingData.oakNumber;
+      var myPeer = new SimplePeer({initiator: false, tickle: false});
+      
+      myPeer.on('signal', function (answerSignalingData){
+         answerSignalingData.oaknumber = oakNumber;
+         callback(answerSignalingData);
+      });
+      myPeer.signal(signalingData);
+      
+      myPeer.on('connect', function(){
+         addSimplePeerInstance(myPeer);
+      });
+   };
+   
+   this.processSignalingResponse = function (signalingData, callback){
+      var oakNumber = signalingData.oakNumber;
+      delete signalingData.oakNumber;
+      (this.connectionsWaitingForSignalingData[oakNumber]).on('connect', function (){
+         console.log('CONNECT');
+         addSimplePeerInstance(this.connectionsWaitingForSignalingData[oakNumber]);
+         delete this.connectionsWaitingForSignalingData[oakNumber];
+         callback();
+      });
+      this.connectionsWaitingForSignalingData[oakNumber].signal(signalingData);
+   };
 }
 
  
@@ -170,6 +209,13 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             }
             wire.use(ut_pex());
             wire.ut_pex.start();
+            /*
+            wire.ut_pex.on('peer', function (peer){
+               theTorrent.addPeer(peer);
+               // got a peer
+               // probably add it to peer connections queue
+            });
+            */
          });
 
          for(var i=0, length=videostreamRequestHandlers.length; i<length; i++){
@@ -557,8 +603,6 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    Videostream(new file(PATH_TO_VIDEO_FILE), video);
 }
 
-
-
 function addSimplePeerInstance(simplePeerInstance, options, callback){
    // The method add a simplePeer to the WebTorrent swarm instance 
    if(theTorrent){
@@ -576,47 +620,33 @@ function addSimplePeerInstance(simplePeerInstance, options, callback){
    }
 }
 
-var simplePeerCreationCounter = 0;
-var connectionsWaitingForSignalingData = [];
 
+var myArray = [];
+var globalCounter = 32;
 
-function createSignalingData(callback){
-   var myPeer = new SimplePeer({initiator: true, tickle: false});
-   myPeer.on('signal', function (signalingData){
-      signalingData.oakNumber = ++simplePeerCreationCounter;
-      connectionsWaitingForSignalingData[simplePeerCreationCounter] = myPeer;
-      callback(signalingData);
-   });
+function horst1(){
+   var myObj = {};
+   myObj.bam = 42;
+   myObj.counter = globalCounter;
+   myArray[globalCounter] = 99;
+   globalCounter++;
+   return horst2(myObj);
 }
 
-function createSignalingDataResponse(signalingData, callback){
-   var oakNumber;
-   var myPeer = new SimplePeer({initiator: false, tickle: false});
-   myPeer.on('signal', function (answerSignalingData){
-      answerSignalingData.oaknumber = oakNumber;
-      callback(answerSignalingData);
-   });
-   oakNumber = signalingData.oakNumber;
-   delete signalingData.oakNumber;
-   myPeer.signal(signalingData);
-   
-   myPeer.on('connect', function(){
-      addSimplePeerInstance(myPeer);
-   });
+function horst2(myObj){
+   var temp = myObj.bam;
+   delete myObj.bam;
+   myObj.bam = temp;
+   return horst3(myObj);
 }
 
-function processSignalingResponse(signalingData, callback){
-   var oakNumber = signalingData.oakNumber;
-   console.log("In processSingalingResponse   oakNumber: " + oakNumber);
-   delete signalingData.oakNumber;
-   (connectionsWaitingForSignalingData[oakNumber]).on('connect', function (){
-      console.log('CONNECT');
-      addSimplePeerInstance(connectionsWaitingForSignalingData[oakNumber]);
-      delete connectionsWaitingForSignalingData[oakNumber];
-      callback();
-   });
-   connectionsWaitingForSignalingData[oakNumber].signal(signalingData);
+function horst3(myObj){
+   var position =  myObj.counter;
+   //console.log("V3 myObj.bam: " + myObj.bam);
+   console.log("V4 myArray[position]: " + myArray[position]);
+   return myArray[position];
 }
+
 
 function on(type, callback){
    // call callback when event of type "type" happend
