@@ -1,14 +1,6 @@
 var theVideoFileSize = 788493;
 
 
-describe("Test horsts methods", function(){
-   it("ta da", function(){
-      var myStreaming = new OakStreaming();
-      expect(myStreaming.horst1()).toEqual(99);
-   }, 5000);
-});
-
-
 describe("Testing if manuallyAddingPeer methods", function(){   
    var twoPeersAreConnected = false;
    var threePeersAreConnected = false;
