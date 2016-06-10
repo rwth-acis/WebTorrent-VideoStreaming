@@ -27,11 +27,20 @@ function OakStreaming(){
    this.peersToAdd = [];
    
    var self = this;
+   
+   this.streamVideo = function(){streamVideo.call(this)};
+   this.loadVideo = function(){loadVideo.call(this)};
+   this.addSimplePeerInstance = addSimplePeerInstance;
+   this.forTesting_connectedToNewWebTorrentPeer = function(){};
+   this.on = function(){};   
+
+   /*
    this.streamVideo = function(a,b,c,d,e){streamVideo.call(self, a, b, c, d, e)};
    this.loadVideo = function(a,b,c){loadVideo.call(self, a, b, c)};
    this.addSimplePeerInstance = function(a,b,c){addSimplePeerInstance.call(self, a, b, c)};
    this.on = function(){};
    this.forTesting_connectedToNewWebTorrentPeer = function(){};
+   */
    
    this.createSignalingData = function (callback){
       var alreadyCalledCallback = false;
@@ -196,7 +205,6 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var self = this;
 
    
-
    function MyReadableStream(options){
       readableStream.Readable.call(this, options);
    }
@@ -418,15 +426,15 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             wires[i].choke();
          }
       }
-      setTimeout(chokeIfNecessary, CHOKE_IF_NECESSARY_INTERVAL);
+      setTimeout(function(){chokeIfNecessary.call(this)}, CHOKE_IF_NECESSARY_INTERVAL);
    }
 
    function updateChart(){
       if(endStreaming){
          return;
       }
-      if (self.theTorrent) {
-         document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer + "\n Bytes taken from server delivery: " + bytesTakenFromServer + "\n Bytes taken from WebTorrent delivery: " + bytesTakenFromWebTorrent;
+      if(self.theTorrent){
+         document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + self.theTorrent.downloaded + "\n torrent.uploaded: " + self.theTorrent.uploaded + "\n torrent.progress: " + self.theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer + "\n Bytes taken from server delivery: " + bytesTakenFromServer + "\n Bytes taken from WebTorrent delivery: " + bytesTakenFromWebTorrent;
       }
       setTimeout(function(){updateChart.call(this)}, UPDATE_CHART_INTERVAL);
    }
@@ -459,7 +467,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       for (var i = 0, length = videostreamRequestHandlers.length; i < length; i++) {
          ceckIfAnswerStreamReady(videostreamRequestHandlers[i]);
       }
-     setTimeout(frequentlyCeckIfAnswerStreamReady, CHECK_IF_ANSWERSTREAM_READY_INTERVAL);
+   setTimeout(function(){frequentlyCeckIfAnswerStreamReady.call(this);}, CHECK_IF_ANSWERSTREAM_READY_INTERVAL);
    }
 
    function checkIfBufferFullEnough(){
@@ -471,7 +479,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          if(timeRanges.start(0) <= 0 && timeRanges.end(0) >= SIZE_OF_VIDEO_FILE-1){
             videoCompletelyLoaded = true;
             if(endIfVideoLoaded){
-               this.theTorrent.destroy();
+               self.theTorrent.destroy();
                delete webTorrentClient;
                endStreaming = true;
                return;                 
