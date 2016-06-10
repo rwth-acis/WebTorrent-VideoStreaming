@@ -9,21 +9,16 @@ describe("Test horsts methods", function(){
 });
 
 
-describe("Testing if manuallyAddingPeer methods", function(){
-   var myStreaming1 = new OakStreaming();
-   var myStreaming2 = new OakStreaming();
-   var myStreaming3 = new OakStreaming();
-   
+describe("Testing if manuallyAddingPeer methods", function(){   
    var twoPeersAreConnected = false;
    var threePeersAreConnected = false;
-   var testTorrent1, testTorrent2, testTorrent3;
-   
+   var testTorrent1, testTorrent2, testTorrent3; 
    
    it("can establish a WebTorrent connection between two OakStreaming instances", function(done){
       expect(true).toBe(true); // every Jasmine spec has to have an expect expression
       var receivedCallbacks = 0;
             
-      myStreaming1.forTesting_connectedToNewWebTorrentPeer(function(){
+      myStreamingA.forTesting_connectedToNewWebTorrentPeer(function(){
          if(receivedCallbacks === 1){
             twoPeersAreConnected = true;
             done();
@@ -31,7 +26,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
             receivedCallbacks++;
          }
       });
-      myStreaming2.forTesting_connectedToNewWebTorrentPeer(function(){
+      myStreamingB.forTesting_connectedToNewWebTorrentPeer(function(){
          if(receivedCallbacks === 1){
             twoPeersAreConnected = true;            
             done();
@@ -39,9 +34,9 @@ describe("Testing if manuallyAddingPeer methods", function(){
             receivedCallbacks++;
          }
       });
-      myStreaming1.createSignalingData(function(signalingData){
-         myStreaming2.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-            myStreaming1.processSignalingResponse(signalingDataResponse);
+      myStreamingA.createSignalingData(function(signalingData){
+         myStreamingB.createSignalingDataResponse(signalingData, function(signalingDataResponse){
+            myStreamingA.processSignalingResponse(signalingDataResponse, function(){console.log("Peers are connected");});
          });
       });
    }, 20000);
@@ -52,12 +47,12 @@ describe("Testing if manuallyAddingPeer methods", function(){
       
       function callback(streamInformationObject, torrent){
          testTorrent = torrent;
-         myStreaming2.loadVideo(streamInformationObject, function(){testTorrent.destroy(done);}, true);
+         myStreamingB.loadVideo(streamInformationObject, function(){testTorrent.destroy(done);}, true);
       }
       
       function streamWhenConnectionEstablished(res){
          if(twoPeersAreConnected){
-            myStreaming1.streamVideo(res, {webTorrentTrackers: [["ws://localhost:8081"]]}, callback, "It's a test", true);
+            myStreamingA.streamVideo(res, {webTorrentTrackers: [["ws://localhost:8081"]]}, callback, "It's a test", true);
          } else {
             setTimeout(streamWhenConnectionEstablished, 500);
          }
@@ -80,7 +75,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
       var receivedCallbacks = 0;
        
        
-      myStreaming1.forTesting_connectedToNewWebTorrentPeer(function(){
+      myStreamingA.forTesting_connectedToNewWebTorrentPeer(function(){
          if(receivedCallbacks === 4){
             threePeersAreConnected = true;
             done();
@@ -88,7 +83,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
             receivedCallbacks++;
          }
       });
-      myStreaming2.forTesting_connectedToNewWebTorrentPeer(function(){
+      myStreamingB.forTesting_connectedToNewWebTorrentPeer(function(){
          if(receivedCallbacks === 4){
             threePeersAreConnected = true;            
             done();
@@ -96,7 +91,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
             receivedCallbacks++;
          }
       });
-      myStreaming3.forTesting_connectedToNewWebTorrentPeer(function(){
+      myStreamingC.forTesting_connectedToNewWebTorrentPeer(function(){
          if(receivedCallbacks === 4){
             threePeersAreConnected = true;            
             done();
@@ -104,12 +99,11 @@ describe("Testing if manuallyAddingPeer methods", function(){
             receivedCallbacks++;
          }
       }); 
-      myStreaming2.createSignalingData(function(signalingData){
-         myStreaming3.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-            myStreaming2.processSignalingResponse(signalingDataResponse);
+      myStreamingB.createSignalingData(function(signalingData){
+         myStreamingC.createSignalingDataResponse(signalingData, function(signalingDataResponse){
+            myStreamingB.processSignalingResponse(signalingDataResponse, function(){console.log("Connected peers")});
          });
-      });
-      
+      });    
    }, 25000);
    
    it("can successfully connect three OakStreaming instances for streaming", function(done){
@@ -119,14 +113,14 @@ describe("Testing if manuallyAddingPeer methods", function(){
       
       function callback(streamInformationObject, torrent){
          testTorrent = torrent;
-         myStreaming1.loadVideo(streamInformationObject, function(){
+         myStreamingA.loadVideo(streamInformationObject, function(){
             if(oneStreamingCompleted){
                testTorrent.destroy(done);
             } else {
                oneStreamingCompleted = true;
             }
          }, true);
-         myStreaming2.loadVideo(streamInformationObject,  function(){
+         myStreamingB.loadVideo(streamInformationObject,  function(){
             if(oneStreamingCompleted){
                testTorrent.destroy(done);
             } else {
@@ -137,7 +131,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
       
       function streamWhenConnectionEstablished(res){
          if(threePeersAreConnected){
-            myStreaming3.streamVideo(res, {webTorrentTrackers: [["ws://localhost:8081"]]}, callback, "It's a test", false);
+            myStreamingC.streamVideo(res, {webTorrentTrackers: [["ws://localhost:8081"]]}, callback, "It's a test", false);
          } else {
             setTimeout(function (){streamWhenConnectionEstablished(res);}, 500);
          }

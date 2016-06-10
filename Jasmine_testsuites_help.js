@@ -14,3 +14,7 @@ para = document.createElement("p");
 para.id = "WebTorrent-received";
 para.style.display = "none";
 document.body.appendChild(para);
+
+window.myStreamingA = new OakStreaming();
+window.myStreamingB = new OakStreaming();
+window.myStreamingC = new OakStreaming();

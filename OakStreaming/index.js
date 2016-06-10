@@ -21,53 +21,74 @@ module.exports = OakStreaming;
  */ 
 function OakStreaming(){
    this.peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);
-   this.simplePeerCreationCounter = 1;
+   this.simplePeerCreationCounter = 0;
    this.connectionsWaitingForSignalingData = [];
-    
-   this.streamVideo = streamVideo;
-   this.loadVideo = loadVideo;
-   this.addSimplePeerInstance = function(){}; 
+   this.theTorrent = null;
+   this.peersToAdd = [];
+   
+   var self = this;
+   this.streamVideo = function(a,b,c,d,e){streamVideo.call(self, a, b, c, d, e)};
+   this.loadVideo = function(a,b,c){loadVideo.call(self, a, b, c)};
+   this.addSimplePeerInstance = function(a,b,c){addSimplePeerInstance.call(self, a, b, c)};
    this.on = function(){};
    this.forTesting_connectedToNewWebTorrentPeer = function(){};
-   this.horst1 = horst1;
-   this.horst2 = horst2;
-   this.horst3 = horst3;
    
    this.createSignalingData = function (callback){
+      var alreadyCalledCallback = false;
+      console.log("Archemage");
       var oakNumber = this.simplePeerCreationCounter;
+      console.log("In createSignalingData oakNumber: " + oakNumber);
       this.connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({initiator: true, tickle: false});
       this.simplePeerCreationCounter++;
+      
       this.connectionsWaitingForSignalingData[oakNumber].on('signal', function (signalingData){
-         signalingData.oakNumber = oakNumber;
-         callback(signalingData);
+         if(!alreadyCalledCallback){
+            alreadyCalledCallback = true;
+            signalingData.oakNumber = oakNumber;
+            callback(signalingData);
+         }
       });
    };
    
    this.createSignalingDataResponse = function (signalingData, callback){
+      console.log("Pala");
       var oakNumber = signalingData.oakNumber;
+      console.log("In createSignalingDataResponse zu Beginn oakNumber: " + oakNumber);
       delete signalingData.oakNumber;
+      
       var myPeer = new SimplePeer({initiator: false, tickle: false});
+      var index = this.simplePeerCreationCounter;
+      this.connectionsWaitingForSignalingData[index] = myPeer;
+      this.simplePeerCreationCounter++;
       
       myPeer.on('signal', function (answerSignalingData){
-         answerSignalingData.oaknumber = oakNumber;
+         console.log("In createSignalingDataResponse nach onSignal oakNumber: " + oakNumber);
+         answerSignalingData.oakNumber = oakNumber;
+         console.log("In createSignalingDataResponse  object that is returned with callback: " + JSON.stringify(answerSignalingData));
          callback(answerSignalingData);
       });
       myPeer.signal(signalingData);
       
+      var self = this;
       myPeer.on('connect', function(){
-         addSimplePeerInstance(myPeer);
+         self.addSimplePeerInstance(self.connectionsWaitingForSignalingData[index]);
       });
    };
    
    this.processSignalingResponse = function (signalingData, callback){
+      console.log("In processSignalingResponse  signalingData paramter: " + JSON.stringify(signalingData));
       var oakNumber = signalingData.oakNumber;
       delete signalingData.oakNumber;
+      console.log("In processSignalingResponse  oakNumber: " + oakNumber);
+      console.log("this.connectionsWaitingForSignalingData: " + this.connectionsWaitingForSignalingData);
+      var self = this;
       (this.connectionsWaitingForSignalingData[oakNumber]).on('connect', function (){
          console.log('CONNECT');
-         addSimplePeerInstance(this.connectionsWaitingForSignalingData[oakNumber]);
-         delete this.connectionsWaitingForSignalingData[oakNumber];
+         self.addSimplePeerInstance(self.connectionsWaitingForSignalingData[oakNumber]);
+         self.connectionsWaitingForSignalingData[oakNumber] = undefined;
          callback();
       });
+      console.log("In processSignalingResponse  object that is passed to .signal(): " + JSON.stringify(signalingData));
       this.connectionsWaitingForSignalingData[oakNumber].signal(signalingData);
    };
 }
@@ -133,7 +154,7 @@ function streamVideo(videoFile, options, callback, isItATest, destroyTorrent){
  * @param {OakStreaming~loadedVideoFinished} callback - This callback gets called when the video has been loaded entirely into the buffer of the video player.
  */
 function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
-   //console.log("ape");
+   console.log("Deathkinght");
    
    //////console.log("I entered this.loadVideo");
    //////console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
@@ -172,8 +193,8 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var webTorrentClient = null;
    var bytesTakenFromWebTorrent = 0;
    var bytesTakenFromServer = 0;
-   var theTorrent;
-   var peersToAdd = [];
+   var self = this;
+
    
 
    function MyReadableStream(options){
@@ -186,12 +207,14 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    if(deliveryByWebtorrent){
       webTorrentClient = new WebTorrent();
       webTorrentClient.add(THE_RECEIVED_TORRENT_FILE, function (torrent){
-         //////console.log("torrent meta data ready");         
-         theTorrent = torrent;
          
-         for(var j=0, length= peersToAdd.length; j<length; j++){
-            theTorrent.addPeer(peersToAdd[j][0]);
-            (peersToAdd[j][1])();
+         
+         //////console.log("torrent meta data ready");         
+         self.theTorrent = torrent;
+         
+         for(var j=0; j< self.peersToAdd.length; j++){
+            self.theTorrent.addPeer(self.peersToAdd[j][0]);
+            (self.peersToAdd[j][1])();
          } 
          
          webTorrentFile = torrent.files[0];
@@ -207,11 +230,14 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             if(!window.firstWire){
                window.firstWire = wire;
             }
+            
+            console.log("typeof ut_pex: " + ut_pex);
+            console.log("typeof ut_pex(): " + ut_pex());
             wire.use(ut_pex());
             wire.ut_pex.start();
             /*
             wire.ut_pex.on('peer', function (peer){
-               theTorrent.addPeer(peer);
+               this.theTorrent.addPeer(peer);
                // got a peer
                // probably add it to peer connections queue
             });
@@ -302,7 +328,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       thisRequest.collectorStreamForWebtorrent = new MyWriteableStream({highWaterMark: 50000000});
       videostreamRequestHandlers.push(thisRequest);
 
-      if(webTorrentFile && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
+      if(webTorrentFile && self.theTorrent.uploaded <= UPLOAD_LIMIT * self.theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
          ////////console.log("after new videostreamRequest creating a corresponding webtorrent stream");
          ////console.log("opts.start: " + opts.start);
          ////console.log("webTorrentFile.length: " + webTorrentFile.length);
@@ -380,9 +406,9 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    };
 
    function chokeIfNecessary(){
-      if (theTorrent && theTorrent.uploaded >= theTorrent.downloaded * UPLOAD_LIMIT + ADDITION_TO_UPLOAD_LIMIT) {
+      if (self.theTorrent && self.theTorrent.uploaded >= self.theTorrent.downloaded * UPLOAD_LIMIT + ADDITION_TO_UPLOAD_LIMIT) {
          if(videoCompletelyLoaded){
-            theTorrent.destroy();
+            self.theTorrent.destroy();
             delete webTorrentClient;
             endStreaming = true;
             return;
@@ -399,10 +425,10 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       if(endStreaming){
          return;
       }
-      if (theTorrent) {
+      if (self.theTorrent) {
          document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer + "\n Bytes taken from server delivery: " + bytesTakenFromServer + "\n Bytes taken from WebTorrent delivery: " + bytesTakenFromWebTorrent;
       }
-      setTimeout(updateChart, UPDATE_CHART_INTERVAL);
+      setTimeout(function(){updateChart.call(this)}, UPDATE_CHART_INTERVAL);
    }
     
    function VideostreamRequestHandler(readStreamNumber, opts, self) {
@@ -445,7 +471,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          if(timeRanges.start(0) <= 0 && timeRanges.end(0) >= SIZE_OF_VIDEO_FILE-1){
             videoCompletelyLoaded = true;
             if(endIfVideoLoaded){
-               theTorrent.destroy();
+               this.theTorrent.destroy();
                delete webTorrentClient;
                endStreaming = true;
                return;                 
@@ -472,7 +498,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             }
          }
       }
-      setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
+      setTimeout(function(){checkIfBufferFullEnough.call(this);}, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
    }
 
    function conductXHR(thisRequest) {
@@ -605,46 +631,19 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
 
 function addSimplePeerInstance(simplePeerInstance, options, callback){
    // The method add a simplePeer to the WebTorrent swarm instance 
-   if(theTorrent){
-      if(theTorrent.infoHash){
-         theTorrent.addPeer(simplePeerInstance);
+   if(this.theTorrent){
+      if(this.theTorrent.infoHash){
+         this.theTorrent.addPeer(simplePeerInstance);
          callback();
       } else {
-         theTorrent.on('infoHash', function() {theTorrent.addPeer(simplePeerInstance); callback();});
+         this.theTorrent.on('infoHash', function() {this.theTorrent.addPeer(simplePeerInstance); callback();});
       }
    } else {
       var pair = [];
       pair.push(simplePeerInstance);
       pair.push(callback);
-      peersToAdd.push(pair);
+      this.peersToAdd.push(pair);
    }
-}
-
-
-var myArray = [];
-var globalCounter = 32;
-
-function horst1(){
-   var myObj = {};
-   myObj.bam = 42;
-   myObj.counter = globalCounter;
-   myArray[globalCounter] = 99;
-   globalCounter++;
-   return horst2(myObj);
-}
-
-function horst2(myObj){
-   var temp = myObj.bam;
-   delete myObj.bam;
-   myObj.bam = temp;
-   return horst3(myObj);
-}
-
-function horst3(myObj){
-   var position =  myObj.counter;
-   //console.log("V3 myObj.bam: " + myObj.bam);
-   console.log("V4 myArray[position]: " + myArray[position]);
-   return myArray[position];
 }
 
 
