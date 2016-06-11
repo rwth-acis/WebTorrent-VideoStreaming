@@ -4,13 +4,15 @@ var theVideoFileSize = 788493;
 describe("Testing if manuallyAddingPeer methods", function(){   
    var twoPeersAreConnected = false;
    var threePeersAreConnected = false;
-   var testTorrent1, testTorrent2, testTorrent3; 
+   var twoPeersStreamingToAnother = false;
+   var testTorrent1, testTorrent2, testTorrent3;
    
    it("can establish a WebTorrent connection between two OakStreaming instances", function(done){
       expect(true).toBe(true); // every Jasmine spec has to have an expect expression
-      var receivedCallbacks = 0;
       
       /*
+      var receivedCallbacks = 0;    
+            
       var tryToSetCallbackA = (function(){
          return function(){
             if(myStreamingA.forTesting_connectedToNewWebTorrentPeer){
@@ -67,8 +69,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
       
       function callback(streamInformationObject, torrent){
          console.log("In the second spec the callback from streamVideo is called");
-         testTorrent = torrent;
-         myStreamingB.loadVideo(streamInformationObject, function(){testTorrent.destroy(); done();}, true);
+         myStreamingB.loadVideo(streamInformationObject, function(){done(); twoPeersStreamingToAnother = true;}, false);
       }
       
       function streamWhenConnectionEstablished(res){
@@ -92,29 +93,39 @@ describe("Testing if manuallyAddingPeer methods", function(){
             streamWhenConnectionEstablished(res);
       });
    }, 40000);
-});
- /*  
+
    it("can automatically establish WebTorrent connections between three OakStreaming instances", function(done){
       expect(true).toBe(true); // every Jasmine spec has to have an expect expression  
-      var receivedCallbacks = 0;
-       
-       
-      myStreamingA.forTesting_connectedToNewWebTorrentPeer(function(){
-         if(receivedCallbacks === 4){
-            threePeersAreConnected = true;
-            done();
+          
+          
+      var receivedCallbacks = 0;     
+    
+    
+      function checkIfnewConnectionsAreCreated(){
+         if(twoPeersStreamingToAnother){
+            myStreamingA.forTesting_connectedToNewWebTorrentPeer(function(){
+               if(receivedCallbacks === 2){
+                  threePeersAreConnected = true;
+                  done();
+               } else {
+                  receivedCallbacks++;
+               }
+            });
+            myStreamingB.forTesting_connectedToNewWebTorrentPeer(function(){
+               if(receivedCallbacks === 2){
+                  threePeersAreConnected = true;            
+                  done();
+               } else {
+                  receivedCallbacks++;
+               }
+            });
          } else {
-            receivedCallbacks++;
+            setTimeout(checkIfnewConnectionsAreCreated, 500);
          }
-      });
-      myStreamingB.forTesting_connectedToNewWebTorrentPeer(function(){
-         if(receivedCallbacks === 4){
-            threePeersAreConnected = true;            
-            done();
-         } else {
-            receivedCallbacks++;
-         }
-      });
+      }
+      checkIfnewConnectionsAreCreated();
+      
+      /* I think not needed
       myStreamingC.forTesting_connectedToNewWebTorrentPeer(function(){
          if(receivedCallbacks === 4){
             threePeersAreConnected = true;            
@@ -122,14 +133,18 @@ describe("Testing if manuallyAddingPeer methods", function(){
          } else {
             receivedCallbacks++;
          }
-      }); 
+      });
+      */
+    
       myStreamingB.createSignalingData(function(signalingData){
          myStreamingC.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-            myStreamingB.processSignalingResponse(signalingDataResponse, function(){console.log("Connected peers")});
+            myStreamingB.processSignalingResponse(signalingDataResponse, function(){console.log("For third spec peers connected"); done();});
          });
       });    
    }, 25000);
-   
+});
+
+/*   
    it("can successfully connect three OakStreaming instances for streaming", function(done){
       expect(true).toBe(true); // every Jasmine spec has to have an expect expression   
       var oneStreamingCompleted = false;

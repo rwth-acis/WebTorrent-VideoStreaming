@@ -244,11 +244,13 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
 
          
          this.forTesting_connectedToNewWebTorrentPeer = function(callback){
-            if(wires.pop() === undefined){
+            if(notificationsBecauseNewWires <= 0){
                torrent.on('wire', function(wire){
+                  notificationsBecauseNewWires--;
                   callback();
                });
-            } else {   
+            } else {
+               notificationsBecauseNewWires--;               
                callback();
             }
          };
