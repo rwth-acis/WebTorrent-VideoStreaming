@@ -32,7 +32,7 @@ function OakStreaming(){
    this.loadVideo = loadVideo;
    this.addSimplePeerInstance = addSimplePeerInstance;
    this.on = function(){};
-   this.forTesting_connectedToNewWebTorrentPeer = function(){};
+   this.forTesting_connectedToNewWebTorrentPeer = null;
    
    /*
    this.streamVideo = function(a,b,c,d,e){streamVideo.call(self, a, b, c, d, e)};
@@ -80,7 +80,7 @@ function OakStreaming(){
       
       var self = this;
       myPeer.on('connect', function(){
-         self.addSimplePeerInstance(self.connectionsWaitingForSignalingData[index]);
+         self.addSimplePeerInstance(self.connectionsWaitingForSignalingData[index], {}, function(){console.log("addSimplePeerInstance ended");});
       });
    };
    
@@ -228,10 +228,14 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          console.log("In loadVideo typeof webTorrentFile after assignment: " + typeof webTorrentFile);
 
          
-         var forTesting_connectedToNewWebTorrentPeer = function(callback){
-            torrent.on('wire', function(wire){
+         this.forTesting_connectedToNewWebTorrentPeer = function(callback){
+            if(wires.pop() === undefined){
+               torrent.on('wire', function(wire){
+                  callback();
+               });
+            } else {   
                callback();
-            });
+            }
          };
          
          torrent.on('wire', function (wire){
@@ -651,7 +655,6 @@ function addSimplePeerInstance(simplePeerInstance, options, callback){
    if(this.theTorrent){
       if(this.theTorrent.infoHash){
          this.theTorrent.addPeer(simplePeerInstance);
-         callback();
       } else {
          this.theTorrent.on('infoHash', function() {this.theTorrent.addPeer(simplePeerInstance); callback();});
       }

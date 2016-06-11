@@ -9,30 +9,58 @@ describe("Testing if manuallyAddingPeer methods", function(){
    it("can establish a WebTorrent connection between two OakStreaming instances", function(done){
       expect(true).toBe(true); // every Jasmine spec has to have an expect expression
       var receivedCallbacks = 0;
-            
-      myStreamingA.forTesting_connectedToNewWebTorrentPeer(function(){
-         if(receivedCallbacks === 1){
-            twoPeersAreConnected = true;
-            done();
-         } else {
-            receivedCallbacks++;
-         }
-      });
-      myStreamingB.forTesting_connectedToNewWebTorrentPeer(function(){
-         if(receivedCallbacks === 1){
-            twoPeersAreConnected = true;            
-            done();
-         } else {
-            receivedCallbacks++;
-         }
-      });
+      
+      /*
+      var tryToSetCallbackA = (function(){
+         return function(){
+            if(myStreamingA.forTesting_connectedToNewWebTorrentPeer){
+               console.log(" callback of myStreamingA.forTesting_connectedToNewWebTorrentPeer is set");
+               myStreamingA.forTesting_connectedToNewWebTorrentPeer(function(){
+                  if(receivedCallbacks === 1){
+                     twoPeersAreConnected = true;
+                     done();
+                  } else {
+                     receivedCallbacks++;
+                  }
+               });
+            } else {
+               console.log("tryToSetCallbackA setTimeout is set");
+               setTimeout(tryToSetCallbackA, 500);
+            }
+         };
+      })();
+      tryToSetCallbackA();
+      
+      
+      var tryToSetCallbackB = (function(){
+         return function(){
+            if(myStreamingB.forTesting_connectedToNewWebTorrentPeer){
+                  console.log("callback of myStreamingB.forTesting_connectedToNewWebTorrentPeer is set");
+                  myStreamingB.forTesting_connectedToNewWebTorrentPeer(function(){
+                     if(receivedCallbacks === 1){
+                        twoPeersAreConnected = true;            
+                        done();
+                     } else {
+                        receivedCallbacks++;
+                     }
+                  });
+            } else {
+               console.log("tryToSetCallbackB setTimeout is set");
+               setTimeout(tryToSetCallbackB, 500);
+            }         
+         };
+      })();
+      tryToSetCallbackB();
+      */
+
       myStreamingA.createSignalingData(function(signalingData){
          myStreamingB.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-            myStreamingA.processSignalingResponse(signalingDataResponse, function(){console.log("Peers are connected");});
+            myStreamingA.processSignalingResponse(signalingDataResponse, function(){console.log("Peers are connected"); done();});
          });
       });
    }, 20000);
-   
+});
+/*   
    it("can successfully connect two OakStreaming instances for streaming", function(done){
       expect(true).toBe(true); // every Jasmine spec has to have an expect expression
       var testTorrent;
@@ -258,3 +286,4 @@ describe("Testing if loadVideo method", function(){
       });
    }, 20000);
 });
+*/
