@@ -261,7 +261,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             }
             
             wire.use(ut_pex());
-            wire.ut_pex.start();
+            //wire.ut_pex.start();
             
             /*
             wire.ut_pex.on('peer', function (peer){
@@ -541,8 +541,8 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
                   }
                }
             }
-            setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
          }
+         setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
       }
    })();
 
@@ -667,7 +667,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    checkIfBufferFullEnough();
 
    //////console.log("I call Videostream constructor");
-   Videostream(new file(PATH_TO_VIDEO_FILE), video);
+   Videostream(new file(PATH_TO_VIDEO_FILE), myVideo);
 }
 
 function addSimplePeerInstance(simplePeerInstance, options, callback){
