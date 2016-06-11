@@ -129,15 +129,25 @@ function streamVideo(videoFile, options, callback, isItATest, destroyTorrent){
    ////console.log("videoFile: " + videoFile);
    ////console.log("options: " + options);
    ////console.log("callback: " + callback);
-   webTorrentClient.seed(videoFile, {announceList: options.webTorrentTrackers}, function(torrent){
+   
+   var seedingOption = {};
+   if(options.webTorrentTrackers){
+      seedingOption.announceList = options.webTorrentTrackers;
+   }
+   
+   webTorrentClient.seed(videoFile, seedingOption, function(torrent){
       ////console.log("Video file was seeded");
       var streamInformationObject = {};
       //streamInformationObject.torrent = torrent;
-      streamInformationObject.magnetURI = torrent.magnetURI;
+      if(options.webTorrentTrackers){
+         streamInformationObject.magnetURI = torrent.magnetURI;
+         streamInformationObject.webTorrentTrackers = options.webTorrentTrackers;
+      }
+      
       streamInformationObject.videoFileSize = torrent.files[0].length;
       streamInformationObject.XHRPath = options.XHRPath;
       streamInformationObject.torrentFile = torrent.torrentFile;
-      streamInformationObject.webTorrentTrackers = options.webTorrentTrackers;
+      
       
       //////console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
       if(isItATest === "It's a test"){
@@ -193,7 +203,6 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var endStreaming = false;
    var webTorrentClient = null;
    var wires = [];
-   var myVideo = document.getElementById("myVideo");
    var consoleCounter = 0;
    var globalvideostreamRequestNumber = 0;
    var bytesReceivedFromServer = 0;
@@ -204,6 +213,12 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var bytesTakenFromWebTorrent = 0;
    var bytesTakenFromServer = 0;
    
+   
+   
+   var myVideo = document.querySelector('video');
+   myVideo.addEventListener('error', function (err){
+      console.error(myVideo.error);
+   });
    
    function MyReadableStream(options){
       readableStream.Readable.call(this, options);
@@ -216,7 +231,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       webTorrentClient = new WebTorrent();
       webTorrentClient.add(THE_RECEIVED_TORRENT_FILE, function (torrent){
                  
-         //////console.log("torrent meta data ready");         
+         //console.log("torrent meta data ready");         
          self.theTorrent = torrent;
          
          for(var j=0; j< self.peersToAdd.length; j++){
@@ -239,6 +254,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          };
          
          torrent.on('wire', function (wire){
+            console.log("torrent.on('wire', ..) is fired");
             wires.push(wire);
             if(!window.firstWire){
                window.firstWire = wire;
@@ -247,7 +263,6 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             wire.use(ut_pex());
             wire.ut_pex.start();
             
-            
             /*
             wire.ut_pex.on('peer', function (peer){
                this.theTorrent.addPeer(peer);
@@ -255,6 +270,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
                // probably add it to peer connections queue
             });
             */
+            console.log("At the end of torrent.on('wire', ..");
          });
 
          for(var i=0, length=videostreamRequestHandlers.length; i<length; i++){
@@ -277,7 +293,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    file.prototype.createReadStream = function (opts){
       if(opts.start > SIZE_OF_VIDEO_FILE){
          //console.log("opts.start > SIZE_OF_VIDEO_FILE there cb(null,null) every time");
-         return (new MultiStream(function (cb){cb(null,null);}));
+         return (new MultiStream(function (cb){cb(null, null);}));
       }
       inCritical = true;
       //console.log(consoleCounter++ + " called createreadStream ");
@@ -297,7 +313,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       };
       util.inherits(MyWriteableStream, readableStream.Writable);
       MyWriteableStream.prototype._write = function(chunk, encoding, done){
-         //////console.log("MyWriteableStream _write is called");       
+         console.log("MyWriteableStream _write is called");       
          if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
             ////////console.log("MyWriteableStream _write: pushing received data in answerStream")
             bytesTakenFromWebTorrent += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
@@ -411,7 +427,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          thisRequest.bytesInAnswerStream = 0;
          var res = thisRequest.answerStream;
          thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
-         //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
+         console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
          theCallbackFunction(null, res);
          return true;
       }
@@ -483,43 +499,51 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
 
    var checkIfBufferFullEnough = (function(){
       return function(){
+         console.log("checkIfBufferFullEnough is called");
          if(videoCompletelyLoaded){
             return;
          }
-         var timeRanges = document.querySelector('video').buffered;
-         if(timeRanges.length >= 1){
-            if(timeRanges.start(0) <= 0 && timeRanges.end(0) >= SIZE_OF_VIDEO_FILE-1){
-               videoCompletelyLoaded = true;
-               if(endIfVideoLoaded){
-                  self.theTorrent.destroy();
-                  delete webTorrentClient;
-                  endStreaming = true;
-                  return;                 
-               } 
-               if(callback){
-                  callback();                 
+         console.log("video.duration: " + myVideo.duration);
+         if(myVideo.duration){
+            var timeRanges = myVideo.buffered;
+            if(timeRanges.length >= 1){
+               console.log("timeRanges.start(0): " + timeRanges.start(0));
+               console.log("timeRanges.end(0): " + timeRanges.end(0));
+               
+               if(timeRanges.start(0) == 0 && timeRanges.end(0) == myVideo.duration){
+                  console.log("In checkIfBufferFullEnough: callback should be called");
+                  videoCompletelyLoaded = true;
+                  if(callback){
+                     callback();                 
+                  }
+                  if(endIfVideoLoaded){
+                     self.theTorrent.destroy();
+                     delete webTorrentClient;
+                     endStreaming = true;
+                     return;                 
+                  } 
                }
             }
-         }
-         inCritical = true;
-         for (var i = 0, length = timeRanges.length; i < length; i++) {
-            ////////console.log("Time range number " + i + ": start(" + timeRanges.start(i) + ") end(" + timeRanges.end(i) + ")");
-            if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)) {
-               if (timeRanges.end(i) - myVideo.currentTime >= DOWNLOAD_FROM_SERVER_TIME_RANGE) {
-                  inCritical = false;
-                  ////////console.log("I set inCritical to false");
+            inCritical = true;
+            for (var i = 0, length = timeRanges.length; i < length; i++) {
+               ////////console.log("Time range number " + i + ": start(" + timeRanges.start(i) + ") end(" + timeRanges.end(i) + ")");
+               if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)) {
+                  if (timeRanges.end(i) - myVideo.currentTime >= DOWNLOAD_FROM_SERVER_TIME_RANGE) {
+                     inCritical = false;
+                     ////////console.log("I set inCritical to false");
+                  }
                }
             }
-         }
-         if (deliveryByServer && inCritical) {
-            for (var j = 0, length = videostreamRequestHandlers.length; j < length; j++) {
-               if (videostreamRequestHandlers[j].currentCB !== null && videostreamRequestHandlers[j].XHRConducted === false) {
-                  conductXHR(videostreamRequestHandlers[j]);
+            if (deliveryByServer && inCritical) {
+               for (var j = 0, length = videostreamRequestHandlers.length; j < length; j++) {
+                  if (videostreamRequestHandlers[j].currentCB !== null && videostreamRequestHandlers[j].XHRConducted === false) {
+                     conductXHR(videostreamRequestHandlers[j]);
+                  }
                }
             }
+            setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
          }
-         setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
-      };
+      }
    })();
 
    function conductXHR(thisRequest) {
@@ -642,10 +666,6 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    frequentlyCeckIfAnswerStreamReady();
    checkIfBufferFullEnough();
 
-   var video = document.querySelector('video');
-   video.addEventListener('error', function (err){
-      console.error(video.error);
-   });
    //////console.log("I call Videostream constructor");
    Videostream(new file(PATH_TO_VIDEO_FILE), video);
 }
