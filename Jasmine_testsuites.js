@@ -4,8 +4,8 @@ var theVideoFileSize = 788493;
 describe("Testing if manuallyAddingPeer methods", function(){   
    var twoPeersAreConnected = false;
    var threePeersAreConnected = false;
-   var twoPeersStreamingToAnother = false;
-   var testTorrent1, testTorrent2, testTorrent3;
+   var twoPeersStreamedToAnother = false;
+   var testTorrentA, testTorrentB;
    
    it("can establish a WebTorrent connection between two OakStreaming instances", function(done){
       expect(true).toBe(true); // every Jasmine spec has to have an expect expression
@@ -65,11 +65,11 @@ describe("Testing if manuallyAddingPeer methods", function(){
   
    it("can successfully connect two OakStreaming instances for streaming", function(done){
       expect(true).toBe(true); // every Jasmine spec has to have an expect expression
-      var testTorrent;
+      
       
       function callback(streamInformationObject, torrent){
          console.log("In the second spec the callback from streamVideo is called");
-         myStreamingB.loadVideo(streamInformationObject, function(){done(); twoPeersStreamingToAnother = true;}, false);
+         myStreamingB.loadVideo(streamInformationObject, function(torrent){twoPeersStreamedToAnother = true; done();}, false);
       }
       
       function streamWhenConnectionEstablished(res){
@@ -96,13 +96,12 @@ describe("Testing if manuallyAddingPeer methods", function(){
 
    it("can automatically establish WebTorrent connections between three OakStreaming instances", function(done){
       expect(true).toBe(true); // every Jasmine spec has to have an expect expression  
-          
-          
+                
       var receivedCallbacks = 0;     
     
     
       function checkIfnewConnectionsAreCreated(){
-         if(twoPeersStreamingToAnother){
+         if(twoPeersStreamedToAnother){
             myStreamingA.forTesting_connectedToNewWebTorrentPeer(function(){
                if(receivedCallbacks === 2){
                   threePeersAreConnected = true;
@@ -136,15 +135,14 @@ describe("Testing if manuallyAddingPeer methods", function(){
       });
       */
     
-      myStreamingB.createSignalingData(function(signalingData){
+      myStreamingA.createSignalingData(function(signalingData){
          myStreamingC.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-            myStreamingB.processSignalingResponse(signalingDataResponse, function(){console.log("For third spec peers connected"); done();});
+            myStreamingA.processSignalingResponse(signalingDataResponse, function(){console.log("For third spec peers connected"); done();});
          });
       });    
    }, 25000);
-});
 
-/*   
+ 
    it("can successfully connect three OakStreaming instances for streaming", function(done){
       expect(true).toBe(true); // every Jasmine spec has to have an expect expression   
       var oneStreamingCompleted = false;
@@ -154,14 +152,16 @@ describe("Testing if manuallyAddingPeer methods", function(){
          testTorrent = torrent;
          myStreamingA.loadVideo(streamInformationObject, function(){
             if(oneStreamingCompleted){
-               testTorrent.destroy(done);
+               testTorrent.destroy();
+               done();
             } else {
                oneStreamingCompleted = true;
             }
          }, true);
          myStreamingB.loadVideo(streamInformationObject,  function(){
             if(oneStreamingCompleted){
-               testTorrent.destroy(done);
+               testTorrent.destroy();
+               done();
             } else {
                oneStreamingCompleted = true;
             }
@@ -193,8 +193,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
 describe("Testing if streamVideo method", function(){
    var myStreaming = new OakStreaming();
       
-   it("creates streamInformationObject correctly",  function(done){ 
-      
+   it("creates streamInformationObject correctly",  function(done){     
       function callback (streamInformationObject){
          expect(streamInformationObject.videoFileSize).toEqual(theVideoFileSize);
          expect(streamInformationObject.XHRPath).toMatch("/example.mp4");
@@ -305,4 +304,3 @@ describe("Testing if loadVideo method", function(){
       });
    }, 20000);
 });
-*/

@@ -25,7 +25,7 @@ function OakStreaming(){
    this.connectionsWaitingForSignalingData = [];
    this.theTorrent = null;
    this.peersToAdd = [];
-   
+   this.notificationsBecauseNewWires = 0;
      
    
    this.streamVideo = streamVideo;
@@ -123,7 +123,7 @@ function OakStreaming(){
  * @param {string} options.XHRPath - The path that will be used for the XML HTTP Request (XHR). If the option object or this property of the option object is undefined, no video data will be requested from the server.
  * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated StreamInformationObject at the end of the execution of streamVideo.
  */
-function streamVideo(videoFile, options, callback, isItATest, destroyTorrent){ 
+function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent){ 
    var webTorrentClient = new WebTorrent();
    ////console.log("streamVideo is executed");
    ////console.log("videoFile: " + videoFile);
@@ -136,6 +136,30 @@ function streamVideo(videoFile, options, callback, isItATest, destroyTorrent){
    }
    
    webTorrentClient.seed(videoFile, seedingOption, function(torrent){
+      console.log("torrent file is seeded");
+      
+      this.forTesting_connectedToNewWebTorrentPeer = function(callback){
+         if(this.notificationsBecauseNewWires <= 0){
+            this.notificationsBecauseNewWires--;
+            var callbackCalled = false;
+            
+            torrent.on('wire', function(wire){
+               if(!callbackCalled){
+                  callback();
+                  callbackCalled = true;
+               }
+            });
+         } else {
+            this.notificationsBecauseNewWires--;            
+            callback();
+         }
+      };
+      
+      torrent.on('wire', function (wire){
+         this.notificationsBecauseNewWires++;  
+      });
+      
+      
       ////console.log("Video file was seeded");
       var streamInformationObject = {};
       //streamInformationObject.torrent = torrent;
@@ -150,8 +174,9 @@ function streamVideo(videoFile, options, callback, isItATest, destroyTorrent){
       
       
       //////console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
-      if(isItATest === "It's a test"){
+      if(returnTorrent === "It's a test"){
          if(destroyTorrent){
+            this.notificationsBecauseNewWires = 0;
             torrent.destroy();
             delete webTorrentClient;
          }
@@ -211,8 +236,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var inCritical = true;
    var videoCompletelyLoaded = false;
    var bytesTakenFromWebTorrent = 0;
-   var bytesTakenFromServer = 0;
-   
+   var bytesTakenFromServer = 0;   
    
    
    var myVideo = document.querySelector('video');
@@ -231,7 +255,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       webTorrentClient = new WebTorrent();
       webTorrentClient.add(THE_RECEIVED_TORRENT_FILE, function (torrent){
                  
-         //console.log("torrent meta data ready");         
+         console.log("webTorrentClient.add   torrent meta data ready");         
          self.theTorrent = torrent;
          
          for(var j=0; j< self.peersToAdd.length; j++){
@@ -244,13 +268,18 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
 
          
          this.forTesting_connectedToNewWebTorrentPeer = function(callback){
-            if(notificationsBecauseNewWires <= 0){
+            if(this.notificationsBecauseNewWires <= 0){
+               this.notificationsBecauseNewWires--;
+               var callbackCalled = false;
+               
                torrent.on('wire', function(wire){
-                  notificationsBecauseNewWires--;
-                  callback();
+                  if(!callbackCalled){
+                     callback();
+                     callbackCalled = true;
+                  }
                });
             } else {
-               notificationsBecauseNewWires--;               
+               this.notificationsBecauseNewWires--;            
                callback();
             }
          };
@@ -261,6 +290,8 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             if(!window.firstWire){
                window.firstWire = wire;
             }
+            this.notificationsBecauseNewWires++;
+            
             
             wire.use(ut_pex());
             //wire.ut_pex.start();
@@ -272,7 +303,6 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
                // probably add it to peer connections queue
             });
             */
-            console.log("At the end of torrent.on('wire', ..");
          });
 
          for(var i=0, length=videostreamRequestHandlers.length; i<length; i++){
@@ -315,7 +345,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       };
       util.inherits(MyWriteableStream, readableStream.Writable);
       MyWriteableStream.prototype._write = function(chunk, encoding, done){
-         console.log("MyWriteableStream _write is called");       
+         //console.log("MyWriteableStream _write is called");       
          if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
             ////////console.log("MyWriteableStream _write: pushing received data in answerStream")
             bytesTakenFromWebTorrent += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
@@ -429,7 +459,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          thisRequest.bytesInAnswerStream = 0;
          var res = thisRequest.answerStream;
          thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
-         console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
+         //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.readStreamNumber);
          theCallbackFunction(null, res);
          return true;
       }
@@ -439,12 +469,14 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var chokeIfNecessary = (function(){
       return function (){
          if (self.theTorrent && self.theTorrent.uploaded >= self.theTorrent.downloaded * UPLOAD_LIMIT + ADDITION_TO_UPLOAD_LIMIT) {
+            /* mache ich schon in einer anderen frequent methode
             if(videoCompletelyLoaded){
                self.theTorrent.destroy();
                delete webTorrentClient;
                endStreaming = true;
                return;
             }
+            */
             for (var i = 0, length = wires.length; i < length; i++){
                //console.log("I choked a peer");
                wires[i].choke();
@@ -501,22 +533,26 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
 
    var checkIfBufferFullEnough = (function(){
       return function(){
-         console.log("checkIfBufferFullEnough is called");
+         //console.log("checkIfBufferFullEnough is called");
          if(videoCompletelyLoaded){
             return;
          }
-         console.log("video.duration: " + myVideo.duration);
+         //console.log("video.duration: " + myVideo.duration);
          if(myVideo.duration){
             var timeRanges = myVideo.buffered;
             if(timeRanges.length >= 1){
-               console.log("timeRanges.start(0): " + timeRanges.start(0));
-               console.log("timeRanges.end(0): " + timeRanges.end(0));
+               //console.log("timeRanges.start(0): " + timeRanges.start(0));
+               //console.log("timeRanges.end(0): " + timeRanges.end(0));
                
                if(timeRanges.start(0) == 0 && timeRanges.end(0) == myVideo.duration){
-                  console.log("In checkIfBufferFullEnough: callback should be called");
+                 // console.log("In checkIfBufferFullEnough: callback should be called");
                   videoCompletelyLoaded = true;
                   if(callback){
-                     callback();                 
+                     if(endIfVideoLoaded){
+                        callback();
+                     } else {
+                        callback(self.theTorrent);
+                     }
                   }
                   if(endIfVideoLoaded){
                      self.theTorrent.destroy();
