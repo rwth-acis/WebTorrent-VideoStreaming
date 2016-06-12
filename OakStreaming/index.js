@@ -562,8 +562,10 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
                      }
                   }
                   if(endIfVideoLoaded){
-                     self.theTorrent.destroy();
-                     delete webTorrentClient;
+                     if(self.theTorrent){
+                        self.theTorrent.destroy();
+                        delete webTorrentClient;
+                     }
                      endStreaming = true;
                      return;                 
                   } 
