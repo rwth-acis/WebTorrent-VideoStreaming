@@ -171,7 +171,7 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
       //streamInformationObject.torrent = torrent;
       if(options.webTorrentTrackers){
          streamInformationObject.magnetURI = torrent.magnetURI;
-         streamInformationObject.webTorrentTrackers = options.webTorrentTrackers;
+         // Sind dann ja schon im torrent file drin      streamInformationObject.webTorrentTrackers = options.webTorrentTrackers;
       }
       
       streamInformationObject.videoFileSize = torrent.files[0].length;
@@ -259,6 +259,10 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
   
    if(deliveryByWebtorrent){
       webTorrentClient = new WebTorrent();
+      
+      
+      //MAGNET_URI
+       
       webTorrentClient.add(THE_RECEIVED_TORRENT_FILE, function (torrent){
                  
          console.log("webTorrentClient.add   torrent meta data ready");         
@@ -266,7 +270,9 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          
          for(var j=0; j< self.peersToAdd.length; j++){
             self.theTorrent.addPeer(self.peersToAdd[j][0]);
-            (self.peersToAdd[j][1])();
+            if(self.peersToAdd[j][1]){
+               (self.peersToAdd[j][1])();
+            }
          } 
          
          webTorrentFile = torrent.files[0];
@@ -723,8 +729,11 @@ function addSimplePeerInstance(simplePeerInstance, options, callback){
    if(this.theTorrent){
       if(this.theTorrent.infoHash){
          this.theTorrent.addPeer(simplePeerInstance);
+         if(callback){
+            callback();
+         }
       } else {
-         this.theTorrent.on('infoHash', function() {this.theTorrent.addPeer(simplePeerInstance); callback();});
+         this.theTorrent.on('infoHash', function() {this.theTorrent.addPeer(simplePeerInstance); if(callback){callback()}});
       }
    } else {
       var pair = [];
