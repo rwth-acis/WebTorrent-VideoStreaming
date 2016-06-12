@@ -189,7 +189,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
    }, 30000);
 });   
 
-
+/*
 describe("Testing if streamVideo method", function(){
    var myStreaming = new OakStreaming();
       
@@ -304,3 +304,4 @@ describe("Testing if loadVideo method", function(){
       });
    }, 20000);
 });
+*/

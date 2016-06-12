@@ -19,13 +19,16 @@ module.exports = OakStreaming;
  * Creates a new OakStreaming instance which has the methods streamVideo, loadVideo, addPeer and on.
  * @constructor
  */ 
-function OakStreaming(){
+function OakStreaming(OakName){
    this.peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);
    this.simplePeerCreationCounter = 0;
    this.connectionsWaitingForSignalingData = [];
    this.theTorrent = null;
    this.peersToAdd = [];
    this.notificationsBecauseNewWires = 0;
+   
+   console.log("In OakStreaming constructor. this.name: " + OakName);
+   this.OakName = OakName;
      
    
    this.streamVideo = streamVideo;
@@ -138,9 +141,11 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
    webTorrentClient.seed(videoFile, seedingOption, function(torrent){
       console.log("torrent file is seeded");
       
-      this.forTesting_connectedToNewWebTorrentPeer = function(callback){
-         if(this.notificationsBecauseNewWires <= 0){
-            this.notificationsBecauseNewWires--;
+      console.log("In loadVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
+      self.forTesting_connectedToNewWebTorrentPeer = function(callback){
+         console.log("In loadVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets executed");
+         if(self.notificationsBecauseNewWires <= 0){
+            self.notificationsBecauseNewWires--;
             var callbackCalled = false;
             
             torrent.on('wire', function(wire){
@@ -150,13 +155,13 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
                }
             });
          } else {
-            this.notificationsBecauseNewWires--;            
+            self.notificationsBecauseNewWires--;            
             callback();
          }
       };
       
       torrent.on('wire', function (wire){
-         this.notificationsBecauseNewWires++;  
+         self.notificationsBecauseNewWires++;  
       });
       
       
@@ -176,7 +181,7 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
       //////console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
       if(returnTorrent === "It's a test"){
          if(destroyTorrent){
-            this.notificationsBecauseNewWires = 0;
+            self.notificationsBecauseNewWires = 0;
             torrent.destroy();
             delete webTorrentClient;
          }
@@ -198,7 +203,7 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
  * @param {OakStreaming~loadedVideoFinished} callback - This callback gets called when the video has been loaded entirely into the buffer of the video player.
  */
 function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
-   console.log("Deathkinght");
+   console.log("Lich");
    
    //////console.log("I entered this.loadVideo");
    //////console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
@@ -264,10 +269,11 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          } 
          
          webTorrentFile = torrent.files[0];
-         console.log("In loadVideo typeof webTorrentFile after assignment: " + typeof webTorrentFile);
+         //console.log("In loadVideo typeof webTorrentFile after assignment: " + typeof webTorrentFile);
 
-         
+         console.log("In loadVideo    " + this.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
          this.forTesting_connectedToNewWebTorrentPeer = function(callback){
+            console.log("In loadVideo     " + this.OakName + ".forTesting_connectedToNewWebTorrentPeer   gets called");
             if(this.notificationsBecauseNewWires <= 0){
                this.notificationsBecauseNewWires--;
                var callbackCalled = false;
