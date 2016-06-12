@@ -101,9 +101,12 @@ describe("Testing if manuallyAddingPeer methods", function(){
     
     
       function checkIfnewConnectionsAreCreated(){
+         console.log("In second last sec. checkIfnewConnectionsAreCreated is called");
          if(twoPeersStreamedToAnother){
+            console.log("In second last spec. In if clause.");
             myStreamingA.forTesting_connectedToNewWebTorrentPeer(function(){
-               if(receivedCallbacks === 2){
+                console.log("In second last spec. " + "myStreamingA.forTesting_connectedToNewWebTorrentPeer gots called");
+               if(receivedCallbacks === 1){
                   threePeersAreConnected = true;
                   done();
                } else {
@@ -111,7 +114,8 @@ describe("Testing if manuallyAddingPeer methods", function(){
                }
             });
             myStreamingB.forTesting_connectedToNewWebTorrentPeer(function(){
-               if(receivedCallbacks === 2){
+               console.log("In second last spec. " + "myStreamingB.forTesting_connectedToNewWebTorrentPeer gots called");
+               if(receivedCallbacks === 1){
                   threePeersAreConnected = true;            
                   done();
                } else {
@@ -137,7 +141,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
     
       myStreamingA.createSignalingData(function(signalingData){
          myStreamingC.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-            myStreamingA.processSignalingResponse(signalingDataResponse, function(){console.log("For third spec peers connected"); done();});
+            myStreamingA.processSignalingResponse(signalingDataResponse, function(){console.log("For third spec peers connected");});
          });
       });    
    }, 25000);
@@ -149,8 +153,10 @@ describe("Testing if manuallyAddingPeer methods", function(){
       var testTorrent;
       
       function callback(streamInformationObject, torrent){
+         console.log("callback from last new sepc is called");
          testTorrent = torrent;
          myStreamingA.loadVideo(streamInformationObject, function(){
+            console.log("last new spec. callback of myStreamingA.loadVideo");
             if(oneStreamingCompleted){
                testTorrent.destroy();
                done();
@@ -159,6 +165,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
             }
          }, true);
          myStreamingB.loadVideo(streamInformationObject,  function(){
+            console.log("last new spec. callback of myStreamingA.loadVideo");
             if(oneStreamingCompleted){
                testTorrent.destroy();
                done();
@@ -169,10 +176,13 @@ describe("Testing if manuallyAddingPeer methods", function(){
       }
       
       function streamWhenConnectionEstablished(res){
+         console.log("In last new spec streamWhenConnectionEstablished gets called");
          if(threePeersAreConnected){
-            myStreamingC.streamVideo(res, {webTorrentTrackers: [["ws://localhost:8081"]]}, callback, "It's a test", false);
+            console.log("last new spec. video gets streamed from myStreamingC");
+            myStreamingC.streamVideo(res, {}, callback, "It's a test", false);
+            // webTorrentTrackers: [["ws://localhost:8081"]]
          } else {
-            setTimeout(function (){streamWhenConnectionEstablished(res);}, 500);
+            setTimeout(function(){streamWhenConnectionEstablished(res);}, 500);
          }
       }
       
@@ -184,6 +194,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
             range: 'bytes=' + 0 + '-' + theVideoFileSize-1
          }
       }, function (res){
+            console.log("Last new spec XHR response stream received");
             streamWhenConnectionEstablished(res);
       });
    }, 30000);

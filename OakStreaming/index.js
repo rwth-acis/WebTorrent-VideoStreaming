@@ -132,6 +132,7 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
    ////console.log("videoFile: " + videoFile);
    ////console.log("options: " + options);
    ////console.log("callback: " + callback);
+   var self = this;
    
    var seedingOption = {};
    if(options.webTorrentTrackers){
@@ -271,11 +272,11 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          webTorrentFile = torrent.files[0];
          //console.log("In loadVideo typeof webTorrentFile after assignment: " + typeof webTorrentFile);
 
-         console.log("In loadVideo    " + this.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
-         this.forTesting_connectedToNewWebTorrentPeer = function(callback){
-            console.log("In loadVideo     " + this.OakName + ".forTesting_connectedToNewWebTorrentPeer   gets called");
-            if(this.notificationsBecauseNewWires <= 0){
-               this.notificationsBecauseNewWires--;
+         console.log("In loadVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
+         self.forTesting_connectedToNewWebTorrentPeer = function(callback){
+            console.log("In loadVideo     " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer   gets called");
+            if(self.notificationsBecauseNewWires <= 0){
+               self.notificationsBecauseNewWires--;
                var callbackCalled = false;
                
                torrent.on('wire', function(wire){
@@ -285,7 +286,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
                   }
                });
             } else {
-               this.notificationsBecauseNewWires--;            
+               self.notificationsBecauseNewWires--;            
                callback();
             }
          };
@@ -296,7 +297,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             if(!window.firstWire){
                window.firstWire = wire;
             }
-            this.notificationsBecauseNewWires++;
+            self.notificationsBecauseNewWires++;
             
             
             wire.use(ut_pex());
@@ -713,6 +714,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    //////console.log("I call Videostream constructor");
    Videostream(new file(PATH_TO_VIDEO_FILE), myVideo);
 }
+
 
 function addSimplePeerInstance(simplePeerInstance, options, callback){
    // The method add a simplePeer to the WebTorrent swarm instance
