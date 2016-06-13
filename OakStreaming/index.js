@@ -7,6 +7,7 @@ var Videostream = require('videostream');
 var WebTorrent = require('webtorrent');
 var SimplePeer = require('simple-peer');
 var ut_pex = require('ut_pex');
+var parseTorrent = require('parse-torrent');
 
 
  /**
@@ -132,7 +133,8 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
    ////console.log("videoFile: " + videoFile);
    ////console.log("options: " + options);
    ////console.log("callback: " + callback);
-   var self = this;
+   var self = this; 
+   
    
    var seedingOption = {};
    if(options.webTorrentTrackers){
@@ -174,6 +176,7 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
          // Sind dann ja schon im torrent file drin      streamInformationObject.webTorrentTrackers = options.webTorrentTrackers;
       }
       
+      streamInformationObject.bufferSize = options.bufferSize;
       streamInformationObject.videoFileSize = torrent.files[0].length;
       streamInformationObject.XHRPath = options.XHRPath;
       streamInformationObject.torrentFile = torrent.torrentFile;
@@ -217,7 +220,10 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var PATH_TO_VIDEO_FILE = streamInformationObject.XHRPath;
    var SIZE_OF_VIDEO_FILE = streamInformationObject.videoFileSize;
    var THE_RECEIVED_TORRENT_FILE = streamInformationObject.torrentFile;
-
+   
+   var VIDEO_BUFFER_SIZE = streamInformationObject.videoBufferSize; // The buffer size in byte
+   var CREATE_READSTREAM_REQUEST_SIZE = streamInformationObject.createReadstreamRequestSize;
+   
    var DOWNLOAD_FROM_SERVER_TIME_RANGE = streamInformationObject.downloadFromServerTimeRange || 5; // in seconds
    var UPLOAD_LIMIT = streamInformationObject.uploadLimit || 2; // multiplied by number of downloaded bytes
    var ADDITION_TO_UPLOAD_LIMIT = streamInformationObject.additionToUploadLimit || 500000; // amount of byte added to upload limit
@@ -259,12 +265,10 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
   
    if(deliveryByWebtorrent){
       webTorrentClient = new WebTorrent();
-      
-      
+          
       //MAGNET_URI
-       
-      webTorrentClient.add(THE_RECEIVED_TORRENT_FILE, function (torrent){
-                 
+     
+      webTorrentClient.add(THE_RECEIVED_TORRENT_FILE, function (torrent){              
          console.log("webTorrentClient.add   torrent meta data ready");         
          self.theTorrent = torrent;
          
@@ -323,7 +327,15 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             if(thisRequest.currentCB !== null){
                //console.log("In onTorrent nachträglich webtorrent stream erzeugen  thisRequest.start: " + thisRequest.start);
                //console.log("In onTorrent  webTorrentFile.length: " + webTorrentFile.length);
-               thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : webTorrentFile.length-1});
+                           
+               var endCreateReadStream;
+               if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
+                  endCreateReadStream = webTorrentFile.length-1;
+               } else {
+                  endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE;
+               }
+                   
+               thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
                thisRequest.oldStartWebTorrent = thisRequest.start;
                thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
             }
@@ -406,10 +418,19 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          ////////console.log("after new videostreamRequest creating a corresponding webtorrent stream");
          ////console.log("opts.start: " + opts.start);
          ////console.log("webTorrentFile.length: " + webTorrentFile.length);
-         var webTorrentStream = webTorrentFile.createReadStream({"start" : opts.start, "end" : webTorrentFile.length-1});
-         thisRequest.webTorrentStream = webTorrentStream;
-         thisRequest.oldStartWebTorrent = opts.start;
-         webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
+          
+         var endCreateReadStream;
+         if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
+            endCreateReadStream = webTorrentFile.length-1;
+         } else {
+            endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE;
+         }
+         thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
+         thisRequest.lastEndCreateReadStream = endCreateReadStream;
+         thisRequest.oldStartWebTorrent = thisRequest.start;
+         
+         thisRequest.webTorrentStream.unpipe();
+         thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
       }
 
       var multi = new MultiStream(function (cb){
@@ -436,8 +457,17 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
                ////////console.log("New cb function was called and I subsequently create a new torrentStream for it because non existed before for this videostreamRequest");
                ////console.log("After new Multistream. thisRequest.start: " + thisRequest.start);
                ////console.log("webTorrentFile.length: " + webTorrentFile.length);
-               thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : webTorrentFile.length-1});
+               var endCreateReadStream;
+               if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
+                  endCreateReadStream = webTorrentFile.length-1;
+               } else {
+                  endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE;
+               }
+               thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
+               thisRequest.lastEndCreateReadStream = endCreateReadStream;
                thisRequest.oldStartWebTorrent = thisRequest.start;
+               
+               thisRequest.webTorrentStream.unpipe();
                thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
             }
 
@@ -530,6 +560,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       this.bytesTakenFromServer = 0;
       this.noMoreData = false;
       this.req = null;
+      this.lastEndCreateReadStream = -42;
    }
 
    var frequentlyCeckIfAnswerStreamReady = (function (){
@@ -577,13 +608,27 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
                   } 
                }
             }
-            inCritical = true;
+            inCritical = true;              
             for (var i = 0, length = timeRanges.length; i < length; i++) {
                ////////console.log("Time range number " + i + ": start(" + timeRanges.start(i) + ") end(" + timeRanges.end(i) + ")");
                if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)) {
                   if (timeRanges.end(i) - myVideo.currentTime >= DOWNLOAD_FROM_SERVER_TIME_RANGE) {
                      inCritical = false;
                      ////////console.log("I set inCritical to false");
+                  }
+                  if (thisRequest.start > lastEndCreateReadStream && timeRanges.end(i) - myVideo.currentTime <= VIDEO_BUFFER_SIZE){
+                     var endCreateReadStream;
+                     if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
+                        endCreateReadStream = webTorrentFile.length-1;
+                     } else {
+                        endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE;
+                     }
+                     thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
+                     thisRequest.lastEndCreateReadStream = endCreateReadStream;
+                     thisRequest.oldStartWebTorrent = thisRequest.start;
+                     
+                     thisRequest.webTorrentStream.unpipe();
+                     thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
                   }
                }
             }
