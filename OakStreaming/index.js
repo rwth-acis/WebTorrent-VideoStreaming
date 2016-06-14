@@ -7,7 +7,7 @@ var Videostream = require('videostream');
 var WebTorrent = require('webtorrent');
 var SimplePeer = require('simple-peer');
 var ut_pex = require('ut_pex');
-var parseTorrent = require('parse-torrent');
+//var parseTorrent = require('parse-torrent');
 
 
  /**
@@ -144,9 +144,9 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
    webTorrentClient.seed(videoFile, seedingOption, function(torrent){
       console.log("torrent file is seeded");
       
-      console.log("In loadVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
+      console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
       self.forTesting_connectedToNewWebTorrentPeer = function(callback){
-         console.log("In loadVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets executed");
+         console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets executed");
          if(self.notificationsBecauseNewWires <= 0){
             self.notificationsBecauseNewWires--;
             var callbackCalled = false;
@@ -207,7 +207,7 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
  * @param {OakStreaming~loadedVideoFinished} callback - This callback gets called when the video has been loaded entirely into the buffer of the video player.
  */
 function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
-   console.log("Lich");
+   console.log("Version Panda");
    
    //////console.log("I entered this.loadVideo");
    //////console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
@@ -220,6 +220,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var PATH_TO_VIDEO_FILE = streamInformationObject.XHRPath;
    var SIZE_OF_VIDEO_FILE = streamInformationObject.videoFileSize;
    var THE_RECEIVED_TORRENT_FILE = streamInformationObject.torrentFile;
+   var XHR_PORT = streamInformationObject.XHRPort || 8080;
    
    var VIDEO_BUFFER_SIZE = streamInformationObject.videoBufferSize || 50000000; // This is the minomum byte range that the WebTorrent client will download in advance (regarding the current playback position) with a sequential chunk selection strategy. This means the video buffer size in byte
    var CREATE_READSTREAM_REQUEST_SIZE = streamInformationObject.createReadstreamRequestSize || 50000000; // The size of the createReadstream WebTorrent requests in bytes. 
@@ -786,7 +787,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       thisRequest.req = http.get({
             path: thisRequest.self.path,
             hostname: 'localhost',
-            port: 8080,
+            port: XHR_PORT,
             headers: {
                range: 'bytes=' + reqStart + '-' + (reqEnd-1)
             }

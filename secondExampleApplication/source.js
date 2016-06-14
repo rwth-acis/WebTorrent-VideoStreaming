@@ -1,4 +1,4 @@
-var OakStreaming = require('./OakStreaming');
+var OakStreaming = require('../OakStreaming');
 var myStreaming = new OakStreaming();
 
 

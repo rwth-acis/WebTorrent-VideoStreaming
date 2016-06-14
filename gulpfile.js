@@ -101,23 +101,43 @@ gulp.task('minify_example_app.html', ['browserify2'], function(){
 gulp.task('connect', function(){
    connect.server({
       root: "./build",
+      livereload: false,
       middleware : function(connect, opts){
          return [cors()];
       }
    });
 });
 
+
+function browserifySecondApplication(){
+   
+   var b = browserify({
+    entries: './secondExampleApplication/source.js',
+    debug: true
+   });
+   
+   return b.bundle()
+    .on('error', gutil.log.bind(gutil, 'Browserify Error'))
+    .pipe(source('./secondExampleApplication/source.js'))
+    .pipe(rename("index.js"))
+    .pipe(gulp.dest('./secondExampleApplication/'));   
+}
+
+gulp.task('browserify3', function(cb){browserifySecondApplication(); cb();});
+
 //start web server for second Example
-gulp.task('secondExample', function(){
+gulp.task('connect2', ['browserify3'], function(){
    connect.server({
       root: "./secondExampleApplication",
       port: 8082,
+      livereload: false,
       middleware : function(connect, opts){
          return [cors()];
       }
    });
 });
 
+gulp.task('example2', ['browserify3', 'connect2']);
 
 
 /* War nicht die Jasmine-browser variante
