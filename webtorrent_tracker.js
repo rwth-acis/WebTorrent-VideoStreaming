@@ -1,6 +1,16 @@
-var Server = require('bittorrent-tracker').Server
+var WebtorrentTracker = require('bittorrent-tracker').Server
+var myStreaming = require('./OakStreaming');
 
-var server = new Server({
+
+
+var create_streamInformationObject = true;
+var Path_where_save_streamInformationObject = "/secondExampleApplication/streamInformationObject.js" || "/streamInformationObject.js";
+//var seed_Video = true;
+var PATH_TO_VIDEO = "/sintle.mp4";
+
+   
+   
+var tracker = new WebtorrentTracker({
   udp: false, // enable udp server? [default=true]
   http: false, // enable http server? [default=true]
   ws: true, // enable websocket server? [default=true]
@@ -43,8 +53,26 @@ server.on('listening', function () {
   // fired when all requested servers are listening
   //console.log('listening on http port:' + server.http.address().port)
   //console.log('listening on udp port:' + server.udp.address().port)
-  console.log('listening on ws port:' + server.ws.address().port)
-})
+  console.log('listening on ws port:' + server.ws.address().port);
+  
+   if(create_streamInformationObject){
+      fs = require('fs')
+      var videoFile = fs.readFile(PATH_TO_VIDEO, function (err,data) {
+        if (err) {
+          return console.log(err);
+        }
+      });
+
+      myStreaming.streamVideo(videoFile, {XHRPath : "/" + PATH_TO_VIDEO, webTorrentTrackers: [["ws://localhost:8081"],["wss://tracker.webtorrent.io"]]}, function(streamInformationObject){
+         fs.writeFile(Path_where_save_streamInformationObject, "var streamInformationObject = " + streamInformationObject + ";", function(err) {
+            if(err) {
+               return console.log(err);
+            }
+            console.log("streamInformationObject was written to a file.");
+         }); 
+      }
+   }
+});
 
 // start tracker server listening! Use 0 to listen on a random free port.
 //server.listen(port, hostname, onlistening)

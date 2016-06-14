@@ -107,6 +107,17 @@ gulp.task('connect', function(){
    });
 });
 
+//start web server for second Example
+gulp.task('secondExample', function(){
+   connect.server({
+      root: "./secondExampleApplication",
+      port: 8082,
+      middleware : function(connect, opts){
+         return [cors()];
+      }
+   });
+});
+
 
 
 /* War nicht die Jasmine-browser variante
