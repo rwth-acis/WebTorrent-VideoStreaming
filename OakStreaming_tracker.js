@@ -70,7 +70,7 @@ tracker.on('listening', function (){
    }   
 */   
          
-   myStreaming.streamVideo("./build/" + Video_Name, {XHRPort: 8082, XHRPath : "/" + Video_Name, webTorrentTrackers: [["ws://localhost:8081"],["wss://tracker.webtorrent.io"]]}, function(streamInformationObject){
+   myStreaming.streamVideo("./build/" + Video_Name, {XHRPath : "/" + Video_Name, XHRPort : 8082, webTorrentTrackers: [["ws://localhost:8081"],["wss://tracker.webtorrent.io"]]}, function(streamInformationObject){
       console.log("streamInformationObject was successfully created");
       fs.writeFile(Path_where_save_streamInformationObject, "var streamInformationObject = " + JSON.stringify(streamInformationObject) + ";", function(err, data){
          if(err) {

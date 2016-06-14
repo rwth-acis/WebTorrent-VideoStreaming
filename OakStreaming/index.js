@@ -180,6 +180,7 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
       streamInformationObject.videoFileSize = torrent.files[0].length;
       streamInformationObject.XHRPath = options.XHRPath;
       streamInformationObject.torrentFile = torrent.torrentFile;
+      streamInformationObject.XHRPort = options.XHRPort
       
       
       //////console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
