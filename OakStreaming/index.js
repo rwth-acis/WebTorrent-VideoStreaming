@@ -221,8 +221,8 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var SIZE_OF_VIDEO_FILE = streamInformationObject.videoFileSize;
    var THE_RECEIVED_TORRENT_FILE = streamInformationObject.torrentFile;
    
-   var VIDEO_BUFFER_SIZE = streamInformationObject.videoBufferSize || 5000000; // This is the minomum byte range that the WebTorrent client will download in advance (regarding the current playback position) with a sequential chunk selection strategy. This means the video buffer size in byte
-   var CREATE_READSTREAM_REQUEST_SIZE = streamInformationObject.createReadstreamRequestSize || 5000000; // The size of the createReadstream WebTorrent requests in bytes. 
+   var VIDEO_BUFFER_SIZE = streamInformationObject.videoBufferSize || 50000000; // This is the minomum byte range that the WebTorrent client will download in advance (regarding the current playback position) with a sequential chunk selection strategy. This means the video buffer size in byte
+   var CREATE_READSTREAM_REQUEST_SIZE = streamInformationObject.createReadstreamRequestSize || 50000000; // The size of the createReadstream WebTorrent requests in bytes. 
    
    var DOWNLOAD_FROM_SERVER_TIME_RANGE = streamInformationObject.downloadFromServerTimeRange || 5; // in seconds
    var UPLOAD_LIMIT = streamInformationObject.uploadLimit || 2; // multiplied by number of downloaded bytes
@@ -516,7 +516,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             var timeRanges = myVideo.buffered;
          
             for (var i = 0, length = timeRanges.length; i < length; i++){
-               if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)) {
+               if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)+3) {
                   if (timeRanges.end(i) - myVideo.currentTime <= VIDEO_BUFFER_SIZE) {
                      for (var i = 0, length = videostreamRequestHandlers.length; i < length; i++) {
                         var thisRequest = videostreamRequestHandlers[i];
