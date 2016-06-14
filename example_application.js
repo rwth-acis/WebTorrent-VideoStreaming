@@ -46,9 +46,9 @@ Y({
   });
 });
 
-window.handleFiles = function(files){   //XHRPath : "/" + files[0].name, 
+window.handleFiles = function(files){   
    streamSource = true;
-   myStreaming.streamVideo(files[0], {webTorrentTrackers: [["ws://localhost:8081"],["wss://tracker.webtorrent.io"]]}, function(streamInformationObject){
+   myStreaming.streamVideo(files[0], {XHRPath : "/" + files[0].name, webTorrentTrackers: [["ws://localhost:8081"],["wss://tracker.webtorrent.io"]]}, function(streamInformationObject){
       console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
      theSharedMap.set("streamInformationObject", streamInformationObject);
    });
