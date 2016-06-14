@@ -221,8 +221,8 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var SIZE_OF_VIDEO_FILE = streamInformationObject.videoFileSize;
    var THE_RECEIVED_TORRENT_FILE = streamInformationObject.torrentFile;
    
-   var VIDEO_BUFFER_SIZE = streamInformationObject.videoBufferSize; // The buffer size in byte
-   var CREATE_READSTREAM_REQUEST_SIZE = streamInformationObject.createReadstreamRequestSize;
+   var VIDEO_BUFFER_SIZE = streamInformationObject.videoBufferSize || 5000000; // This is the minomum byte range that the WebTorrent client will download in advance (regarding the current playback position) with a sequential chunk selection strategy. This means the video buffer size in byte
+   var CREATE_READSTREAM_REQUEST_SIZE = streamInformationObject.createReadstreamRequestSize || 5000000; // The size of the createReadstream WebTorrent requests in bytes. 
    
    var DOWNLOAD_FROM_SERVER_TIME_RANGE = streamInformationObject.downloadFromServerTimeRange || 5; // in seconds
    var UPLOAD_LIMIT = streamInformationObject.uploadLimit || 2; // multiplied by number of downloaded bytes
@@ -234,7 +234,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = streamInformationObject.checkIfAnswerstreamReadyInterval || 200; // in miliseconds
    var UPDATE_CHART_INTERVAL = streamInformationObject.updateChartInterval || 1000; // in miliseconds
    var CHOKE_IF_NECESSARY_INTERVAL = streamInformationObject.chokeIfNecessaryInterval || 500; // in miliseconds
-   
+   var CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL = streamInformationObject.checkIfNewCreateReadstreamInterval || 500 ;
    
    var self = this;
    var endStreaming = false;
@@ -266,9 +266,9 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    if(deliveryByWebtorrent){
       webTorrentClient = new WebTorrent();
           
-      //MAGNET_URI
+      //THE_RECEIVED_TORRENT_FILE 
      
-      webTorrentClient.add(THE_RECEIVED_TORRENT_FILE, function (torrent){              
+      webTorrentClient.add(MAGNET_URI, function (torrent){              
          console.log("webTorrentClient.add   torrent meta data ready");         
          self.theTorrent = torrent;
          
@@ -336,6 +336,22 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
                }
                    
                thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
+               /*
+               thisRequest.on('end', function(){
+                  if(thisRequest.currentCB !== null && thisRequest.start > thisRequest.lastEndCreateReadStream && thisRequest.start < thisRequest.videoFileSize){
+                     var endCreateReadStream;
+                     if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
+                        endCreateReadStream = webTorrentFile.length-1;
+                     } else {
+                        endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE;
+                     }                
+                     thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
+                     thisRequest.oldStartWebTorrent = thisRequest.start;
+                     thisRequest.webTorrentStream.unpipe();
+                     thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
+                  }             
+               });
+               */
                thisRequest.oldStartWebTorrent = thisRequest.start;
                thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
             }
@@ -486,7 +502,48 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       };
       return multi;
    };
-
+  
+   
+   
+   
+   var frequentlyCheckIfNewCreateReadStreamNecessary = (function (){
+      return function(){
+         if(videoCompletelyLoaded){
+            return;
+         }
+      
+        if(myVideo.duration){
+            var timeRanges = myVideo.buffered;
+         
+            for (var i = 0, length = timeRanges.length; i < length; i++){
+               if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)) {
+                  if (timeRanges.end(i) - myVideo.currentTime <= VIDEO_BUFFER_SIZE) {
+                     for (var i = 0, length = videostreamRequestHandlers.length; i < length; i++) {
+                        var thisRequest = videostreamRequestHandlers[i];
+                        
+                        if(thisRequest.currentCB !== null && thisRequest.start > thisRequest.lastEndCreateReadStream && thisRequest.start < thisRequest.videoFileSize){
+                           var endCreateReadStream;
+                           if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
+                              endCreateReadStream = webTorrentFile.length-1;
+                           } else {
+                              endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE;
+                           }                
+                           thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
+                           thisRequest.oldStartWebTorrent = thisRequest.start;
+                           thisRequest.webTorrentStream.unpipe();
+                           thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
+                        }
+                     }
+                  }
+               }
+            }
+            setTimeout(frequentlyCheckIfNewCreateReadStreamNecessary, CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL);
+         }
+      }   
+   })();
+   frequentlyCheckIfNewCreateReadStreamNecessary();
+   
+   
    function ceckIfAnswerStreamReady(thisRequest){
       ////////console.log("At the beginning of thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
       ////////console.log("In ceckIfAnswerStreamReady of videostreamRequest number " + thisRequest.readStreamNumber +  ". thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream + "     thisRequest.currentCB: " + thisRequest.currentCB);
@@ -615,20 +672,6 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
                   if (timeRanges.end(i) - myVideo.currentTime >= DOWNLOAD_FROM_SERVER_TIME_RANGE) {
                      inCritical = false;
                      ////////console.log("I set inCritical to false");
-                  }
-                  if (thisRequest.start > lastEndCreateReadStream && timeRanges.end(i) - myVideo.currentTime <= VIDEO_BUFFER_SIZE){
-                     var endCreateReadStream;
-                     if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
-                        endCreateReadStream = webTorrentFile.length-1;
-                     } else {
-                        endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE;
-                     }
-                     thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
-                     thisRequest.lastEndCreateReadStream = endCreateReadStream;
-                     thisRequest.oldStartWebTorrent = thisRequest.start;
-                     
-                     thisRequest.webTorrentStream.unpipe();
-                     thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
                   }
                }
             }

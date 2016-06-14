@@ -9,10 +9,12 @@ var myStreaming = new OakStreaming();
 var theSharedMap = null;
 var streamSource = false;
 
+/*
 document.querySelector('form').addEventListener('submit', function (ev) {
   ev.preventDefault();
    myStreaming.loadVideo(JSON.parse(document.querySelector('#incoming').value), function(){console.log("All video data has been received");});
 });
+*/
 
 Y({
   db: {
@@ -44,10 +46,10 @@ Y({
   });
 });
 
-window.handleFiles = function(files){
+window.handleFiles = function(files){   //XHRPath : "/" + files[0].name, 
    streamSource = true;
-   myStreaming.streamVideo(files[0], {XHRPath : "/" + files[0].name, webTorrentTrackers: [["ws://localhost:8081"],["wss://tracker.webtorrent.io"]]}, function(streamInformationObject){
+   myStreaming.streamVideo(files[0], {webTorrentTrackers: [["ws://localhost:8081"],["wss://tracker.webtorrent.io"]]}, function(streamInformationObject){
       console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
-     // theSharedMap.set("streamInformationObject", streamInformationObject);
+     theSharedMap.set("streamInformationObject", streamInformationObject);
    });
 }
