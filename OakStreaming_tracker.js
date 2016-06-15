@@ -1,18 +1,6 @@
 var WebtorrentTracker = require('bittorrent-tracker').Server;
-var fs = require('fs');
-var OakStreaming = require('./OakStreaming');
-var myStreaming = new OakStreaming("Horst");
 
-
-
-
-var create_streamInformationObject = true;
-var Path_where_save_streamInformationObject = "./secondExampleApplication/streamInformationObject.js";
-//var seed_Video = true;
-var Video_Name = "sintel.mp4";
-
-   
-   console.log("Version Panda");
+console.log("Version Panda");
    
 var tracker = new WebtorrentTracker({
   udp: false, // enable udp server? [default=true]
@@ -69,22 +57,11 @@ tracker.on('listening', function (){
       });
    }   
 */   
-         
-   myStreaming.streamVideo("./build/" + Video_Name, {XHRPath : "/" + Video_Name, XHRPort : 8082, webTorrentTrackers: [["ws://localhost:8081"],["wss://tracker.webtorrent.io"]]}, function(streamInformationObject){
-      console.log("streamInformationObject was successfully created");
-      fs.writeFile(Path_where_save_streamInformationObject, "var streamInformationObject = " + JSON.stringify(streamInformationObject) + ";", function(err, data){
-         if(err) {
-            return console.log(err);
-         }
-         console.log("streamInformationObject was written to a file.");
-      }); 
-   });
-
 });
 
 // start tracker server listening! Use 0 to listen on a random free port.
 //server.listen(port, hostname, onlistening)
-tracker.listen(8081, "localhost");
+tracker.listen(8081, "localhost", function(){console.log("the onlisten function from tracker.listen is called");});
 
 // listen for individual tracker messages from peers:
 

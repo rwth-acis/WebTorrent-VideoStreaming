@@ -109,8 +109,7 @@ gulp.task('connect', function(){
 });
 
 
-function browserifySecondApplication(){
-   
+function browserifySecondApplication(){   
    var b = browserify({
     entries: './secondExampleApplication/source.js',
     debug: true
