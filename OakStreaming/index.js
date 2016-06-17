@@ -136,12 +136,13 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
    var self = this; 
    
    
-   var seedingOption = {};
+   var seedingOptions = {};
    if(options.webTorrentTrackers){
-      seedingOption.announceList = options.webTorrentTrackers;
+      seedingOptions.announceList = options.webTorrentTrackers;
+      seedingOptions.announce = options.webTorrentTrackers; // nur zum test
    }
    
-   webTorrentClient.seed(videoFile, seedingOption, function(torrent){
+   webTorrentClient.seed(videoFile, seedingOptions, function(torrent){
       console.log("torrent file is seeded");
       
       console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
@@ -208,7 +209,7 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
  * @param {OakStreaming~loadedVideoFinished} callback - This callback gets called when the video has been loaded entirely into the buffer of the video player.
  */
 function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
-   console.log("Version Panda");
+   console.log("Version Naga");
    
    //////console.log("I entered this.loadVideo");
    //////console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
@@ -229,6 +230,8 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var DOWNLOAD_FROM_SERVER_TIME_RANGE = streamInformationObject.downloadFromServerTimeRange || 5; // in seconds
    var UPLOAD_LIMIT = streamInformationObject.uploadLimit || 2; // multiplied by number of downloaded bytes
    var ADDITION_TO_UPLOAD_LIMIT = streamInformationObject.additionToUploadLimit || 500000; // amount of byte added to upload limit
+   
+   
    var XHR_REQUEST_SIZE = streamInformationObject.xhrRequestSize || 50000; // in byte
    var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = streamInformationObject.thresholdForReturningAnswerStream || 50000; // in byte
 
@@ -266,6 +269,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    
   
    if(deliveryByWebtorrent){
+      console.log("entered if(deliveryByWebtorrent)");
       webTorrentClient = new WebTorrent();
           
       //THE_RECEIVED_TORRENT_FILE 

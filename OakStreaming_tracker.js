@@ -3,10 +3,10 @@ var WebtorrentTracker = require('bittorrent-tracker').Server;
 console.log("Version Panda");
    
 var tracker = new WebtorrentTracker({
-  udp: false, // enable udp server? [default=true]
-  http: false, // enable http server? [default=true]
-  ws: true, // enable websocket server? [default=true]
-  stats: true, // enable web-based statistics? [default=true]
+  udp: false, 
+  http: false, 
+  ws: true, 
+  stats: true,
   filter: function (infoHash, params, cb) {
     // Blacklist/whitelist function for allowing/disallowing torrents. If this option is
     // omitted, all torrents are allowed. It is possible to interface with a database or
