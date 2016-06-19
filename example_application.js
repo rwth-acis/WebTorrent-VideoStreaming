@@ -46,10 +46,10 @@ Y({
   });
 });
 
-window.handleFiles = function(files){     // ,["wss://tracker.webtorrent.io"]
+window.handleFiles = function(files){     // ,["wss://tracker.webtorrent.io"]   "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  
    streamSource = true;
-   myStreaming.streamVideo(files[0], {XHRPath : "/" + files[0].name, webTorrentTrackers: [["ws://localhost:8081"]]}, function(streamInformationObject){
+   myStreaming.streamVideo(files[0], {XHRPort: 9999, XHRPath : "/" + files[0].name, webTorrentTrackers: [["wss://tracker.webtorrent.io"]]}, function(streamInformationObject){
       console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
-     theSharedMap.set("streamInformationObject", streamInformationObject);
+      theSharedMap.set("streamInformationObject", streamInformationObject);
    });
 }

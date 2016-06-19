@@ -6,35 +6,31 @@ xvfb.startSync();
 
 var WebTorrent = require('webtorrent-hybrid');
 
-//module.exports = function(){console.log("BAM!");}; 
-//OakStreaming;
-/*
+module.exports = OakStreaming;
+
 
 function OakStreaming(OakName){
    this.peerId = 1234567898765;
    this.OakName = OakName;     
-   this.streamVideo = function (){};
-   this.bam = function (videoFile, options, callback){ 
+   this.streamVideo = function (videoFile, options, callback){ 
       var webTorrentClient = new WebTorrent(); 
-           
+      
+      var seedingOptions = {};
       if(options.webTorrentTrackers){
-         var seedingOptions = {announceList : options.webTorrentTrackers};
+         seedingOptions = {announceList : options.webTorrentTrackers};
       }   
       
       webTorrentClient.seed(videoFile, seedingOptions, function(torrent){
          console.log("torrent file is seeded");
-         if(options.webTorrentTrackers){
-            streamInformationObject = {
-               magnetURI: torrent.magnetURI,
-               bufferSize : options.bufferSize,
-               videoFileSize : torrent.files[0].length,
-               XHRPath : options.XHRPath,
-               torrentFile : torrent.torrentFile,
-               XHRPort : options.XHRPort
-            };
-         }               
+         streamInformationObject = {
+            bufferSize : options.bufferSize,
+            videoFileSize : torrent.files[0].length,
+            XHRPath : options.XHRPath,
+            torrentFile : torrent.torrentFile,
+            XHRPort : options.XHRPort,
+            magnetURI : torrent.magnetURI
+         };             
          callback(streamInformationObject);
       });
    };
 }
-*/

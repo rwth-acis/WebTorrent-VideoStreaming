@@ -1,6 +1,6 @@
 var WebtorrentTracker = require('bittorrent-tracker').Server;
 
-console.log("Version Panda");
+console.log("Version Tinker");
    
 var tracker = new WebtorrentTracker({
   udp: false, 
@@ -24,7 +24,7 @@ var tracker = new WebtorrentTracker({
     // In addition to returning a boolean (`true` for allowed, `false` for disallowed),
     // you can return an `Error` object to disallow and provide a custom reason.
   }
-})
+});
 
 // Internal http, udp, and websocket servers exposed as public properties.
 //server.http
@@ -61,7 +61,7 @@ tracker.on('listening', function (){
 
 // start tracker server listening! Use 0 to listen on a random free port.
 //server.listen(port, hostname, onlistening)
-tracker.listen(8081, "localhost", function(){console.log("the onlisten function from tracker.listen is called");});
+tracker.listen(9917, "localhost", function(){console.log("the onlisten function from tracker.listen is called");});
 
 // listen for individual tracker messages from peers:
 

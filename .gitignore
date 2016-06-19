@@ -1,5 +1,6 @@
 .DS_Store
 sintel.mp4
+test.mp4
 Jasmine_testsuites_build/
 node_modules/
 build/index.html

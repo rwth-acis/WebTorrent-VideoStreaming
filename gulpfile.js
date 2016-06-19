@@ -17,7 +17,7 @@ var cors = require('cors');
 
 /*
 gulp.task('html', function (){
-  gulp.src('./build/*.html')
+  gulp.src('./web/*.html')
     .pipe(connect.reload());
 });
 */
@@ -65,7 +65,7 @@ function bundle() {
     //.pipe(sourcemaps.init({loadMaps: true})) // loads map from browserify file
     // Add transformation tasks to the pipeline here.
     //.pipe(sourcemaps.write('./')) // writes .map file
-    .pipe(gulp.dest('./build/'));
+    .pipe(gulp.dest('./web/'));
 }
 
 
@@ -77,11 +77,11 @@ function errorLog(error){
 /* Takes to long for developement. Therefore commented out till deployment. Didn't work when commented out.
 // Uglifies output of browserify
 gulp.task('uglify_example_app.js', ['browserify2'], function(){
-   return gulp.src('./build/example_application_temp.js')
+   return gulp.src('./web/example_application_temp.js')
    .pipe(uglify())
    //.on('error', errorLog)
    .pipe(rename("example_application.js"))
-   .pipe(gulp.dest('./build/'));
+   .pipe(gulp.dest('./web/'));
    console.log("Uglified bundle");
 });
 */
@@ -92,7 +92,7 @@ gulp.task('minify_example_app.html', ['browserify2'], function(){
    .pipe(htmlmin({collapseWhitespace: true}))
    .on('error', errorLog)
    .pipe(rename("index.html"))
-   .pipe(gulp.dest('./build/'));
+   .pipe(gulp.dest('./web/'));
    console.log("uglified example_application.html");
 });
 
@@ -100,7 +100,7 @@ gulp.task('minify_example_app.html', ['browserify2'], function(){
 //start web server
 gulp.task('connect', function(){
    connect.server({
-      root: "./build",
+      root: "./web",
       livereload: false,
       middleware : function(connect, opts){
          return [cors()];

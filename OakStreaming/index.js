@@ -214,7 +214,9 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
       streamInformationObject.videoFileSize = torrent.files[0].length;
       streamInformationObject.XHRPath = options.XHRPath;
       streamInformationObject.torrentFile = torrent.torrentFile;
-      streamInformationObject.XHRPort = options.XHRPort
+      streamInformationObject.XHRPort = options.XHRPort;
+      streamInformationObject.hashValue = options.hashValue;      
+      
       
       
       //////console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
@@ -248,6 +250,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    //////console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
    var deliveryByServer = streamInformationObject.XHRPath ? true : false;
    var deliveryByWebtorrent = streamInformationObject.torrentFile ? true : false;
+   var hashValue = streamInformationObject.hashValue;
    var webTorrentTrackers = streamInformationObject.webTorrentTrackers;
    //var deliveryByWebtorrent = streamInformationObject.magnetURI ? true : false;
    var MAGNET_URI = streamInformationObject.magnetURI;
@@ -255,7 +258,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var PATH_TO_VIDEO_FILE = streamInformationObject.XHRPath;
    this.SIZE_OF_VIDEO_FILE = streamInformationObject.videoFileSize;
    var THE_RECEIVED_TORRENT_FILE = streamInformationObject.torrentFile;
-   var XHR_PORT = streamInformationObject.XHRPort || 8080;
+   var XHR_PORT = streamInformationObject.XHRPort || 80;
    
    var VIDEO_BUFFER_SIZE = streamInformationObject.videoBufferSize || 50000000; // This is the minomum byte range that the WebTorrent client will download in advance (regarding the current playback position) with a sequential chunk selection strategy. This means the video buffer size in byte
    var CREATE_READSTREAM_REQUEST_SIZE = streamInformationObject.createReadstreamRequestSize || 50000000; // The size of the createReadstream WebTorrent requests in bytes. 
@@ -397,6 +400,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          }
       });
    }
+   
    
    
    var file = function (path){
@@ -822,6 +826,9 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
       
       //console.log("At htto.get   reqStart: " + reqStart + "     reqEnd: " + reqEnd);
 
+      
+      
+      
       thisRequest.req = http.get({
             path: thisRequest.self.path,
             hostname: 'localhost',
@@ -847,7 +854,11 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    checkIfBufferFullEnough();
 
    //////console.log("I call Videostream constructor");
-   Videostream(new file(PATH_TO_VIDEO_FILE), myVideo);
+   if(hashValue){
+      Videostream(new file(hashValue), myVideo);
+   } else {
+      Videostream(new file(PATH_TO_VIDEO_FILE), myVideo);
+   }
 }
 
 

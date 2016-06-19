@@ -1,7 +1,6 @@
 var fs = require('fs');
 var OakStreaming = require('./OakStreaming_Node');
 
-/*
 var myStreaming = new OakStreaming("Horst");
 //var streamBuffers = require('stream-buffers');
 
@@ -10,11 +9,11 @@ console.log("Beastmaster");
 var create_streamInformationObject = true;
 var Path_where_save_streamInformationObject = "./secondExampleApplication/streamInformationObject.js";
 //var seed_Video = true;
-var Video_Name = "example.mp4";
+var Video_Name = "web/test.mp4";
 
-//var PATH_TO_VIDEO = __dirname + "\\build\\example.mp4";
+//var PATH_TO_VIDEO = __dirname + "\\web\\example.mp4";
 //console.log(PATH_TO_VIDEO);
-var PATH_TO_VIDEO = "./build/example.mp4";
+var PATH_TO_VIDEO = "./web/test.mp4";
 
 
 
@@ -24,7 +23,7 @@ if(create_streamInformationObject){
    // This will wait until we know the readable stream is actually valid before piping
    videoFileStream.on('open', function (){
       console.log("Video file is open");
-      myStreaming.streamVideo(videoFileStream, {XHRPath : "/" + Video_Name, XHRPort : 8082, webTorrentTrackers: [[]]}, function(streamInformationObject){
+      myStreaming.streamVideo(videoFileStream, {XHRPath : "/" + Video_Name, XHRPort : 80, webTorrentTrackers: [["wss://tracker.webtorrent.io"]]}, function(streamInformationObject){
          console.log("streamInformationObject was successfully created");
          fs.writeFile(Path_where_save_streamInformationObject, "var streamInformationObject = " + JSON.stringify(streamInformationObject) + ";", function(err, data){
             if(err) {
@@ -40,7 +39,9 @@ if(create_streamInformationObject){
      console.log(err);
    });
 }  
-*/
+
+
+
 /*
 if(create_streamInformationObject){      // [["ws://localhost:8081"]]  ["wss://tracker.webtorrent.io"],["wss://tracker.btorrent.xyz"],["wss://tracker.openwebtorrent.com"],["wss://tracker.fastcast.nz"]
    console.log("Before streamVideo");
