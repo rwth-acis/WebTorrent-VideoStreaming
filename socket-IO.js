@@ -104,27 +104,33 @@ function checkStartingWatchingDirectory(){
    if(filesToProcess == 0){
       var directoryWatcher = chokidar.watch(__dirname + "\\web\\videos", {awaitWriteFinish: {stabilityThreshold: 500}});
       
-      directoryWatcher.on("unlink", function(windowsPath){
-         var unixPath = windowsPath.replace('\\', '/');
-         app.get(unixPath, function(req, res){console.log("File was deleted");});
+      directoryWatcher.on("unlink", function(windowsAbsolutePath){
+         var fileName = windowsAbsolutePath.substring(windowsAbsolutePath.lastIndexOf("\\")+1);
+         //var unixPath = windowsPath.replace(/\\/g, "/");
+         app.get("/" + fileName, function(req, res){console.log("File was deleted");});
       });
-      directoryWatcher.on("add", function(windowsPath){
-         var unixPath = windowsPath.replace('\\', '/');
-         console.log("In on.add path paramter: " + unixPath);
-         app.get(unixPath, function(req, res){
-            res.sendFile(unixPath);
+      directoryWatcher.on("add", function(windowsAbsolutePath){
+         var fileName = windowsAbsolutePath.substring(windowsAbsolutePath.lastIndexOf("\\")+1);
+         
+         //var unixPath = windowsPath;//.replace(/\\/g, "/");
+         console.log("In on.add path function paramter: " + windowsAbsolutePath);
+         app.get("/" + fileName, function(req, res){
+            console.log("Received a request for: " + "/" + fileName);
+            res.sendFile(windowsAbsolutePath);
          });
-         calculateHashOfFile(unixPath, function(hashvalue){
-            app.get(hashvalue, function(req, res){
-               res.sendFile(unixPath);                
+         calculateHashOfFile(windowsAbsolutePath, function(hashValue){
+            app.get("/" + hashValue, function(req, res){
+               console.log("Received a request for: " + hashValue);
+               res.sendFile(windowsAbsolutePath);                
             });
          });
       });
-      directoryWatcher.on("change", function(windowsPath, stats){
-         var unixPath = windowsPath.replace('\\', '/');
-         calculateHashOfFile(unixPath, function(hashvalue){
-            app.get(hashvalue, function(req, res){
-               res.sendFile(unixPath);                
+      directoryWatcher.on("change", function(windowsAbsolutePath, stats){
+         //var unixPath = windowsPath;//.replace(/\\/g, "/");
+         calculateHashOfFile(windowsAbsolutePath, function(hashValue){
+            app.get("/" + hashValue, function(req, res){
+               console.log("Received a request for: " + hashValue);
+               res.sendFile(windowsAbsolutePath);           
             });
          });
       });
