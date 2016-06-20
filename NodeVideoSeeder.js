@@ -7,10 +7,10 @@ var myStreaming = new OakStreaming("Horst");
 console.log("Pitlord");
 
 var create_streamInformationObject = true;
-var Path_where_save_streamInformationObject = "./web/streamInformationObject.js";
+var Path_where_save_streamInformationObject = __dirname + "/web/streamInformationObject.js";
 // var Path_where_save_streamInformationObject = "./secondExampleApplication/streamInformationObject.js";
 //var seed_Video = true;
-var PATH_TO_VIDEO = "web/videos/3bb938fb70049e3e45f533b37ccae995ae96516e04c2f35b0c1142e47b2a39c1";
+var PATH_TO_VIDEO = "web/videos/ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e";
 
 //var PATH_TO_VIDEO = __dirname + "\\web\\example.mp4";
 //console.log(PATH_TO_VIDEO);
@@ -18,7 +18,7 @@ var PATH_TO_VIDEO = "web/videos/3bb938fb70049e3e45f533b37ccae995ae96516e04c2f35b
 
 
 if(create_streamInformationObject){
-   var videoFileStream = fs.createReadStream("./" + PATH_TO_VIDEO);;
+   var videoFileStream = fs.createReadStream(__dirname + "/" + PATH_TO_VIDEO);;
    
    // This will wait until we know the readable stream is actually valid before piping
    videoFileStream.on('open', function(){

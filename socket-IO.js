@@ -19,7 +19,7 @@ var directoryPath = __dirname + "\\web\\videos";
 var filesToProcess = 0;
 var directoryWatcher = null;
 
-/* Code stehen lassen. Der war gut. Fürs automatische Speichern der hashwerte in textfile
+// Code stehen lassen. Der war gut. Fürs automatische Speichern der hashwerte in textfile
 fs.readdir(directoryPath, function( err, files ){
    if( err ) {
       console.error( "Could not list the directory.", err );
@@ -70,8 +70,8 @@ fs.readdir(directoryPath, function( err, files ){
       });
    });
 });
-*/
 
+/*
 function calculateHashOfFile(filePath, callback){
    console.log("calculateHashOfFile is called");
    var hash = crypto.createHash('sha256');      
@@ -159,6 +159,7 @@ app.get('/', function(req, res){
 app.get("/example_application.js", function(req, res){
   res.sendFile(__dirname + "/web/" + "example_application.js");
 });
+*/
 
 /*
 app.get("/example.mp4", function(req, res){
