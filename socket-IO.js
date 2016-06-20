@@ -15,7 +15,7 @@ var participantsSet = [];
 var myGlobal = this;
 
 
-var directoryPath = __dirname + "\\web\\videos";
+var directoryPath = __dirname + "/web/videos";
 var filesToProcess = 0;
 var directoryWatcher = null;
 
@@ -30,7 +30,7 @@ fs.readdir(directoryPath, function( err, files ){
    
    files.forEach( function( file, index ) {
       var hash = crypto.createHash('sha256');      
-      var filePath = directoryPath + "\\" + file;
+      var filePath = directoryPath + "/" + file;
       fs.stat( filePath, function( error, stat ){
          if( error ) {
             console.error( "Error stating file.", error );
@@ -50,7 +50,7 @@ fs.readdir(directoryPath, function( err, files ){
                console.log("stream.on('end',..) was called");
                var finalHash = hash.digest('hex');
                console.log("__dirname: " + __dirname);
-               fs.appendFile(__dirname + "\\web\\hashValues.sha2", file + "/////" + finalHash + '\n', function (err){
+               fs.appendFile(__dirname + "/web/hashValues.sha2", file + "/////" + finalHash + '\n', function (err){
                   if(err){
                      return console.log(err);
                   }
