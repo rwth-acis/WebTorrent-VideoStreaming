@@ -4,26 +4,26 @@ var OakStreaming = require('./OakStreaming_Node');
 var myStreaming = new OakStreaming("Horst");
 //var streamBuffers = require('stream-buffers');
 
-console.log("Beastmaster");
+console.log("Pitlord");
 
 var create_streamInformationObject = true;
-var Path_where_save_streamInformationObject = "./secondExampleApplication/streamInformationObject.js";
+var Path_where_save_streamInformationObject = "./web/streamInformationObject.js";
+// var Path_where_save_streamInformationObject = "./secondExampleApplication/streamInformationObject.js";
 //var seed_Video = true;
-var Video_Name = "web/test.mp4";
+var PATH_TO_VIDEO = "web/videos/3bb938fb70049e3e45f533b37ccae995ae96516e04c2f35b0c1142e47b2a39c1";
 
 //var PATH_TO_VIDEO = __dirname + "\\web\\example.mp4";
 //console.log(PATH_TO_VIDEO);
-var PATH_TO_VIDEO = "./web/test.mp4";
 
 
 
 if(create_streamInformationObject){
-   var videoFileStream = fs.createReadStream(PATH_TO_VIDEO);
+   var videoFileStream = fs.createReadStream("./" + PATH_TO_VIDEO);;
    
    // This will wait until we know the readable stream is actually valid before piping
-   videoFileStream.on('open', function (){
+   videoFileStream.on('open', function(){
       console.log("Video file is open");
-      myStreaming.streamVideo(videoFileStream, {XHRPath : "/" + Video_Name, XHRPort : 80, webTorrentTrackers: [["wss://tracker.webtorrent.io"]]}, function(streamInformationObject){
+      myStreaming.streamVideo(videoFileStream, {XHRPath : "/" + PATH_TO_VIDEO, XHRPort : 80, webTorrentTrackers: [["http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"]]}, function(streamInformationObject){
          console.log("streamInformationObject was successfully created");
          fs.writeFile(Path_where_save_streamInformationObject, "var streamInformationObject = " + JSON.stringify(streamInformationObject) + ";", function(err, data){
             if(err) {
@@ -36,7 +36,7 @@ if(create_streamInformationObject){
 
    // This catches any errors that happen while creating the readable stream (usually invalid names)
    videoFileStream.on('error', function(err) {
-     console.log(err);
+      console.log(err);
    });
 }  
 

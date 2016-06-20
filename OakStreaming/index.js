@@ -635,7 +635,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
             return;
          }
          if(self.theTorrent && webTorrentFile){
-            document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + self.theTorrent.downloaded + "\n torrent.uploaded: " + self.theTorrent.uploaded + "\n torrent.progress: " + self.theTorrent.progress + "\n Bytes received from server: " + this.bytesReceivedFromServer + "\n Bytes taken from server delivery: " + bytesTakenFromServer + "\n Bytes taken from WebTorrent delivery: " + bytesTakenFromWebTorrent;
+            document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + self.theTorrent.downloaded + "\n torrent.uploaded: " + self.theTorrent.uploaded + "\n torrent.progress: " + self.theTorrent.progress + "\n Bytes received from server: " + self.bytesReceivedFromServer + "\n Bytes taken from server delivery: " + bytesTakenFromServer + "\n Bytes taken from WebTorrent delivery: " + bytesTakenFromWebTorrent;
          }
          setTimeout(updateChart, UPDATE_CHART_INTERVAL);
       };

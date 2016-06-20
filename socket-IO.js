@@ -19,7 +19,7 @@ var directoryPath = __dirname + "\\web\\videos";
 var filesToProcess = 0;
 var directoryWatcher = null;
 
-/*
+/* Code stehen lassen. Der war gut. Fürs automatische Speichern der hashwerte in textfile
 fs.readdir(directoryPath, function( err, files ){
    if( err ) {
       console.error( "Could not list the directory.", err );
@@ -206,6 +206,6 @@ io.on('connection', function(socket){
 	clientNumberCounter++;
 });
 
-http.listen(9999, function(){
+http.listen(9918, function(){
 	console.log('listening on *:9999');
 });
