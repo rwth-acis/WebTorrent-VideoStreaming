@@ -16,13 +16,12 @@ function OakStreaming(OakName){
       var webTorrentClient = new WebTorrent(); 
       
       var seedingOptions = {};
-      if(options.webTorrentTrackers){
-         seedingOptions = {announceList : options.webTorrentTrackers};
-      }   
+      seedingOptions.announceList = options.webTorrentTrackers;     
+      seedingOptions.path = options.path;
       
       webTorrentClient.seed(videoFile, seedingOptions, function(torrent){
          console.log("torrent file is seeded");
-         streamInformationObject = {
+         var streamInformationObject = {
             bufferSize : options.bufferSize,
             videoFileSize : torrent.files[0].length,
             XHRPath : options.XHRPath,

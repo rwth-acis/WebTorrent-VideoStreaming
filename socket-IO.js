@@ -19,7 +19,7 @@ var directoryPath = __dirname + "/web/videos";
 var filesToProcess = 0;
 var directoryWatcher = null;
 
-// Code stehen lassen. Der war gut. Fürs automatische Speichern der hashwerte in textfile
+/* Code stehen lassen. Der war gut. Fürs automatische Speichern der hashwerte in textfile
 fs.readdir(directoryPath, function( err, files ){
    if( err ) {
       console.error( "Could not list the directory.", err );
@@ -70,8 +70,9 @@ fs.readdir(directoryPath, function( err, files ){
       });
    });
 });
+*/
 
-/*
+
 function calculateHashOfFile(filePath, callback){
    console.log("calculateHashOfFile is called");
    var hash = crypto.createHash('sha256');      
@@ -102,35 +103,35 @@ function calculateHashOfFile(filePath, callback){
 
 function checkStartingWatchingDirectory(){
    if(filesToProcess == 0){
-      var directoryWatcher = chokidar.watch(__dirname + "\\web\\videos", {awaitWriteFinish: {stabilityThreshold: 500}});
+      var directoryWatcher = chokidar.watch(__dirname + "/web/videos", {awaitWriteFinish: {stabilityThreshold: 500}});
       
-      directoryWatcher.on("unlink", function(windowsAbsolutePath){
-         var fileName = windowsAbsolutePath.substring(windowsAbsolutePath.lastIndexOf("\\")+1);
+      directoryWatcher.on("unlink", function(absolutePath){
+         var fileName = absolutePath.substring(absolutePath.lastIndexOf("/")+1);
          //var unixPath = windowsPath.replace(/\\/g, "/");
          app.get("/" + fileName, function(req, res){console.log("File was deleted");});
       });
-      directoryWatcher.on("add", function(windowsAbsolutePath){
-         var fileName = windowsAbsolutePath.substring(windowsAbsolutePath.lastIndexOf("\\")+1);
+      directoryWatcher.on("add", function(absolutePath){
+         var fileName = absolutePath.substring(absolutePath.lastIndexOf("/")+1);
          
          //var unixPath = windowsPath;//.replace(/\\/g, "/");
-         console.log("In on.add path function paramter: " + windowsAbsolutePath);
+         console.log("In on.add path function paramter: " + absolutePath);
          app.get("/" + fileName, function(req, res){
             console.log("Received a request for: " + "/" + fileName);
-            res.sendFile(windowsAbsolutePath);
+            res.sendFile(absolutePath);
          });
-         calculateHashOfFile(windowsAbsolutePath, function(hashValue){
+         calculateHashOfFile(absolutePath, function(hashValue){
             app.get("/" + hashValue, function(req, res){
                console.log("Received a request for: " + hashValue);
-               res.sendFile(windowsAbsolutePath);                
+               res.sendFile(absolutePath);                
             });
          });
       });
-      directoryWatcher.on("change", function(windowsAbsolutePath, stats){
+      directoryWatcher.on("change", function(absolutePath, stats){
          //var unixPath = windowsPath;//.replace(/\\/g, "/");
-         calculateHashOfFile(windowsAbsolutePath, function(hashValue){
+         calculateHashOfFile(absolutePath, function(hashValue){
             app.get("/" + hashValue, function(req, res){
                console.log("Received a request for: " + hashValue);
-               res.sendFile(windowsAbsolutePath);           
+               res.sendFile(absolutePath);           
             });
          });
       });
@@ -156,10 +157,13 @@ app.get('/', function(req, res){
   res.sendFile(__dirname + '/web/index.html');
 });
 
+app.get('/index.html', function(req, res){
+  res.sendFile(__dirname + '/web/index.html');
+});
+
 app.get("/example_application.js", function(req, res){
   res.sendFile(__dirname + "/web/" + "example_application.js");
 });
-*/
 
 /*
 app.get("/example.mp4", function(req, res){
@@ -207,6 +211,6 @@ io.on('connection', function(socket){
 	clientNumberCounter++;
 });
 
-http.listen(9918, function(){
-	console.log('listening on *:9999');
+http.listen(9912, function(){
+	console.log('listening on *:9912');
 });

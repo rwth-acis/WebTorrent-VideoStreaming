@@ -170,10 +170,10 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
    
    
    var seedingOptions = {};
-   if(options.webTorrentTrackers){
+  // if(options.webTorrentTrackers){
       seedingOptions.announceList = options.webTorrentTrackers;
-      seedingOptions.announce = options.webTorrentTrackers; // nur zum test
-   }
+      //seedingOptions.announce = options.webTorrentTrackers; // nur zum test
+ //  }
    
    webTorrentClient.seed(videoFile, seedingOptions, function(torrent){
       console.log("torrent file is seeded");
@@ -215,7 +215,8 @@ function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent
       streamInformationObject.XHRPath = options.XHRPath;
       streamInformationObject.torrentFile = torrent.torrentFile;
       streamInformationObject.XHRPort = options.XHRPort;
-      streamInformationObject.hashValue = options.hashValue;      
+      streamInformationObject.hashValue = options.hashValue; 
+      streamInformationObject.path = options.path;
       
       
       
@@ -260,7 +261,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
    var THE_RECEIVED_TORRENT_FILE = streamInformationObject.torrentFile;
    var XHR_PORT = streamInformationObject.XHRPort || 80;
    
-   var VIDEO_BUFFER_SIZE = streamInformationObject.videoBufferSize || 50000000; // This is the minomum byte range that the WebTorrent client will download in advance (regarding the current playback position) with a sequential chunk selection strategy. This means the video buffer size in byte
+   var DOWNLOAD_FROM_P2P_TIME_RANGE = streamInformationObject.videoBufferSize || 20; // how much seconds must be buffered in advance such that no more data streams are requested from the P2P network                  Old Describtion: This is the minomum byte range that the WebTorrent client will download in advance (regarding the current playback position) with a sequential chunk selection strategy. This means the video buffer size in byte
    var CREATE_READSTREAM_REQUEST_SIZE = streamInformationObject.createReadstreamRequestSize || 50000000; // The size of the createReadstream WebTorrent requests in bytes. 
    
    var DOWNLOAD_FROM_SERVER_TIME_RANGE = streamInformationObject.downloadFromServerTimeRange || 5; // in seconds
@@ -310,7 +311,11 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
           
       //THE_RECEIVED_TORRENT_FILE 
      
-      webTorrentClient.add(MAGNET_URI, function (torrent){              
+      var webTorrentOptions = {};
+      if(streamInformationObject.path){
+         webTorrentOptions.path = streamInformationObject.path;
+      }
+      webTorrentClient.add(MAGNET_URI, webTorrentOptions, function (torrent){              
          console.log("webTorrentClient.add   torrent meta data ready");         
          self.theTorrent = torrent;
          
@@ -560,7 +565,7 @@ function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
          
             for (var i = 0, length = timeRanges.length; i < length; i++){
                if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)+3) {
-                  if (timeRanges.end(i) - myVideo.currentTime <= VIDEO_BUFFER_SIZE) {
+                  if (timeRanges.end(i) - myVideo.currentTime <= DOWNLOAD_FROM_P2P_TIME_RANGE) {
                      for (var i = 0, length = videostreamRequestHandlers.length; i < length; i++) {
                         var thisRequest = videostreamRequestHandlers[i];
                         

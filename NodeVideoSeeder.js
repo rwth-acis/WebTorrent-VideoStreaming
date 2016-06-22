@@ -10,7 +10,7 @@ var create_streamInformationObject = true;
 var Path_where_save_streamInformationObject = __dirname + "/web/streamInformationObject.js";
 // var Path_where_save_streamInformationObject = "./secondExampleApplication/streamInformationObject.js";
 //var seed_Video = true;
-var PATH_TO_VIDEO = "web/videos/ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e";
+var PATH_TO_VIDEO = "web/videos/test.mp4";
 
 //var PATH_TO_VIDEO = __dirname + "\\web\\example.mp4";
 //console.log(PATH_TO_VIDEO);
@@ -18,12 +18,22 @@ var PATH_TO_VIDEO = "web/videos/ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513
 
 
 if(create_streamInformationObject){
-   var videoFileStream = fs.createReadStream(__dirname + "/" + PATH_TO_VIDEO);;
+   console.log("Path that gets put into createReadStream: " + __dirname + "/" + PATH_TO_VIDEO);
    
+
+  
+   var videoFileStream = fs.createReadStream(__dirname + "/" + PATH_TO_VIDEO);
+   
+   var bufs = [];
+   var buf;
+   videoFileStream.on('data', function(d){ bufs.push(d); });
+   videoFileStream.on('end', function(){
+   buf = Buffer.concat(bufs);
+   console.log("buf.length: " + buf.length);
    // This will wait until we know the readable stream is actually valid before piping
-   videoFileStream.on('open', function(){
-      console.log("Video file is open");
-      myStreaming.streamVideo(videoFileStream, {XHRPath : "/" + PATH_TO_VIDEO, XHRPort : 80, webTorrentTrackers: [["http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"]]}, function(streamInformationObject){
+   //videoFileStream.on('open', function(){
+      //console.log("Video file is open");  // XHRPath : "/" + PATH_TO_VIDEO
+      myStreaming.streamVideo(buf, {path: "/home/wtvideo/webtorrent-temp", hashValue: "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e", XHRPort : 80, webTorrentTrackers: [["wss://tracker.webtorrent.io"],["wss://tracker.btorrent.xyz"],["wss://tracker.openwebtorrent.com"],["wss://tracker.fastcast.nz"],["http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"]]}, function(streamInformationObject){
          console.log("streamInformationObject was successfully created");
          fs.writeFile(Path_where_save_streamInformationObject, "var streamInformationObject = " + JSON.stringify(streamInformationObject) + ";", function(err, data){
             if(err) {
@@ -32,8 +42,8 @@ if(create_streamInformationObject){
             console.log("streamInformationObject was written to a file.");
          }); 
       });
+  // });
    });
-
    // This catches any errors that happen while creating the readable stream (usually invalid names)
    videoFileStream.on('error', function(err) {
       console.log(err);
