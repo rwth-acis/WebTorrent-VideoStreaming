@@ -25,7 +25,7 @@ function OakStreaming(OakName){
    var self = this;
    (function(){
       var peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);   
-      console.log("Version: Pitlord   In OakStreaming constructor. this.name: " + OakName);
+      console.log("Version: Alchimist   In OakStreaming constructor. this.name: " + OakName);
       var OakName = OakName;
       
       var simplePeerCreationCounter = 0;
@@ -162,72 +162,72 @@ function OakStreaming(OakName){
          ////console.log("videoFile: " + videoFile);
          ////console.log("options: " + options);
          ////console.log("callback: " + callback);
-         var self = this; 
          
-         
-         var seedingOptions = {};
-        // if(options.webTorrentTrackers){
-            seedingOptions.announceList = options.webTorrentTrackers;
-            //seedingOptions.announce = options.webTorrentTrackers; // nur zum test
-       //  }
-         
-         webTorrentClient.seed(videoFile, seedingOptions, function(torrent){
-            console.log("torrent file is seeded");
-            
-            console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
-            self.forTesting_connectedToNewWebTorrentPeer = function(callback){
-               console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets executed");
-               if(notificationsBecauseNewWires <= 0){
-                  notificationsBecauseNewWires--;
-                  var callbackCalled = false;
-                  
-                  torrent.on('wire', function(wire){
-                     if(!callbackCalled){
-                        callback();
-                        callbackCalled = true;
-                     }
-                  });
-               } else {
-                  notificationsBecauseNewWires--;            
-                  callback();
-               }
-            };
-            
-            torrent.on('wire', function (wire){
-               notificationsBecauseNewWires++;  
-            });
-            
-            
-            ////console.log("Video file was seeded");
-            var streamInformationObject = {};
-            //streamInformationObject.torrent = torrent;
+         var streamInformationObject = {};
+         streamInformationObject.bufferSize = options.bufferSize;
+         streamInformationObject.pathToFileOnXHRServer = options.pathToFileOnXHRServer;
+         streamInformationObject.XHRPort = options.XHRPort;
+         streamInformationObject.hashValue = options.hashValue; 
+             
+         if(videoFile){
+            var seedingOptions = {};
             if(options.webTorrentTrackers){
-               streamInformationObject.magnetURI = torrent.magnetURI;
-               // Sind dann ja schon im torrent file drin      streamInformationObject.webTorrentTrackers = options.webTorrentTrackers;
+               seedingOptions.announceList = options.webTorrentTrackers;
+               //seedingOptions.announce = options.webTorrentTrackers; // nur zum test
             }
             
-            streamInformationObject.bufferSize = options.bufferSize;
-            streamInformationObject.videoFileSize = torrent.files[0].length;
-            streamInformationObject.XHRPath = options.XHRPath;
-            streamInformationObject.torrentFile = torrent.torrentFile;
-            streamInformationObject.XHRPort = options.XHRPort;
-            streamInformationObject.hashValue = options.hashValue; 
-            streamInformationObject.path = options.path;
-            
-            
-            
-            //////console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
-            if(returnTorrent === "It's a test"){
-               if(destroyTorrent){
-                  notificationsBecauseNewWires = 0;
-                  torrent.destroy();
-                  delete webTorrentClient;
+            var self = this; 
+            webTorrentClient.seed(videoFile, seedingOptions, function(torrent){
+               console.log("torrent file is seeded");
+               
+               streamInformationObject.videoFileSize = torrent.files[0].length;
+               streamInformationObject.torrentFile = torrent.torrentFile;
+               streamInformationObject.pathToFileToSeed = options.pathToFileToSeed;
+               
+               //if(options.webTorrentTrackers){ Schauen ob es auch ohne if block drum herum läuft
+                  streamInformationObject.magnetURI = torrent.magnetURI;
+                  // Sind dann ja schon im torrent file drin      streamInformationObject.webTorrentTrackers = options.webTorrentTrackers;
+               //}
+               
+               console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
+               self.forTesting_connectedToNewWebTorrentPeer = function(callback){
+                  console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets executed");
+                  if(notificationsBecauseNewWires <= 0){
+                     notificationsBecauseNewWires--;
+                     var callbackCalled = false;
+                     
+                     torrent.on('wire', function(wire){
+                        if(!callbackCalled){
+                           callback();
+                           callbackCalled = true;
+                        }
+                     });
+                  } else {
+                     notificationsBecauseNewWires--;            
+                     callback();
+                  }
+               };
+               
+               torrent.on('wire', function (wire){
+                  notificationsBecauseNewWires++;  
+               });          
+                        
+               //////console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
+               if(returnTorrent === "It's a test"){
+                  if(destroyTorrent){
+                     notificationsBecauseNewWires = 0;
+                     torrent.destroy();
+                     delete webTorrentClient;
+                  }
+                  callback(streamInformationObject, torrent);
+               } else {
+                  callback(streamInformationObject);
+                  return streamInformationObject;
                }
-               setTimeout(function(){callback(streamInformationObject, torrent);},0);
-            } else {
-               setTimeout(function(){callback(streamInformationObject);},0);
-            }
-         });
+            });
+         } else {
+            callback(streamInformationObject);
+         }
       }
 
 
@@ -240,23 +240,22 @@ function OakStreaming(OakName){
        * @param {StreamInformationObject} streamInformationObject - This object contains all data that is needed to initiate loading the video from other peers and/or a Web server. StreamInformationObjects can be created by the {@link streamVideo|streamVideo} method.
        * @param {OakStreaming~loadedVideoFinished} callback - This callback gets called when the video has been loaded entirely into the buffer of the video player.
        */
-      function loadVideo(streamInformationObject, callback, endIfVideoLoaded){
-         console.log("Version Naga");
-         
+      function loadVideo(streamInformationObject, callback, endIfVideoLoaded){         
          //////console.log("I entered this.loadVideo");
          //////console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
-         var deliveryByServer = streamInformationObject.XHRPath ? true : false;
+         var deliveryByServer = (streamInformationObject.pathToFileOnXHRServer || streamInformationObject.hashValue) ? true : false;
          var deliveryByWebtorrent = streamInformationObject.torrentFile ? true : false;
+         var XHRServerURL = streamInformationObject.XHRServerURL || false;
+         var XHR_PORT = streamInformationObject.XHRPort || 80;
+         var pathToFileOnXHRServer = streamInformationObject.pathToFileOnXHRServer;       
          var hashValue = streamInformationObject.hashValue;
          var webTorrentTrackers = streamInformationObject.webTorrentTrackers;
          //var deliveryByWebtorrent = streamInformationObject.magnetURI ? true : false;
          var MAGNET_URI = streamInformationObject.magnetURI;
-         //console.log("streamInformationObject.XHRPath: " + streamInformationObject.XHRPath);
-         var PATH_TO_VIDEO_FILE = streamInformationObject.XHRPath;
-         SIZE_OF_VIDEO_FILE = streamInformationObject.videoFileSize;
          var THE_RECEIVED_TORRENT_FILE = streamInformationObject.torrentFile;
-         var XHR_PORT = streamInformationObject.XHRPort || 80;
-         
+         //console.log("streamInformationObject.XHRPath: " + streamInformationObject.XHRPath);
+         SIZE_OF_VIDEO_FILE = streamInformationObject.videoFileSize;
+
          var DOWNLOAD_FROM_P2P_TIME_RANGE = streamInformationObject.videoBufferSize || 20; // how much seconds must be buffered in advance such that no more data streams are requested from the P2P network                  Old Describtion: This is the minomum byte range that the WebTorrent client will download in advance (regarding the current playback position) with a sequential chunk selection strategy. This means the video buffer size in byte
          var CREATE_READSTREAM_REQUEST_SIZE = streamInformationObject.createReadstreamRequestSize || 50000000; // The size of the createReadstream WebTorrent requests in bytes. 
          
@@ -308,12 +307,15 @@ function OakStreaming(OakName){
             //THE_RECEIVED_TORRENT_FILE 
            
             var webTorrentOptions = {};
-            if(streamInformationObject.path){
-               webTorrentOptions.path = streamInformationObject.path;
+            /* Weiß nicht mehr warum das hier steht
+            if(streamInformationObject.pathToFileToSeed){
+               webTorrentOptions.path = streamInformationObject.pathToFileToSeed;
             }
+            */
             webTorrentClient.add(MAGNET_URI, webTorrentOptions, function (torrent){              
                console.log("webTorrentClient.add   torrent meta data ready");         
                theTorrent = torrent;
+               webTorrentFile = torrent.files[0];
                
                for(var j=0; j< peersToAdd.length; j++){
                   theTorrent.addPeer(peersToAdd[j][0]);
@@ -321,8 +323,7 @@ function OakStreaming(OakName){
                      (peersToAdd[j][1])();
                   }
                } 
-               
-               webTorrentFile = torrent.files[0];
+                            
                //console.log("In loadVideo typeof webTorrentFile after assignment: " + typeof webTorrentFile);
 
                console.log("In loadVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
@@ -372,7 +373,7 @@ function OakStreaming(OakName){
                      //console.log("In onTorrent  webTorrentFile.length: " + webTorrentFile.length);
                                  
                      var endCreateReadStream;
-                     if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
+                     if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE > webTorrentFile.length-1){
                         endCreateReadStream = webTorrentFile.length-1;
                      } else {
                         endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE;
@@ -404,10 +405,10 @@ function OakStreaming(OakName){
          
          
          
-         var file = function (path){
-            this.path = path;
+         var fileLikeObject = function (pathToFileOnXHRServer){
+            this.pathToFileOnXHRServer = pathToFileOnXHRServer;
          };
-         file.prototype.createReadStream = function (opts){
+         fileLikeObject.prototype.createReadStream = function (opts){
             if(opts.start > SIZE_OF_VIDEO_FILE){
                //console.log("opts.start > SIZE_OF_VIDEO_FILE there cb(null,null) every time");
                return (new MultiStream(function (cb){cb(null, null);}));
@@ -548,17 +549,13 @@ function OakStreaming(OakName){
          };
         
          
-         
-         
-         var frequentlyCheckIfNewCreateReadStreamNecessary = (function (){
-            return function(){
+            
+         function frequentlyCheckIfNewCreateReadStreamNecessary(){
                if(videoCompletelyLoaded){
                   return;
-               }
-            
-              if(myVideo.duration){
-                  var timeRanges = myVideo.buffered;
-               
+               }        
+               if(myVideo.duration){
+                  var timeRanges = myVideo.buffered;          
                   for (var i = 0, length = timeRanges.length; i < length; i++){
                      if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)+3) {
                         if (timeRanges.end(i) - myVideo.currentTime <= DOWNLOAD_FROM_P2P_TIME_RANGE) {
@@ -584,8 +581,6 @@ function OakStreaming(OakName){
                   setTimeout(frequentlyCheckIfNewCreateReadStreamNecessary, CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL);
                }
             }   
-         })();
-         frequentlyCheckIfNewCreateReadStreamNecessary();
          
          
          function ceckIfAnswerStreamReady(thisRequest){
@@ -608,10 +603,9 @@ function OakStreaming(OakName){
                return true;
             }
             return false;
-         };
+         }
 
-         var chokeIfNecessary = (function(){
-            return function (){
+         function chokeIfNecessary(){
                if (theTorrent && theTorrent.uploaded >= theTorrent.downloaded * UPLOAD_LIMIT + ADDITION_TO_UPLOAD_LIMIT) {
                   /* mache ich schon in einer anderen frequent methode
                   if(videoCompletelyLoaded){
@@ -627,11 +621,9 @@ function OakStreaming(OakName){
                   }
                }
                setTimeout(chokeIfNecessary, CHOKE_IF_NECESSARY_INTERVAL);
-            };
-         })();
+            }
 
-         var updateChart = (function(){
-            return function(){
+         function updateChart(){
                if(endStreaming){
                   return;
                }
@@ -639,8 +631,7 @@ function OakStreaming(OakName){
                   document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer + "\n Bytes taken from server delivery: " + bytesTakenFromServer + "\n Bytes taken from WebTorrent delivery: " + bytesTakenFromWebTorrent;
                }
                setTimeout(updateChart, UPDATE_CHART_INTERVAL);
-            };
-         })();
+         }
           
          function VideostreamRequestHandler(readStreamNumber, opts, self) {
             this.readStreamNumber = readStreamNumber;
@@ -664,8 +655,7 @@ function OakStreaming(OakName){
             this.lastEndCreateReadStream = -42;
          }
 
-         var frequentlyCeckIfAnswerStreamReady = (function (){
-            return function(){
+         function frequentlyCeckIfAnswerStreamReady(){
                if(videoCompletelyLoaded){
                   return;
                }
@@ -673,11 +663,9 @@ function OakStreaming(OakName){
                   ceckIfAnswerStreamReady(videostreamRequestHandlers[i]);
                }
                setTimeout(frequentlyCeckIfAnswerStreamReady, CHECK_IF_ANSWERSTREAM_READY_INTERVAL);
-            };
-         })();
+         }
 
-         var checkIfBufferFullEnough = (function(){
-            return function(){
+         function checkIfBufferFullEnough(){
                //console.log("checkIfBufferFullEnough is called");
                if(videoCompletelyLoaded){
                   return;
@@ -729,7 +717,6 @@ function OakStreaming(OakName){
                }
                setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
             }
-         })();
 
          function conductXHR(thisRequest) {
             if(thisRequest.currentCB === null){
@@ -827,17 +814,19 @@ function OakStreaming(OakName){
             
             //console.log("At htto.get   reqStart: " + reqStart + "     reqEnd: " + reqEnd);
 
+                  
+            var XHROptionObject = {
+               path: thisRequest.self.pathToFileOnXHRServer,
+               headers: {
+                  range: 'bytes=' + reqStart + '-' + (reqEnd-1)
+               }
+            };
+            if(XHRServerURL){
+               XHROptionObject.hostname = XHRServerURL;
+               XHROptionObject.port = XHR_PORT;
+            }
             
-            
-            
-            thisRequest.req = http.get({
-                  path: thisRequest.self.path,
-                  hostname: 'localhost',
-                  port: XHR_PORT,
-                  headers: {
-                     range: 'bytes=' + reqStart + '-' + (reqEnd-1)
-                  }
-              }, function (res){
+            thisRequest.req = http.get(XHROptionObject, function (res){
                   var contentRange = res.headers['content-range'];
                   if (contentRange) {
                      thisRequest.fileSize = parseInt(contentRange.split('/')[1], 10);
@@ -849,6 +838,7 @@ function OakStreaming(OakName){
                }
             );
          }
+         frequentlyCheckIfNewCreateReadStreamNecessary();
          chokeIfNecessary();
          updateChart();
          frequentlyCeckIfAnswerStreamReady();
@@ -856,9 +846,9 @@ function OakStreaming(OakName){
 
          //////console.log("I call Videostream constructor");
          if(hashValue){
-            Videostream(new file(hashValue), myVideo);
+            Videostream(new fileLikeObject(hashValue), myVideo);
          } else {
-            Videostream(new file(PATH_TO_VIDEO_FILE), myVideo);
+            Videostream(new fileLikeObject(pathToFileOnXHRServer), myVideo);
          }
       }
 
