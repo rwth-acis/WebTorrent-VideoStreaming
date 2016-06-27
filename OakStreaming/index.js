@@ -24,8 +24,10 @@ function FVSL(OakName){
    (function(){
       var peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);   
       console.log("Version: Headhunter   In OakStreaming constructor. this.name: " + OakName);
-      var OakName = OakName;
+      var OakName = OakName || "NoName FVSL instance";
       
+      // Only methods should be part of the API, i.e. only methods should be publically accessible.
+      // Every method should have access to these variables. Therefore they are definied at this high scope.
       var simplePeerCreationCounter = 0;
       var connectionsWaitingForSignalingData = [];
       var theTorrent = null;
@@ -142,23 +144,39 @@ function FVSL(OakName){
 
       /**
        * Streams a video file to all other clients/peers.
-       * @param {object} videoFile - The video file that should be streamed to the other clients/peers. This paramter can either be a {@link https://developer.mozilla.org/en-US/docs/Web/API/File|W3C File object}, a {@link https://developer.mozilla.org/en-US/docs/Web/API/FileList|W3C FileList}, a {@link https://nodejs.org/api/buffer.html|Node Buffer object} or a {@link https://nodejs.org/api/stream.html#stream_class_stream_readable|Readable stream object}.
+       * @param {object} video_file - The video file that should be streamed to the other clients/peers. This paramter can either be a {@link https://developer.mozilla.org/en-US/docs/Web/API/File|W3C File object}, a {@link https://developer.mozilla.org/en-US/docs/Web/API/FileList|W3C FileList}, a {@link https://nodejs.org/api/buffer.html|Node Buffer object} or a {@link https://nodejs.org/api/stream.html#stream_class_stream_readable|Readable stream object}.
        * @param {object} [options] - Options for the creation of the StreamInformationObject, that gets passed as an argument to the callback function.
-       * @param {string} options.XHRPath - The path that will be used for the XML HTTP Request (XHR). If the option object or this property of the option object is undefined, no video data will be requested from the server.
+       * @param {string} options.path_to_file_on_XHR_server - The path that will be used for the XML HTTP Request (XHR). A valid path would be, for example, "/videos/aVideoFile.mp4". It is not necessary to set both the pathToFileOnXHRServer and the hashValue paramter for successfull XHR requests. If this property and the hashValue property is undefined, no video data will be requested from the server.
+       * @param {string} options.hash_value - Hash value of the video file that should by requested from the SVSL WebServer. It is not necessary to set both the pathToFileOnXHRServer and the hashValue paramter for successfull XHR requests. If this property and the hashValue property is undefined, no video data will be requested from the server. 
+       * @param {string} options.XHR_server_URL - URL of a XHR server that can serve the video file. If this property is not set, XHR will be send to the Web server that served the Web page.
+            * @param {string} options.XHR_port - Port that will be used when communicating with the XHR server that was specified in the XHRServerURL property. This property should only be set when the XHRServerURL property is set too. The default value is 80.
+                   * @param {string} options.download_from_p2p_time_range - How many seconds of video playback must be buffered in advance such that no more data streams are requested from the WebTorrent network. The default value is 20 seconds.
+                   * @param {string} options.create_readStream_request_size - The size of the byte range requests to the WebTorrent network. The default value is 5000000 bytes.
+                         
        * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated StreamInformationObject at the end of the execution of streamVideo.
        */
-      function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent){ 
+      function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent){ 
          var webTorrentClient = new WebTorrent();
          //console.log("streamVideo is executed");
          //console.log("videoFile: " + videoFile);
          //console.log("options: " + options);
          //console.log("callback: " + callback);
+
+         var DOWNLOAD_FROM_P2P_TIME_RANGE = streamInformationObject.downloadFromP2PTimeRange || 20; // how much seconds must be buffered in advance such that no more data streams are requested from the P2P network                  Old Describtion: This is the minomum byte range that the WebTorrent client will download in advance (regarding the current playback position) with a sequential chunk selection strategy. This means the video buffer size in byte
+         var CREATE_READSTREAM_REQUEST_SIZE = streamInformationObject.createReadstreamRequestSize || 5000000; // The size of the createReadstream WebTorrent requests in bytes. 
          
+         var DOWNLOAD_FROM_SERVER_TIME_RANGE = streamInformationObject.downloadFromServerTimeRange || 5; // in seconds
+         var UPLOAD_LIMIT = streamInformationObject.uploadLimit || 2; // multiplied by number of downloaded bytes
+         var ADDITION_TO_UPLOAD_LIMIT = streamInformationObject.additionToUploadLimit || 500000; // amount of byte added to upload limit
+         
+          
          var streamInformationObject = {};
-         streamInformationObject.bufferSize = options.bufferSize;
+         streamInformationObject.downloadFromP2PTimeRange = options.downloadFromP2PTimeRange;
          streamInformationObject.pathToFileOnXHRServer = options.pathToFileOnXHRServer;
          streamInformationObject.XHRPort = options.XHRPort;
          streamInformationObject.hashValue = options.hashValue; 
+         
+         //var SIZE_OF_VIDEO_FILE = streamInformationObject.sizeOfVideoFile;
              
          if(videoFile){
             var seedingOptions = {};
@@ -280,9 +298,9 @@ function FVSL(OakName){
          //console.log("Buffer.isBuffer(THE_RECEIVED_TORRENT_FILE): " + Buffer.isBuffer(THE_RECEIVED_TORRENT_FILE));
          
          //console.log("THE_RECEIVED_TORRENT_FILE\n" + parseTorrent(THE_RECEIVED_TORRENT_FILE));
-         var SIZE_OF_VIDEO_FILE = streamInformationObject.videoFileSize;
+         var SIZE_OF_VIDEO_FILE = streamInformationObject.sizeOfVideoFile;
 
-         var DOWNLOAD_FROM_P2P_TIME_RANGE = streamInformationObject.videoBufferSize || 20; // how much seconds must be buffered in advance such that no more data streams are requested from the P2P network                  Old Describtion: This is the minomum byte range that the WebTorrent client will download in advance (regarding the current playback position) with a sequential chunk selection strategy. This means the video buffer size in byte
+         var DOWNLOAD_FROM_P2P_TIME_RANGE = streamInformationObject.downloadFromP2PTimeRange || 20; // how much seconds must be buffered in advance such that no more data streams are requested from the P2P network                  Old Describtion: This is the minomum byte range that the WebTorrent client will download in advance (regarding the current playback position) with a sequential chunk selection strategy. This means the video buffer size in byte
          var CREATE_READSTREAM_REQUEST_SIZE = streamInformationObject.createReadstreamRequestSize || 50000000; // The size of the createReadstream WebTorrent requests in bytes. 
          
          var DOWNLOAD_FROM_SERVER_TIME_RANGE = streamInformationObject.downloadFromServerTimeRange || 5; // in seconds
