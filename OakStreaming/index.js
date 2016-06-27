@@ -1,87 +1,79 @@
 var http = require('http');
 var MultiStream = require('multistream');
 var util = require('util');
-//var Readable = require('stream').Readable;
 var readableStream = require('readable-stream');
 var Videostream = require('videostream');
+var ut_pex = require('ut_pex');
 var WebTorrent = require('webtorrent');
 var SimplePeer = require('simple-peer');
-var ut_pex = require('ut_pex');
-//var parseTorrent = require('parse-torrent');
-
+var parseTorrent = require('parse-torrent');
 
 
  /**
- * @module OakStreaming
+ * @module FVSL
  */
-module.exports = OakStreaming;
+module.exports = FVSL;
 
 
  /**
- * Creates a new OakStreaming instance which has the methods streamVideo, loadVideo, addPeer and on.
+ * Creates a new FVSL instance which has the methods streamVideo, loadVideo, createSignalingData, createSignalingDataResponse, processSignalingResponse and several simple get methods  
  * @constructor
  */ 
-function OakStreaming(OakName){ 
+function FVSL(OakName){
    var self = this;
    (function(){
       var peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);   
-      console.log("Version: Alchimist   In OakStreaming constructor. this.name: " + OakName);
+      console.log("Version: Headhunter   In OakStreaming constructor. this.name: " + OakName);
       var OakName = OakName;
       
       var simplePeerCreationCounter = 0;
       var connectionsWaitingForSignalingData = [];
       var theTorrent = null;
       var peersToAdd = [];
-      var notificationsBecauseNewWires = 0;
       var bytesReceivedFromServer = 0;
+      var notificationsBecauseNewWires = 0;
       var SIZE_OF_VIDEO_FILE = -42;
       
       self.streamVideo = streamVideo;
       self.loadVideo = loadVideo;
-      self.on = function(){};
       self.forTesting_connectedToNewWebTorrentPeer = null;
                 
-      self.numberOfBytesDownloadedFromServer = function(){
+      self.getNumberOfBytesDownloadedFromServer = function(){
          return bytesReceivedFromServer;
       };
-      self.numberOfBystesDownloadedP2P = function(){
+      
+      self.getNumberOfBystesDownloadedP2P = function(){
          if(theTorrent){
             return theTorrent.downloaded;
          } else {
             return 0;
          }
       };
-      self.numberOfBytesUploadedP2P = function(){
+      
+      self.getNumberOfBytesUploadedP2P = function(){
          if(theTorrent){
             return theTorrent.uploaded;
          } else {
             return 0;
          }
       };
-      self.percentageDownloadedTorrent = function(){
+      
+      self.getPercentageDownloadedTorrent = function(){
          if(theTorrent){
             return theTorrent.progress;
          } else {
             return 0;
          }
       };
-      self.fileSize = function(){
+      
+      self.getFileSize = function(){
          return SIZE_OF_VIDEO_FILE;
       };
       
-      /*
-      this.streamVideo = function(a,b,c,d,e){streamVideo.call(self, a, b, c, d, e)};
-      this.loadVideo = function(a,b,c){loadVideo.call(self, a, b, c)};
-      this.addSimplePeerInstance = function(a,b,c){addSimplePeerInstance.call(self, a, b, c)};
-      this.on = function(){};
-      this.forTesting_connectedToNewWebTorrentPeer = function(){};
-      */
-      
       self.createSignalingData = function (callback){
          var alreadyCalledCallback = false;
-         console.log("Archemage");
          var oakNumber = simplePeerCreationCounter;
-         console.log("In createSignalingData oakNumber: " + oakNumber);
+         console.log("In createSignalingData for oakNumber: " + oakNumber);
          connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({initiator: true, tickle: false});
          simplePeerCreationCounter++;
          
@@ -95,9 +87,8 @@ function OakStreaming(OakName){
       };
       
       self.createSignalingDataResponse = function (signalingData, callback){
-         console.log("Pala");
          var oakNumber = signalingData.oakNumber;
-         console.log("In createSignalingDataResponse zu Beginn oakNumber: " + oakNumber);
+         console.log("In createSignalingDataResponse. In the beginning oakNumber: " + oakNumber);
          delete signalingData.oakNumber;
          
          var myPeer = new SimplePeer({initiator: false, tickle: false});
@@ -106,9 +97,9 @@ function OakStreaming(OakName){
          simplePeerCreationCounter++;
          
          myPeer.on('signal', function (answerSignalingData){
-            console.log("In createSignalingDataResponse nach onSignal oakNumber: " + oakNumber);
+            console.log("In createSignalingDataResponse, after onSignal oakNumber: " + oakNumber);
             answerSignalingData.oakNumber = oakNumber;
-            console.log("In createSignalingDataResponse  object that is returned with callback: " + JSON.stringify(answerSignalingData));
+            console.log("In createSignalingDataResponse,  object that is returned with callback: " + JSON.stringify(answerSignalingData));
             callback(answerSignalingData);
          });
          myPeer.signal(signalingData);
@@ -120,19 +111,19 @@ function OakStreaming(OakName){
       };
       
       self.processSignalingResponse = function (signalingData, callback){
-         console.log("In processSignalingResponse  signalingData paramter: " + JSON.stringify(signalingData));
+         console.log("In processSignalingResponse,  signalingData paramter: " + JSON.stringify(signalingData));
          var oakNumber = signalingData.oakNumber;
          delete signalingData.oakNumber;
-         console.log("In processSignalingResponse  oakNumber: " + oakNumber);
+         console.log("In processSignalingResponse,  oakNumber: " + oakNumber);
          console.log("connectionsWaitingForSignalingData: " + connectionsWaitingForSignalingData);
          var self = this;
          (connectionsWaitingForSignalingData[oakNumber]).on('connect', function (){
-            console.log('CONNECT');
+            console.log('Established a simple-peer connection');
             self.addSimplePeerInstance(connectionsWaitingForSignalingData[oakNumber]);
             connectionsWaitingForSignalingData[oakNumber] = undefined;
             callback();
          });
-         console.log("In processSignalingResponse  object that is passed to .signal(): " + JSON.stringify(signalingData));
+         console.log("In processSignalingResponse,  object that is passed to .signal(): " + JSON.stringify(signalingData));
          connectionsWaitingForSignalingData[oakNumber].signal(signalingData);
       };
        
@@ -158,10 +149,10 @@ function OakStreaming(OakName){
        */
       function streamVideo(videoFile, options, callback, returnTorrent, destroyTorrent){ 
          var webTorrentClient = new WebTorrent();
-         ////console.log("streamVideo is executed");
-         ////console.log("videoFile: " + videoFile);
-         ////console.log("options: " + options);
-         ////console.log("callback: " + callback);
+         //console.log("streamVideo is executed");
+         //console.log("videoFile: " + videoFile);
+         //console.log("options: " + options);
+         //console.log("callback: " + callback);
          
          var streamInformationObject = {};
          streamInformationObject.bufferSize = options.bufferSize;
@@ -180,13 +171,37 @@ function OakStreaming(OakName){
             webTorrentClient.seed(videoFile, seedingOptions, function(torrent){
                console.log("torrent file is seeded");
                
+               var torrentFileAsBlobURL = torrent.torrentFileBlobURL;
+               var xhr = new XMLHttpRequest();
+               var XHROrMethodEndHappend = false;
+               xhr.open('GET', torrentFileAsBlobURL, true);
+               xhr.responseType = 'blob';
+               xhr.onload = function(e) {
+                 if (this.status == 200) {
+                   streamInformationObject.torrentAsBlob = this.response;
+                   if(XHROrMethodEndHappend){
+                      callback(streamInformationObject);
+                   } else {
+                      XHROrMethodEndHappend = true;
+                   }
+                   // myBlob is now the blob that the object URL pointed to.
+                 }
+               };
+               xhr.send();
                streamInformationObject.videoFileSize = torrent.files[0].length;
-               streamInformationObject.torrentFile = torrent.torrentFile;
+               //streamInformationObject.torrentFile = torrent.torrentFile;
+               //console.log("Buffer.isBuffer(streamInformationObject.torrentFile): " + Buffer.isBuffer(streamInformationObject.torrentFile));
+               //console.log("streamInformationObject.torrentFile  stringified: \n" + JSON.stringify(streamInformationObject.torrentFile));
+               //console.log("parseTorrent(streamInformationObject.torrentFile): \n" + parseTorrent(streamInformationObject.torrentFile));
+               streamInformationObject.parsedTorrent =  parseTorrent(torrent.torrentFile);
+               console.log(JSON.stringify(streamInformationObject.parsedTorrent));
+               //console.log("THE_RECEIVED_TORRENT_FILE\n" + parseTorrent(THE_RECEIVED_TORRENT_FILE));
+               var bufferTorrent = parseTorrent(streamInformationObject.parsedTorrent); 
                streamInformationObject.pathToFileToSeed = options.pathToFileToSeed;
                
                //if(options.webTorrentTrackers){ Schauen ob es auch ohne if block drum herum läuft
                   streamInformationObject.magnetURI = torrent.magnetURI;
-                  // Sind dann ja schon im torrent file drin      streamInformationObject.webTorrentTrackers = options.webTorrentTrackers;
+                  streamInformationObject.webTorrentTrackers = options.webTorrentTrackers;
                //}
                
                console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
@@ -212,7 +227,7 @@ function OakStreaming(OakName){
                   notificationsBecauseNewWires++;  
                });          
                         
-               //////console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
+               console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
                if(returnTorrent === "It's a test"){
                   if(destroyTorrent){
                      notificationsBecauseNewWires = 0;
@@ -226,8 +241,12 @@ function OakStreaming(OakName){
                }
             });
          } else {
-            callback(streamInformationObject);
-         }
+            if(XHROrMethodEndHappend){
+               callback(streamInformationObject);
+            } else {
+                XHROrMethodEndHappend = true;
+            }
+         }  
       }
 
 
@@ -241,20 +260,27 @@ function OakStreaming(OakName){
        * @param {OakStreaming~loadedVideoFinished} callback - This callback gets called when the video has been loaded entirely into the buffer of the video player.
        */
       function loadVideo(streamInformationObject, callback, endIfVideoLoaded){         
-         //////console.log("I entered this.loadVideo");
+         console.log("loadVideo is called");
          //////console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
          var deliveryByServer = (streamInformationObject.pathToFileOnXHRServer || streamInformationObject.hashValue) ? true : false;
-         var deliveryByWebtorrent = streamInformationObject.torrentFile ? true : false;
+         var deliveryByWebtorrent = streamInformationObject.parsedTorrent ? true : false;
          var XHRServerURL = streamInformationObject.XHRServerURL || false;
+         //console.log("streamInformationObject.XHRServerURL: " + streamInformationObject.XHRServerURL);
          var XHR_PORT = streamInformationObject.XHRPort || 80;
          var pathToFileOnXHRServer = streamInformationObject.pathToFileOnXHRServer;       
          var hashValue = streamInformationObject.hashValue;
          var webTorrentTrackers = streamInformationObject.webTorrentTrackers;
          //var deliveryByWebtorrent = streamInformationObject.magnetURI ? true : false;
          var MAGNET_URI = streamInformationObject.magnetURI;
-         var THE_RECEIVED_TORRENT_FILE = streamInformationObject.torrentFile;
-         //console.log("streamInformationObject.XHRPath: " + streamInformationObject.XHRPath);
-         SIZE_OF_VIDEO_FILE = streamInformationObject.videoFileSize;
+         //console.log("Buffer.isBuffer(streamInformationObject.torrentFile.data): " + Buffer.isBuffer(streamInformationObject.torrentFile.data));
+         //console.log("streamInformationObject.torrentFile:\n" + JSON.stringify(streamInformationObject.torrentFile));
+         var THE_RECEIVED_TORRENT_FILE = streamInformationObject.parsedTorrent;
+         
+         //console.log("THE_RECEIVED_TORRENT_FILE:\n" + JSON.stringify(THE_RECEIVED_TORRENT_FILE));
+         //console.log("Buffer.isBuffer(THE_RECEIVED_TORRENT_FILE): " + Buffer.isBuffer(THE_RECEIVED_TORRENT_FILE));
+         
+         //console.log("THE_RECEIVED_TORRENT_FILE\n" + parseTorrent(THE_RECEIVED_TORRENT_FILE));
+         var SIZE_OF_VIDEO_FILE = streamInformationObject.videoFileSize;
 
          var DOWNLOAD_FROM_P2P_TIME_RANGE = streamInformationObject.videoBufferSize || 20; // how much seconds must be buffered in advance such that no more data streams are requested from the P2P network                  Old Describtion: This is the minomum byte range that the WebTorrent client will download in advance (regarding the current playback position) with a sequential chunk selection strategy. This means the video buffer size in byte
          var CREATE_READSTREAM_REQUEST_SIZE = streamInformationObject.createReadstreamRequestSize || 50000000; // The size of the createReadstream WebTorrent requests in bytes. 
@@ -312,7 +338,9 @@ function OakStreaming(OakName){
                webTorrentOptions.path = streamInformationObject.pathToFileToSeed;
             }
             */
-            webTorrentClient.add(MAGNET_URI, webTorrentOptions, function (torrent){              
+            var url = URL.createObjectURL(streamInformationObject.torrentAsBlob);
+            
+            webTorrentClient.add(url, webTorrentOptions, function (torrent){              
                console.log("webTorrentClient.add   torrent meta data ready");         
                theTorrent = torrent;
                webTorrentFile = torrent.files[0];
@@ -870,12 +898,6 @@ function OakStreaming(OakName){
             pair.push(callback);
             peersToAdd.push(pair);
          }
-      }
-
-
-      function on(type, callback){
-         // call callback when event of type "type" happend
-         // bisher nur das event "foundNewPeerViaTracker" geplant
       }
    })();
 }
