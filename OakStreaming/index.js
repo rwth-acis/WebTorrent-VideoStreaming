@@ -34,17 +34,17 @@ function FVSL(OakName){
       var peersToAdd = [];
       var bytesReceivedFromServer = 0;
       var notificationsBecauseNewWires = 0;
-      var SIZE_OF_VIDEO_FILE = -42;
+      var SIZE_OF_VIDEO_FILE = 0;
       
       self.streamVideo = streamVideo;
       self.loadVideo = loadVideo;
       self.forTesting_connectedToNewWebTorrentPeer = null;
                 
-      self.getNumberOfBytesDownloadedFromServer = function(){
+      self.get_number_of_bytes_downloaded_from_server = function(){
          return bytesReceivedFromServer;
       };
       
-      self.getNumberOfBystesDownloadedP2P = function(){
+      self.get_number_of_bystes_downloaded_P2P = function(){
          if(theTorrent){
             return theTorrent.downloaded;
          } else {
@@ -52,7 +52,7 @@ function FVSL(OakName){
          }
       };
       
-      self.getNumberOfBytesUploadedP2P = function(){
+      self.get_number_of_bytes_uploaded_P2P = function(){
          if(theTorrent){
             return theTorrent.uploaded;
          } else {
@@ -60,7 +60,7 @@ function FVSL(OakName){
          }
       };
       
-      self.getPercentageDownloadedTorrent = function(){
+      self.get_percentage_downloaded_of_torrent = function(){
          if(theTorrent){
             return theTorrent.progress;
          } else {
@@ -68,7 +68,7 @@ function FVSL(OakName){
          }
       };
       
-      self.getFileSize = function(){
+      self.get_file_size = function(){
          return SIZE_OF_VIDEO_FILE;
       };
       
@@ -688,17 +688,6 @@ function FVSL(OakName){
                }
                setTimeout(chokeIfNecessary, CHOKE_IF_NECESSARY_INTERVAL);
             }
-
-         // This function updates the statistics that is shown above the video when it is connected to a WebTorrent network
-         function updateChart(){
-               if(endStreaming){
-                  return;
-               }
-               if(theTorrent && webTorrentFile){
-                  document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer + "\n Bytes taken from server delivery: " + bytesTakenFromServer + "\n Bytes taken from WebTorrent delivery: " + bytesTakenFromWebTorrent;
-               }
-               setTimeout(updateChart, UPDATE_CHART_INTERVAL);
-         }
          
          function VideostreamRequestHandler(createReadStreamNumber, opts, self) {
             this.createReadStreamNumber = createReadStreamNumber;
