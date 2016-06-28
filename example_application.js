@@ -46,9 +46,9 @@ Y({
   });
 });
 
-window.handleFiles = function(files){     // ,["wss://tracker.webtorrent.io"]   "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  hashValue : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e"
+window.handleFiles = function(files){     // ,["wss://tracker.webtorrent.io"]   "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  hashValue : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e"    XHRPort: 8080, 
    streamSource = true;
-   myStreaming.streamVideo(files[0], {XHRPort: 8080, pathToFileOnXHRServer: "/test.mp4", webTorrentTrackers: [["wss://tracker.webtorrent.io"]]}, function(streamInformationObject){
+   myStreaming.streamVideo(files[0], {pathToFileOnXHRServer: "/videos/test.mp4", webTorrentTrackers: [["wss://tracker.webtorrent.io"]]}, function(streamInformationObject){
       console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
       theSharedMap.set("streamInformationObject", streamInformationObject);
    });
