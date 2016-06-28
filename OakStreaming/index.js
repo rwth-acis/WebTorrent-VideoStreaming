@@ -167,7 +167,7 @@ function FVSL(OakName){
          //console.log("options: " + options);
          //console.log("callback: " + callback);         
           
-         var streamInformationObject = options
+         var stream_information_object = options
              
          if(video_file){
             var seedingOptions = {};
@@ -185,9 +185,9 @@ function FVSL(OakName){
                xhr.responseType = 'blob';
                xhr.onload = function(e) {
                  if (this.status == 200) {
-                   streamInformationObject.torrentAsBlob = this.response;
+                   stream_information_object.torrentAsBlob = this.response;
                    if(XHROrMethodEndHappend){
-                      callback(streamInformationObject);
+                      callback(stream_information_object);
                    } else {
                       XHROrMethodEndHappend = true;
                    }
@@ -197,11 +197,11 @@ function FVSL(OakName){
                */
                
                SIZE_OF_VIDEO_FILE = torrent.files[0].length;
-               streamInformationObject.size_of_video_file = torrent.files[0].length;
-               streamInformationObject.magnetURI = torrent.magnetURI;
-               streamInformationObject.infoHash = torrent.infoHash;
-               // streamInformationObject.parsedTorrent =  parseTorrent(torrent.torrentFile); // K42
-               // var bufferTorrent = parseTorrent(streamInformationObject.parsedTorrent); K42
+               stream_information_object.size_of_video_file = torrent.files[0].length;
+               stream_information_object.magnetURI = torrent.magnetURI;
+               stream_information_object.infoHash = torrent.infoHash;
+               // stream_information_object.parsedTorrent =  parseTorrent(torrent.torrentFile); // K42
+               // var bufferTorrent = parseTorrent(stream_information_object.parsedTorrent); K42
               
                
                console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
@@ -230,26 +230,26 @@ function FVSL(OakName){
                   notificationsBecauseNewWires++;  
                });          
                         
-               console.log("Creaded streamInformationObject:\n" + JSON.stringify(streamInformationObject));
+               console.log("Creaded stream_information_object:\n" + JSON.stringify(stream_information_object));
                
-               // For some Jasmine tests it is appropriate that the torrent gets destroyed immediately after the streamInformationObject has been created. The destruction of the torrent stops the seeding.
+               // For some Jasmine tests it is appropriate that the torrent gets destroyed immediately after the stream_information_object has been created. The destruction of the torrent stops the seeding.
                if(returnTorrent === "It's a test"){
                   if(destroyTorrent){
                      notificationsBecauseNewWires = 0;
                      torrent.destroy();
                      delete webTorrentClient;
                   }
-                  callback(streamInformationObject, torrent);
+                  callback(stream_information_object, torrent);
                } else {
-                  callback(streamInformationObject);
-                  return streamInformationObject;
+                  callback(stream_information_object);
+                  return stream_information_object;
                }
             });
          } else {
-            callback(streamInformationObject);
+            callback(stream_information_object);
             /* K42
             if(XHROrMethodEndHappend){
-               callback(streamInformationObject);
+               callback(stream_information_object);
             } else {
                 XHROrMethodEndHappend = true;
             }
@@ -270,36 +270,36 @@ function FVSL(OakName){
        */
       function loadVideo(stream_information_object, callback, end_streaming_when_video_loaded){       
          console.log("loadVideo is called");
-         //console.log("option paramter:\n" + JSON.stringify(streamInformationObject));
+         //console.log("option paramter:\n" + JSON.stringify(stream_information_object));
          
          // All these declared varibales until 'var self = this' are intended to be constants
-         var deliveryByServer = (streamInformationObject.path_to_file_on_XHR_server || streamInformationObject.hash_value) ? true : false;
-         var deliveryByWebtorrent = streamInformationObject.magnetURI ? true : false;
-         var XHRServerURL = streamInformationObject.XHR_server_URL || false;
-         var XHR_PORT = streamInformationObject.XHR_port || 80;
-         var pathToFileOnXHRServer = streamInformationObject.path_to_file_on_XHR_server;      
-         var hashValue = streamInformationObject.hash_value;
-         //var webTorrentTrackers = streamInformationObject.webTorrent_trackers;
-         var MAGNET_URI = streamInformationObject.magnetURI;
-         // var THE_RECEIVED_TORRENT_FILE = streamInformationObject.parsedTorrent;    K42
-         SIZE_OF_VIDEO_FILE = streamInformationObject.size_of_video_file;
+         var deliveryByServer = (stream_information_object.path_to_file_on_XHR_server || stream_information_object.hash_value) ? true : false;
+         var deliveryByWebtorrent = stream_information_object.magnetURI ? true : false;
+         var XHRServerURL = stream_information_object.XHR_server_URL || false;
+         var XHR_PORT = stream_information_object.XHR_port || 80;
+         var pathToFileOnXHRServer = stream_information_object.path_to_file_on_XHR_server;      
+         var hashValue = stream_information_object.hash_value;
+         //var webTorrentTrackers = stream_information_object.webTorrent_trackers;
+         var MAGNET_URI = stream_information_object.magnetURI;
+         // var THE_RECEIVED_TORRENT_FILE = stream_information_object.parsedTorrent;    K42
+         SIZE_OF_VIDEO_FILE = stream_information_object.size_of_video_file;
 
-         var DOWNLOAD_FROM_P2P_TIME_RANGE = streamInformationObject.download_from_p2p_time_range || 20;
-         var CREATE_READSTREAM_REQUEST_SIZE = streamInformationObject.create_readStream_request_size || 50000000;
+         var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20;
+         var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 50000000;
          
-         var DOWNLOAD_FROM_SERVER_TIME_RANGE = streamInformationObject.download_from_server_time_range || 5;
-         var UPLOAD_LIMIT = streamInformationObject.peer_upload_limit_multiplier || 2;
-         var ADDITION_TO_UPLOAD_LIMIT = streamInformationObject.peer_upload_limit_addition || 500000;
+         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 5;
+         var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
+         var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 500000;
          
          
-         var XHR_REQUEST_SIZE = streamInformationObject.xhrRequestSize || 50000; // in byte
-         var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = streamInformationObject.thresholdForReturningAnswerStream || 50000; // in byte
+         var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 50000; // in byte
+         var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = stream_information_object.thresholdForReturningAnswerStream || 50000; // in byte
 
-         var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = streamInformationObject.checkIfBufferFullEnoughInterval || 300; // in miliseconds
-         var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = streamInformationObject.checkIfAnswerstreamReadyInterval || 200; // in miliseconds
-         var UPDATE_CHART_INTERVAL = streamInformationObject.updateChartInterval || 1000; // in miliseconds
-         var CHOKE_IF_NECESSARY_INTERVAL = streamInformationObject.chokeIfNecessaryInterval || 500; // in miliseconds
-         var CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL = streamInformationObject.checkIfNewCreateReadstreamInterval || 500 ;
+         var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = stream_information_object.checkIfBufferFullEnoughInterval || 300; // in miliseconds
+         var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = stream_information_object.checkIfAnswerstreamReadyInterval || 200; // in miliseconds
+         var UPDATE_CHART_INTERVAL = stream_information_object.updateChartInterval || 1000; // in miliseconds
+         var CHOKE_IF_NECESSARY_INTERVAL = stream_information_object.chokeIfNecessaryInterval || 500; // in miliseconds
+         var CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL = stream_information_object.checkIfNewCreateReadstreamInterval || 500 ;
          
          
          // From here on most newly declared variables are not indeted to function as constants
@@ -339,16 +339,16 @@ function FVSL(OakName){
             var webTorrentOptions = {};
             
             /* Weiß nicht mehr warum das hier steht
-            if(streamInformationObject.pathToFileToSeed){
-               webTorrentOptions.path = streamInformationObject.pathToFileToSeed;
+            if(stream_information_object.pathToFileToSeed){
+               webTorrentOptions.path = stream_information_object.pathToFileToSeed;
             }
             */
-            //var url = URL.createObjectURL(streamInformationObject.torrentAsBlob);   K42
+            //var url = URL.createObjectURL(stream_information_object.torrentAsBlob);   K42
             
             
             // A magnetURI contains URLs to tracking servers and the info hash of the torrent.
             //The client receives the complete torrent file from a tracking server.
-            webTorrentClient.add(magnetURI, webTorrentOptions, function (torrent){
+            webTorrentClient.add(MAGNET_URI, webTorrentOptions, function (torrent){
                // From this point on the WebTorrent instance will download video data from the WebTorrent network in the background in a rarest-peace-first manner as fast as possible.
                // Sequential stream request like createreadstrime are prioritized over this rarest-peace-first background downloading.
                
@@ -419,7 +419,7 @@ function FVSL(OakName){
                   // To answer a createReadStream request a Multistream (https://www.npmjs.com/package/multistream) is returned which requests a Node readableStream as soon as its buffer has went dry.
                   // The current callback which should be called with the created readableStream is saved in currentlyExpectedCallback
                   if(thisRequest.currentlyExpectedCallback !== null){
-                     //console.log("In onTorrent nachträglich webtorrent stream erzeugen  thisRequest.start: " + thisRequest.start);
+                     console.log("In onTorrent nachträglich webtorrent stream erzeugen  thisRequest.start: " + thisRequest.start);
                      //console.log("In onTorrent  webTorrentFile.length: " + webTorrentFile.length);
                                  
                      var endCreateReadStream;
