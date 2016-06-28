@@ -200,7 +200,8 @@ function FVSL(OakName){
               
                
                console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
-               // This function calls the callback function when this FVSL instance already connected to another peer or as soon as it connects to another peer.
+               // This function calls the callback function when this FVSL instance already connected to another peer
+               // or as soon as it connects to another peer.
                self.forTesting_connectedToNewWebTorrentPeer = function(callback){
                   console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets executed");
                   if(notificationsBecauseNewWires <= 0){
@@ -338,21 +339,27 @@ function FVSL(OakName){
             */
             //var url = URL.createObjectURL(streamInformationObject.torrentAsBlob);   K42
             
+            
+            // A magnetURI contains URLs to tracking servers and the info hash of the torrent.
+            //The client receives the complete torrent file from a tracking server.
             webTorrentClient.add(magnetURI, webTorrentOptions, function (torrent){              
                console.log("webTorrentClient.add   torrent meta data ready");         
                theTorrent = torrent;
                webTorrentFile = torrent.files[0];
                
+               // Peers which used the offered methods to manually connect to this FVSL instance
+               // before a torrent file was loaded are added now to the set of peers that are used for video data exchange.
                for(var j=0; j< peersToAdd.length; j++){
                   theTorrent.addPeer(peersToAdd[j][0]);
                   if(peersToAdd[j][1]){
                      (peersToAdd[j][1])();
                   }
                } 
-                            
-               //console.log("In loadVideo typeof webTorrentFile after assignment: " + typeof webTorrentFile);
 
+               // This function has the same purpose 
                console.log("In loadVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
+               // This function calls the callback function when this FVSL instance already connected to another peer
+               // or as soon as it connects to another peer.
                self.forTesting_connectedToNewWebTorrentPeer = function(callback){
                   console.log("In loadVideo     " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer   gets called");
                   if(notificationsBecauseNewWires <= 0){
@@ -379,7 +386,8 @@ function FVSL(OakName){
                   }
                   notificationsBecauseNewWires++;
                   
-                  
+                  // This activates the ut_pex extension for this peer
+                  // which is necessary to exchange peers between WebTorrent instances
                   wire.use(ut_pex());
                   //wire.ut_pex.start();
                   
