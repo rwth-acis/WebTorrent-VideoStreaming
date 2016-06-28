@@ -23,7 +23,7 @@ function FVSL(OakName){
    var self = this;
    (function(){
       var peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);   
-      console.log("Version: Raider   In OakStreaming constructor. this.name: " + OakName);
+      console.log("Version: Wyvern        In OakStreaming constructor. this.name: " + OakName);
       var OakName = OakName || "NoName FVSL instance";
       
       // Only methods should be part of the API, i.e. only methods should be publically accessible.
@@ -614,36 +614,48 @@ function FVSL(OakName){
          // This function frequently checks if less than DOWNLOAD_FROM_P2P_TIME_RANGE seconds of video data is buffered in advance.
          // If it is the case this function conducts a new sequential byte range request to the WebTorrent network
          function frequentlyCheckIfNewCreateReadStreamNecessary(){
-               if(videoCompletelyLoaded){
-                  return;
-               }        
-               if(myVideo.duration){
-                  var timeRanges = myVideo.buffered;          
-                  for (var i = 0, length = timeRanges.length; i < length; i++){
-                     if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)+3) {
-                        if (timeRanges.end(i) - myVideo.currentTime <= DOWNLOAD_FROM_P2P_TIME_RANGE) {
-                           for (var i = 0, length = videostreamRequestHandlers.length; i < length; i++) {
-                              var thisRequest = videostreamRequestHandlers[i];
-                              
-                              if(thisRequest.currentlyExpectedCallback !== null && thisRequest.start > thisRequest.lastEndCreateReadStream && thisRequest.start < thisRequest.videoFileSize){
-                                 var endCreateReadStream;
-                                 if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
-                                    endCreateReadStream = webTorrentFile.length-1;
-                                 } else {
-                                    endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE;
-                                 }                
-                                 thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
-                                 thisRequest.oldStartWebTorrent = thisRequest.start;
-                                 thisRequest.webTorrentStream.unpipe();
-                                 thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
-                              }
+            if(videoCompletelyLoaded){
+               return;
+            }        
+            if(myVideo.duration){
+               var timeRanges = myVideo.buffered;          
+               for (var i = 0, length = timeRanges.length; i < length; i++){
+                  if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)+3) {
+                     if (timeRanges.end(i) - myVideo.currentTime <= DOWNLOAD_FROM_P2P_TIME_RANGE) {
+                        for (var i = 0, length = videostreamRequestHandlers.length; i < length; i++) {
+                           var thisRequest = videostreamRequestHandlers[i];
+                           
+                           if(thisRequest.currentlyExpectedCallback !== null && thisRequest.start > thisRequest.lastEndCreateReadStream && thisRequest.start < thisRequest.videoFileSize){
+                              var endCreateReadStream;
+                              if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
+                                 endCreateReadStream = webTorrentFile.length-1;
+                              } else {
+                                 endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE;
+                              }                
+                              thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
+                              thisRequest.oldStartWebTorrent = thisRequest.start;
+                              thisRequest.webTorrentStream.unpipe();
+                              thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
                            }
                         }
                      }
                   }
-                  setTimeout(frequentlyCheckIfNewCreateReadStreamNecessary, CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL);
                }
-            }   
+               setTimeout(frequentlyCheckIfNewCreateReadStreamNecessary, CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL);
+            }
+         }   
+         
+         // The final version of the library should not include this function. This function updates the statistics that are shown above the video. This version shows values which are not intended for end user use.
+         function updateChart(){
+            if(endStreaming){
+               return;
+            }
+            if(theTorrent && webTorrentFile){
+               document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer + "\n Bytes taken from server delivery: " + bytesTakenFromServer + "\n Bytes taken from WebTorrent delivery: " + bytesTakenFromWebTorrent;
+            }
+            setTimeout(updateChart, UPDATE_CHART_INTERVAL);
+         }         
+         
          
          // This function checks for a given videostreamRequestHandler if we have called enough video data to call the callback function.
          // If it is the case, the callback function gets called togehter with the buffered data.
