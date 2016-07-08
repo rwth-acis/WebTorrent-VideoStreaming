@@ -15,6 +15,7 @@
     "binary-search": "^1.2.0",
     "bittorrent-tracker": "^8.0.7",
     "chokidar": "^1.5.2",
+    "create-torrent": "^3.24.5",
     "express": "^4.10.2",
     "http": "0.0.0",
     "inherits": "^2.0.1",

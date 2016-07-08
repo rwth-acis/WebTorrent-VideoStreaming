@@ -6,10 +6,11 @@ var Videostream = require('videostream');
 var ut_pex = require('ut_pex');
 var WebTorrent = require('webtorrent');
 var SimplePeer = require('simple-peer');
-var parseTorrent = require('parse-torrent');
+//var parseTorrent = require('parse-torrent');
+var createTorrent = require('create-torrent');
 
 
- /**
+/**
  * @module FVSL
  */
 module.exports = FVSL;
@@ -201,7 +202,12 @@ function FVSL(OakName){
                stream_information_object.size_of_video_file = torrent.files[0].length;
                stream_information_object.magnetURI = torrent.magnetURI;
                stream_information_object.infoHash = torrent.infoHash;
-               // stream_information_object.parsedTorrent =  parseTorrent(torrent.torrentFile); // K42
+               
+              
+               stream_information_object.torrentFile = torrentFile;
+               console.log("Creaded stream_information_object:\n" + JSON.stringify(stream_information_object));
+
+               
                // var bufferTorrent = parseTorrent(stream_information_object.parsedTorrent); K42
               
                
@@ -229,10 +235,7 @@ function FVSL(OakName){
                // This is necessary such that the forTesting_connectedToNewWebTorrentPeer function knows how many peers already connected to this FVSL instance.
                torrent.on('wire', function (wire){
                   notificationsBecauseNewWires++;  
-               });          
-                        
-               console.log("Creaded stream_information_object:\n" + JSON.stringify(stream_information_object));
-               
+               });
                // For some Jasmine tests it is appropriate that the torrent gets destroyed immediately after the stream_information_object has been created. The destruction of the torrent stops the seeding.
                if(returnTorrent === "It's a test"){
                   if(destroyTorrent){
@@ -244,7 +247,7 @@ function FVSL(OakName){
                } else {
                   callback(stream_information_object);
                   return stream_information_object;
-               }
+               }    
             });
          } else {
             callback(stream_information_object);
@@ -275,14 +278,14 @@ function FVSL(OakName){
          
          // All these declared varibales until 'var self = this' are intended to be constants
          var deliveryByServer = (stream_information_object.path_to_file_on_XHR_server || stream_information_object.hash_value) ? true : false;
-         var deliveryByWebtorrent = stream_information_object.magnetURI ? true : false;
+         var deliveryByWebtorrent = stream_information_object.torrentFile ? true : false;
          var XHRServerURL = stream_information_object.XHR_server_URL || false;
          var XHR_PORT = stream_information_object.XHR_port || 80;
          var pathToFileOnXHRServer = stream_information_object.path_to_file_on_XHR_server;      
          var hashValue = stream_information_object.hash_value;
          //var webTorrentTrackers = stream_information_object.webTorrent_trackers;
          var MAGNET_URI = stream_information_object.magnetURI;
-         // var THE_RECEIVED_TORRENT_FILE = stream_information_object.parsedTorrent;    K42
+         var THE_RECEIVED_TORRENT_FILE = stream_information_object.torrentFile;
          SIZE_OF_VIDEO_FILE = stream_information_object.size_of_video_file;
 
          var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20;
@@ -349,7 +352,7 @@ function FVSL(OakName){
             
             // A magnetURI contains URLs to tracking servers and the info hash of the torrent.
             //The client receives the complete torrent file from a tracking server.
-            webTorrentClient.add(MAGNET_URI, webTorrentOptions, function (torrent){
+            webTorrentClient.add(THE_RECEIVED_TORRENT_FILE, webTorrentOptions, function (torrent){
                // From this point on the WebTorrent instance will download video data from the WebTorrent network in the background in a rarest-peace-first manner as fast as possible.
                // Sequential stream request like createreadstrime are prioritized over this rarest-peace-first background downloading.
                
@@ -536,7 +539,7 @@ function FVSL(OakName){
             thisRequest.collectorStreamForWebtorrent = new MyWriteableStream({highWaterMark: 50000000});
             videostreamRequestHandlers.push(thisRequest);
 
-            if(webTorrentFile && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
+            if(webTorrentFile){ // Um Einhaltung des Upload limits kümmert sich doch chokeIfNecessary   && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
                ////////console.log("after new videostreamRequest creating a corresponding webtorrent stream");
                ////console.log("opts.start: " + opts.start);
                ////console.log("webTorrentFile.length: " + webTorrentFile.length);
@@ -555,10 +558,8 @@ function FVSL(OakName){
                thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
             }
 
-            // A new Multistream gets created which will be the answer the the request from the VideoStream request
-            var multi = new MultiStream(function (cb){
-               //console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + "    does a cb request");
-              
+            function factoryFunctionForStreamCreation(cb){
+               //console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + "    does a cb request");         
                if(thisRequest.end >= 0 && thisRequest.start >= thisRequest.end){
                   //console.log("called cb(null,null) from " + thisRequest.createReadStreamNumber); 
                   thisRequest.req = null;
@@ -598,7 +599,11 @@ function FVSL(OakName){
                      conductXHR(thisRequest);
                   }
                }
-            });
+            }
+            
+            // A new Multistream gets created which will be the answer the the request from the VideoStream request
+            var multi = new MultiStream(factoryFunctionForStreamCreation);
+
             ////////console.log(consoleCounter++ + " terminate createReadStream");
             var destroy = multi.destroy;
             multi.destroy = function(){
@@ -625,8 +630,8 @@ function FVSL(OakName){
                         for (var i = 0, length = videostreamRequestHandlers.length; i < length; i++) {
                            var thisRequest = videostreamRequestHandlers[i];
                            
-                           if(thisRequest.currentlyExpectedCallback !== null && thisRequest.start > thisRequest.lastEndCreateReadStream && thisRequest.start < thisRequest.videoFileSize){
-                              var endCreateReadStream;
+                           if(thisRequest.currentlyExpectedCallback !== null && thisRequest.start > thisRequest.lastEndCreateReadStream && thisRequest.start < SIZE_OF_VIDEO_FILE){
+                              var endCreateReadStream;videoFileSize
                               if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
                                  endCreateReadStream = webTorrentFile.length-1;
                               } else {
@@ -748,25 +753,28 @@ function FVSL(OakName){
                   if(timeRanges.length >= 1){
                      //console.log("timeRanges.start(0): " + timeRanges.start(0));
                      //console.log("timeRanges.end(0): " + timeRanges.end(0));
-                     
-                     if(timeRanges.start(0) == 0 && timeRanges.end(0) == myVideo.duration){
-                       // console.log("In checkIfBufferFullEnough: callback should be called");
+                     if(theTorrent.progress === 1){
                         videoCompletelyLoaded = true;
-                        if(callback){
+                     } else {
+                        if(timeRanges.start(0) == 0 && timeRanges.end(0) == myVideo.duration){
+                          // console.log("In checkIfBufferFullEnough: callback should be called");
+                           videoCompletelyLoaded = true;
+                           if(callback){
+                              if(end_streaming_when_video_loaded){
+                                 callback();
+                              } else {
+                                 callback(theTorrent);
+                              }
+                           }
                            if(end_streaming_when_video_loaded){
-                              callback();
-                           } else {
-                              callback(theTorrent);
-                           }
+                              if(theTorrent){
+                                 theTorrent.destroy();
+                                 delete webTorrentClient;
+                              }
+                              endStreaming = true;
+                              return;                 
+                           } 
                         }
-                        if(end_streaming_when_video_loaded){
-                           if(theTorrent){
-                              theTorrent.destroy();
-                              delete webTorrentClient;
-                           }
-                           endStreaming = true;
-                           return;                 
-                        } 
                      }
                   }
                   

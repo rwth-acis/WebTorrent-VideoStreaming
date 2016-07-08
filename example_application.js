@@ -26,10 +26,13 @@ Y({
     room: 'WebTorrent-Streaming-yeah'
   },
   share: {
-     myMap : 'Map'
+     //myMap : 'Map',
+     myArray : 'Array'
   }
 }).then(function (y){
-  theSharedMap = y.share.myMap;
+  //theSharedMap = y.share.myMap;
+  theSharedArray = y.share.myArray;
+  /*
   y.share.myMap.observe(function(event){
       console.log("The following event-type was thrown: "+ event.type)
       console.log("The event was executed on: "+ event.name)
@@ -41,13 +44,26 @@ Y({
          console.log("After myStreaming.loadVideo(..) in myMap.observe(..)");    
       }
   });
+  */
+  theSharedArray.observe(function(event){
+      console.log("The following event-type was thrown: "+ event.type)
+      console.log("The event was executed on: "+ event.name)
+      console.log("The event object has more information:")
+      console.log(event);
+      if(!streamSource){
+         console.log("Video gets loaded");
+         myStreaming.loadVideo(theSharedArray.get(0), function(){console.log("All video data has been received");});
+         console.log("After myStreaming.loadVideo(..) in myMap.observe(..)");    
+      }
+  });
 });
 
 window.handleFiles = function(files){     // ,["wss://tracker.webtorrent.io"]   "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  XHR_server_URL : "localhost"     hash_value : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e"
    streamSource = true;
    myStreaming.streamVideo(files[0], {XHR_port: 8080, path_to_file_on_XHR_server: "/videos/test.mp4", webTorrent_trackers: [["wss://tracker.webtorrent.io"]]}, function(streamInformationObject){
-      console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
-      theSharedMap.set("streamInformationObject", streamInformationObject);
+      //console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
+      console.log("In example.js video file got seeded.");
+      theSharedArray.insert(0, [streamInformationObject]);
    });
 }
 
