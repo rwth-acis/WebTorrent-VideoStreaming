@@ -6,8 +6,8 @@ var Videostream = require('videostream');
 var ut_pex = require('ut_pex');
 var WebTorrent = require('webtorrent');
 var SimplePeer = require('simple-peer');
-//var parseTorrent = require('parse-torrent');
-var createTorrent = require('create-torrent');
+var parseTorrent = require('parse-torrent'); // unnötig
+var createTorrent = require('create-torrent'); // unnötig
 
 
 /**
@@ -24,7 +24,7 @@ function FVSL(OakName){
    var self = this;
    (function(){
       var peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);   
-      console.log("Version: Wyvern        In OakStreaming constructor. this.name: " + OakName);
+      console.log("Version: Shams        In OakStreaming constructor. this.name: " + OakName);
       var OakName = OakName || "NoName FVSL instance";
       
       // Only methods should be part of the API, i.e. only methods should be publically accessible.
@@ -169,11 +169,13 @@ function FVSL(OakName){
          //console.log("options: " + options);
          //console.log("callback: " + callback);         
           
-         var stream_information_object = options
+         var stream_information_object = options;
              
          if(video_file){
             var seedingOptions = {};
-            seedingOptions.announceList = options.webTorrent_trackers;
+            if(options.webTorrent_trackers){
+               seedingOptions.announceList = options.webTorrent_trackers;
+            }
 
             var self = this; 
             webTorrentClient.seed(video_file, seedingOptions, function(torrent){
@@ -197,9 +199,13 @@ function FVSL(OakName){
                };
                xhr.send();
                */
+               SIZE_OF_VIDEO_FILE = 0;
+               stream_information_object.size_of_video_file = 0;
+               for(var i=0, length=torrent.files.length; i<length; i++){
+                  SIZE_OF_VIDEO_FILE += torrent.files[i].length;
+                  stream_information_object.size_of_video_file += torrent.files[i].length;
+               }
                
-               SIZE_OF_VIDEO_FILE = torrent.files[0].length;
-               stream_information_object.size_of_video_file = torrent.files[0].length;
                stream_information_object.magnetURI = torrent.magnetURI;
                stream_information_object.infoHash = torrent.infoHash;
                
@@ -287,6 +293,7 @@ function FVSL(OakName){
          var MAGNET_URI = stream_information_object.magnetURI;
          var THE_RECEIVED_TORRENT_FILE = stream_information_object.torrentFile;
          SIZE_OF_VIDEO_FILE = stream_information_object.size_of_video_file;
+         console.log("stream_information_object.size_of_video_file: "  + stream_information_object.size_of_video_file);
 
          var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20;
          var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 50000000;
@@ -473,20 +480,24 @@ function FVSL(OakName){
                return (new MultiStream(function (cb){cb(null, null);}));
             }
             inCritical = true;
-            //console.log(consoleCounter++ + " called createreadStream ");
-            //console.log(consoleCounter++ + " opts.start: " + opts.start);
-            //console.log(consoleCounter++ + " opts.end: " + opts.end);
+            console.log(consoleCounter++ + " called createreadStream ");
+            console.log(consoleCounter++ + " opts.start: " + opts.start);
+            console.log(consoleCounter++ + " opts.end: " + opts.end);
 
             var thisRequest = new VideostreamRequestHandler(++globalvideostreamRequestNumber, opts, this);
            
             // Everytime I printed out the value of opts.end is was NaN.
             // I suppose that should be interpreted as "till the end of the file"
             // Of course, our returned stream should, nevertheless, not buffer a giant amount of video data in advance but instead retrieve and put out chunks of video data on-demand
+            
+            thisRequest.end = SIZE_OF_VIDEO_FILE;
+            /* versuch bug zu fixen
             if(opts.end && !isNaN(opts.end)){
                thisRequest.end = opts.end + 1;
             } else {
                thisRequest.end = SIZE_OF_VIDEO_FILE;
             }
+            */
             
             
             // This writeable Node.js stream will process every data that is received from sequential WebTorrent streams
@@ -518,9 +529,11 @@ function FVSL(OakName){
                      }
                   } else {
                      if(thisRequest.currentlyExpectedCallback === null){
+                        /*
                         if(thisRequest.webTorrentStream){
                            thisRequest.webTorrentStream.pause();
                         }
+                        */
                         thisRequest.noMoreData = true;
                      } else {
                         var theCallbackFunction = thisRequest.currentlyExpectedCallback;
@@ -536,7 +549,7 @@ function FVSL(OakName){
                         theCallbackFunction(null, res);
                      }
                   }
-                     thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
+                  thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
                }
                //ceckIfAnswerStreamReady(thisRequest);
                thisRequest.oldStartWebTorrent += chunk.length;
@@ -913,7 +926,7 @@ function FVSL(OakName){
             
             thisRequest.oldStartServer = reqStart;
             
-            //console.log("At htto.get   reqStart: " + reqStart + "     reqEnd: " + reqEnd);
+            console.log("At htto.get   reqStart: " + reqStart + "     reqEnd: " + reqEnd);
 
                   
             var XHROptionObject = {
@@ -930,7 +943,8 @@ function FVSL(OakName){
             thisRequest.req = http.get(XHROptionObject, function (res){
                   var contentRange = res.headers['content-range'];
                   if (contentRange) {
-                     thisRequest.fileSize = parseInt(contentRange.split('/')[1], 10);
+                     console.log("parseInt(contentRange.split('/')[1], 10) XHR: " + parseInt(contentRange.split('/')[1], 10));
+                     SIZE_OF_VIDEO_FILE = parseInt(contentRange.split('/')[1], 10);
                   }
                   //////////console.log("I return currentlyExpectedCallback with http response stream");
                   ////////////console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thisCallbackNumber);
