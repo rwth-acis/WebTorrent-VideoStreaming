@@ -6,8 +6,8 @@ var Videostream = require('videostream');
 var ut_pex = require('ut_pex');
 var WebTorrent = require('webtorrent');
 var SimplePeer = require('simple-peer');
-var parseTorrent = require('parse-torrent'); // unnötig
-var createTorrent = require('create-torrent'); // unnötig
+//var parseTorrent = require('parse-torrent'); // unnötig
+//var createTorrent = require('create-torrent'); // unnötig
 
 
 /**
@@ -172,7 +172,9 @@ function FVSL(OakName){
          var stream_information_object = options;
              
          if(video_file){
-            var seedingOptions = {};
+            var seedingOptions = {
+               name: "OakStreaming_Torrent"
+            };
             if(options.webTorrent_trackers){
                seedingOptions.announceList = options.webTorrent_trackers;
             }
@@ -207,6 +209,7 @@ function FVSL(OakName){
                }
                
                stream_information_object.magnetURI = torrent.magnetURI;
+               console.log("torrent.magnetURI: " + torrent.magnetURI);
                stream_information_object.infoHash = torrent.infoHash;
                
               
@@ -291,6 +294,7 @@ function FVSL(OakName){
          var hashValue = stream_information_object.hash_value;
          //var webTorrentTrackers = stream_information_object.webTorrent_trackers;
          var MAGNET_URI = stream_information_object.magnetURI;
+         console.log("MAGNET_URI: "  + MAGNET_URI);
          var THE_RECEIVED_TORRENT_FILE = Buffer.from(stream_information_object.torrentFile, 'base64');
          SIZE_OF_VIDEO_FILE = stream_information_object.size_of_video_file;
          console.log("stream_information_object.size_of_video_file: "  + stream_information_object.size_of_video_file);
@@ -477,8 +481,7 @@ function FVSL(OakName){
          fileLikeObject.prototype.createReadStream = function (opts){
             if(opts.start >= SIZE_OF_VIDEO_FILE){
                //console.log("opts.start > SIZE_OF_VIDEO_FILE there cb(null,null) every time");
-              // comment out for fix try     return (new MultiStream(function (cb){cb(null, null);}));
-               return;
+               return (new MultiStream(function (cb){cb(null, null);}));
             }
             inCritical = true;
             /*
@@ -556,7 +559,7 @@ function FVSL(OakName){
                thisRequest.oldStartWebTorrent += chunk.length;
                done();
             };
-            thisRequest.collectorStreamForWebtorrent = new MyWriteableStream({highWaterMark: 50000000});
+            thisRequest.collectorStreamForWebtorrent = new MyWriteableStream({highWaterMark: 500000000});
             videostreamRequestHandlers.push(thisRequest);
 
             if(webTorrentFile){ // Um Einhaltung des Upload limits kümmert sich doch chokeIfNecessary   && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
@@ -578,12 +581,14 @@ function FVSL(OakName){
                thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
             }
 
-            function factoryFunctionForStreamCreation(cb){
+            function factoryFunctionForStreamCreation(cb){              
                //console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + "    does a cb request");         
                if(thisRequest.end >= 0 && thisRequest.start >= thisRequest.end){
-                  //console.log("called cb(null,null) from " + thisRequest.createReadStreamNumber); 
-                 
-                  thisRequest.req = null;
+                  //console.log("called cb(null,null) from " + thisRequest.createReadStreamNumber);             
+                  // !!!!!!!!!!!!!!!!!!! Testeshalber rausgenommen     thisRequest.req = null;
+                  if (thisRequest.req) {
+                     thisRequest.req.destroy();
+                  }
                   return cb(null, null);
                }
               
@@ -617,7 +622,9 @@ function FVSL(OakName){
                   }
 
                   if(deliveryByServer && inCritical && !thisRequest.XHRConducted){
-                     conductXHR(thisRequest);
+                     //if(deliveryByWebtorrent && theTorrent.progress <1){     Sollte rein wenn ich das nicht elegant gelöst bekomme
+                        conductXHR(thisRequest);
+                     //}
                   }
                }
             }
@@ -834,10 +841,21 @@ function FVSL(OakName){
             if (thisRequest.end >= 0 && reqEnd > thisRequest.end) {
                reqEnd = thisRequest.end;
             }
-            if (reqStart >= reqEnd) {
-               thisRequest.req = null;
+            if (reqStart >= reqEnd){
                //console.log("called cb(null,null)");
-               return thisRequest.currentlyExpectedCallback(null, null);
+               
+               // !!!!!!!!! dieser if block neu fix versuch
+               if(thisRequest.req){
+                  thisRequest.req.destroy();
+               }
+               thisRequest.XHRConducted = false;
+               
+               
+               if(thisRequest.currentlyExpectedCallback){
+                  return thisRequest.currentlyExpectedCallback(null, null);
+               } else {
+                  return;
+               }                  
             }
 
             /* glaube ich unnötiger und/oder gefährlicher müll
@@ -920,12 +938,12 @@ function FVSL(OakName){
                   theCallbackFunction(null, res);
                }
                */
-               thisRequest.XHRConducted = false;
                if(thisRequest.currentlyExpectedCallback){
                   conductXHR(thisRequest); // try to solve example_application.js:14013 Uncaught Error: Data too short
-               }                  
-            }  
-            
+               } else {
+                  thisRequest.XHRConducted = false;
+               }                 
+            }
             thisRequest.oldStartServer = reqStart;
             
             //console.log("At htto.get   reqStart: " + reqStart + "     reqEnd: " + reqEnd);
@@ -945,11 +963,13 @@ function FVSL(OakName){
             thisRequest.req = http.get(XHROptionObject, function (res){
                   var contentRange = res.headers['content-range'];
                   if (contentRange) {
-                     //console.log("parseInt(contentRange.split('/')[1], 10) XHR: " + parseInt(contentRange.split('/')[1], 10));
+                     console.log("parseInt(contentRange.split('/')[1], 10) XHR: " + parseInt(contentRange.split('/')[1], 10));
+                     /* Hat zu bugs geführt. Hat geringe priorität einzubauen das file_size auch vom XHR server erfragt wird.
                      SIZE_OF_VIDEO_FILE = parseInt(contentRange.split('/')[1], 10);
                      if(thisRequest.end === 0){
                         thisRequest.end = SIZE_OF_VIDEO_FILE;
-                     }               
+                     }
+                     */
                   }
                   //////////console.log("I return currentlyExpectedCallback with http response stream");
                   ////////////console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thisCallbackNumber);
