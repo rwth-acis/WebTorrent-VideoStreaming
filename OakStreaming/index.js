@@ -210,7 +210,7 @@ function FVSL(OakName){
                stream_information_object.infoHash = torrent.infoHash;
                
               
-               stream_information_object.torrentFile = torrent.torrentFile;
+               stream_information_object.torrentFile = torrent.torrentFile.toString('base64');
                console.log("Creaded stream_information_object:\n" + JSON.stringify(stream_information_object));
 
                
@@ -291,7 +291,7 @@ function FVSL(OakName){
          var hashValue = stream_information_object.hash_value;
          //var webTorrentTrackers = stream_information_object.webTorrent_trackers;
          var MAGNET_URI = stream_information_object.magnetURI;
-         var THE_RECEIVED_TORRENT_FILE = stream_information_object.torrentFile;
+         var THE_RECEIVED_TORRENT_FILE = Buffer.from(stream_information_object.torrentFile, 'base64');
          SIZE_OF_VIDEO_FILE = stream_information_object.size_of_video_file;
          console.log("stream_information_object.size_of_video_file: "  + stream_information_object.size_of_video_file);
 
@@ -359,7 +359,7 @@ function FVSL(OakName){
             
             // A magnetURI contains URLs to tracking servers and the info hash of the torrent.
             //The client receives the complete torrent file from a tracking server.
-            webTorrentClient.add(MAGNET_URI, webTorrentOptions, function (torrent){
+            webTorrentClient.add(THE_RECEIVED_TORRENT_FILE, webTorrentOptions, function (torrent){
                // From this point on the WebTorrent instance will download video data from the WebTorrent network in the background in a rarest-peace-first manner as fast as possible.
                // Sequential stream request like createreadstrime are prioritized over this rarest-peace-first background downloading.
                
@@ -480,24 +480,22 @@ function FVSL(OakName){
                return (new MultiStream(function (cb){cb(null, null);}));
             }
             inCritical = true;
+            /*
             console.log(consoleCounter++ + " called createreadStream ");
             console.log(consoleCounter++ + " opts.start: " + opts.start);
             console.log(consoleCounter++ + " opts.end: " + opts.end);
-
+            */
             var thisRequest = new VideostreamRequestHandler(++globalvideostreamRequestNumber, opts, this);
            
             // Everytime I printed out the value of opts.end is was NaN.
             // I suppose that should be interpreted as "till the end of the file"
             // Of course, our returned stream should, nevertheless, not buffer a giant amount of video data in advance but instead retrieve and put out chunks of video data on-demand
             
-            thisRequest.end = SIZE_OF_VIDEO_FILE;
-            /* versuch bug zu fixen
             if(opts.end && !isNaN(opts.end)){
                thisRequest.end = opts.end + 1;
             } else {
                thisRequest.end = SIZE_OF_VIDEO_FILE;
             }
-            */
             
             
             // This writeable Node.js stream will process every data that is received from sequential WebTorrent streams
@@ -926,7 +924,7 @@ function FVSL(OakName){
             
             thisRequest.oldStartServer = reqStart;
             
-            console.log("At htto.get   reqStart: " + reqStart + "     reqEnd: " + reqEnd);
+            //console.log("At htto.get   reqStart: " + reqStart + "     reqEnd: " + reqEnd);
 
                   
             var XHROptionObject = {
@@ -943,7 +941,7 @@ function FVSL(OakName){
             thisRequest.req = http.get(XHROptionObject, function (res){
                   var contentRange = res.headers['content-range'];
                   if (contentRange) {
-                     console.log("parseInt(contentRange.split('/')[1], 10) XHR: " + parseInt(contentRange.split('/')[1], 10));
+                     //console.log("parseInt(contentRange.split('/')[1], 10) XHR: " + parseInt(contentRange.split('/')[1], 10));
                      SIZE_OF_VIDEO_FILE = parseInt(contentRange.split('/')[1], 10);
                   }
                   //////////console.log("I return currentlyExpectedCallback with http response stream");
