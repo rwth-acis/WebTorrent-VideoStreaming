@@ -475,9 +475,10 @@ function FVSL(OakName){
          };
          // The VideoStream object will call createReadStream several times with different values for the start property of ops.
          fileLikeObject.prototype.createReadStream = function (opts){
-            if(opts.start > SIZE_OF_VIDEO_FILE){
+            if(opts.start >= SIZE_OF_VIDEO_FILE){
                //console.log("opts.start > SIZE_OF_VIDEO_FILE there cb(null,null) every time");
-               return (new MultiStream(function (cb){cb(null, null);}));
+              // comment out for fix try     return (new MultiStream(function (cb){cb(null, null);}));
+               return;
             }
             inCritical = true;
             /*
@@ -494,7 +495,9 @@ function FVSL(OakName){
             if(opts.end && !isNaN(opts.end)){
                thisRequest.end = opts.end + 1;
             } else {
-               thisRequest.end = SIZE_OF_VIDEO_FILE;
+               if(SIZE_OF_VIDEO_FILE !== 0){
+                  thisRequest.end = SIZE_OF_VIDEO_FILE;
+               }
             }
             
             
@@ -518,7 +521,7 @@ function FVSL(OakName){
                         thisRequest.answerStream.push(null);
                         thisRequest.bytesInAnswerStream = 0;
                         var res = thisRequest.answerStream;
-                        thisRequest.answerStream = new MyReadableStream({highWaterMark: 50000000});
+                        thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
                         //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                         if (thisRequest.webTorrentStream){
                            thisRequest.webTorrentStream.pause();
@@ -539,7 +542,7 @@ function FVSL(OakName){
                         thisRequest.answerStream.push(null);
                         thisRequest.bytesInAnswerStream = 0;
                         var res = thisRequest.answerStream;
-                        thisRequest.answerStream = new MyReadableStream({highWaterMark: 50000000});
+                        thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
                         //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                         if (thisRequest.webTorrentStream){
                            thisRequest.webTorrentStream.pause();
@@ -553,7 +556,7 @@ function FVSL(OakName){
                thisRequest.oldStartWebTorrent += chunk.length;
                done();
             };
-            thisRequest.collectorStreamForWebtorrent = new MyWriteableStream({highWaterMark: 500000000});
+            thisRequest.collectorStreamForWebtorrent = new MyWriteableStream({highWaterMark: 50000000});
             videostreamRequestHandlers.push(thisRequest);
 
             if(webTorrentFile){ // Um Einhaltung des Upload limits kümmert sich doch chokeIfNecessary   && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
@@ -579,6 +582,7 @@ function FVSL(OakName){
                //console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + "    does a cb request");         
                if(thisRequest.end >= 0 && thisRequest.start >= thisRequest.end){
                   //console.log("called cb(null,null) from " + thisRequest.createReadStreamNumber); 
+                 
                   thisRequest.req = null;
                   return cb(null, null);
                }
@@ -695,7 +699,7 @@ function FVSL(OakName){
                }
                thisRequest.bytesInAnswerStream = 0;
                var res = thisRequest.answerStream;
-               thisRequest.answerStream = new MyReadableStream({highWaterMark: 50000000});
+               thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
                //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                theCallbackFunction(null, res);
                return true;
@@ -706,22 +710,22 @@ function FVSL(OakName){
          // This function frequently checks if video data upload should be throttled because the peer_upload_limit is reached
          // If it should be throttled, then every peer gets choked which means there will be no more data send to other peers for approximately 800 milliseconds.
          function chokeIfNecessary(){
-               if (theTorrent && theTorrent.uploaded >= theTorrent.downloaded * UPLOAD_LIMIT + ADDITION_TO_UPLOAD_LIMIT) {
-                  /* mache ich schon in einer anderen frequent methode
-                  if(videoCompletelyLoaded){
-                     theTorrent.destroy();
-                     delete webTorrentClient;
-                     endStreaming = true;
-                     return;
-                  }
-                  */
-                  for (var i = 0, length = wires.length; i < length; i++){
-                     //console.log("I choked a peer");
-                     wires[i].choke();
-                  }
+            if (theTorrent && theTorrent.uploaded >= theTorrent.downloaded * UPLOAD_LIMIT + ADDITION_TO_UPLOAD_LIMIT) {
+               /* mache ich schon in einer anderen frequent methode
+               if(videoCompletelyLoaded){
+                  theTorrent.destroy();
+                  delete webTorrentClient;
+                  endStreaming = true;
+                  return;
                }
-               setTimeout(chokeIfNecessary, CHOKE_IF_NECESSARY_INTERVAL);
+               */
+               for (var i = 0, length = wires.length; i < length; i++){
+                  //console.log("I choked a peer");
+                  wires[i].choke();
+               }
             }
+            setTimeout(chokeIfNecessary, CHOKE_IF_NECESSARY_INTERVAL);
+         }
          
          function VideostreamRequestHandler(createReadStreamNumber, opts, self) {
             this.createReadStreamNumber = createReadStreamNumber;
@@ -732,7 +736,7 @@ function FVSL(OakName){
             this.currentlyExpectedCallback = null;
             this.CallbackNumber = 0;
             this.webTorrentStream = null;
-            this.answerStream = new MyReadableStream({highWaterMark: 50000000});
+            this.answerStream = new MyReadableStream({highWaterMark: 5000000});
             this.bytesInAnswerStream = 0;
             this.collectorStreamForWebtorrent = null;
             this.XHRConducted = false;
@@ -747,75 +751,75 @@ function FVSL(OakName){
 
          // This function frequently checks for every videostreamRequestHandler if there is enough data buffer to call the corresponding callback function with the buffered data
          function frequentlyCeckIfAnswerStreamReady(){
-               if(videoCompletelyLoaded){
-                  return;
-               }
-               for (var i = 0, length = videostreamRequestHandlers.length; i < length; i++) {
-                  ceckIfAnswerStreamReady(videostreamRequestHandlers[i]);
-               }
-               setTimeout(frequentlyCeckIfAnswerStreamReady, CHECK_IF_ANSWERSTREAM_READY_INTERVAL);
+            if(videoCompletelyLoaded){
+               return;
+            }
+            for (var i = 0, length = videostreamRequestHandlers.length; i < length; i++) {
+               ceckIfAnswerStreamReady(videostreamRequestHandlers[i]);
+            }
+            setTimeout(frequentlyCeckIfAnswerStreamReady, CHECK_IF_ANSWERSTREAM_READY_INTERVAL);
          }
 
          // The job of this function is to frequently check to things.
          // First, if the video is completely loaded.
          // Second, if less than DOWNLOAD_FROM_SERVER_TIME_RANGE seconds of video playback are buffered in advance.
          function checkIfBufferFullEnough(){
-               //console.log("checkIfBufferFullEnough is called");
-               if(videoCompletelyLoaded){
-                  return;
-               }
-               //console.log("video.duration: " + myVideo.duration);
-               if(myVideo.duration){
-                  var timeRanges = myVideo.buffered;
-                  if(timeRanges.length >= 1){
-                     //console.log("timeRanges.start(0): " + timeRanges.start(0));
-                     //console.log("timeRanges.end(0): " + timeRanges.end(0));
-                     if(theTorrent.progress === 1){
-                        videoCompletelyLoaded = true;
-                     } else {
-                        if(timeRanges.start(0) == 0 && timeRanges.end(0) == myVideo.duration){
-                          // console.log("In checkIfBufferFullEnough: callback should be called");
-                           videoCompletelyLoaded = true;
-                           if(callback){
-                              if(end_streaming_when_video_loaded){
-                                 callback();
-                              } else {
-                                 callback(theTorrent);
-                              }
-                           }
-                           if(end_streaming_when_video_loaded){
-                              if(theTorrent){
-                                 theTorrent.destroy();
-                                 delete webTorrentClient;
-                              }
-                              endStreaming = true;
-                              return;                 
-                           } 
-                        }
-                     }
-                  }
-                  
-                  // From here on it is checked wether there are less seconds buffered than DOWNLOAD_FROM_SERVER_TIME_RANGE
-                  inCritical = true;              
-                  for (var i = 0, length = timeRanges.length; i < length; i++) {
-                     ////////console.log("Time range number " + i + ": start(" + timeRanges.start(i) + ") end(" + timeRanges.end(i) + ")");
-                     if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)) {
-                        if (timeRanges.end(i) - myVideo.currentTime >= DOWNLOAD_FROM_SERVER_TIME_RANGE) {
-                           inCritical = false;
-                           ////////console.log("I set inCritical to false");
-                        }
-                     }
-                  }
-                  if (deliveryByServer && inCritical) {
-                     for (var j = 0, length = videostreamRequestHandlers.length; j < length; j++) {
-                        if (videostreamRequestHandlers[j].currentlyExpectedCallback !== null && videostreamRequestHandlers[j].XHRConducted === false) {
-                           conductXHR(videostreamRequestHandlers[j]);
-                        }
-                     }
-                  }
-               }
-               setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
+            //console.log("checkIfBufferFullEnough is called");
+            if(videoCompletelyLoaded){
+               return;
             }
+            //console.log("video.duration: " + myVideo.duration);
+            if(myVideo.duration){
+               var timeRanges = myVideo.buffered;
+               if(timeRanges.length >= 1){
+                  //console.log("timeRanges.start(0): " + timeRanges.start(0));
+                  //console.log("timeRanges.end(0): " + timeRanges.end(0));
+                  if(theTorrent.progress === 1){
+                     videoCompletelyLoaded = true;
+                  } else {
+                     if(timeRanges.start(0) == 0 && timeRanges.end(0) == myVideo.duration){
+                       // console.log("In checkIfBufferFullEnough: callback should be called");
+                        videoCompletelyLoaded = true;
+                        if(callback){
+                           if(end_streaming_when_video_loaded){
+                              callback();
+                           } else {
+                              callback(theTorrent);
+                           }
+                        }
+                        if(end_streaming_when_video_loaded){
+                           if(theTorrent){
+                              theTorrent.destroy();
+                              delete webTorrentClient;
+                           }
+                           endStreaming = true;
+                           return;                 
+                        } 
+                     }
+                  }
+               }
+               
+               // From here on it is checked wether there are less seconds buffered than DOWNLOAD_FROM_SERVER_TIME_RANGE
+               inCritical = true;              
+               for (var i = 0, length = timeRanges.length; i < length; i++) {
+                  ////////console.log("Time range number " + i + ": start(" + timeRanges.start(i) + ") end(" + timeRanges.end(i) + ")");
+                  if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)) {
+                     if (timeRanges.end(i) - myVideo.currentTime >= DOWNLOAD_FROM_SERVER_TIME_RANGE) {
+                        inCritical = false;
+                        ////////console.log("I set inCritical to false");
+                     }
+                  }
+               }
+               if (deliveryByServer && inCritical) {
+                  for (var j = 0, length = videostreamRequestHandlers.length; j < length; j++) {
+                     if (videostreamRequestHandlers[j].currentlyExpectedCallback !== null && videostreamRequestHandlers[j].XHRConducted === false) {
+                        conductXHR(videostreamRequestHandlers[j]);
+                     }
+                  }
+               }
+            }
+            setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
+         }
 
          
          // This function conductes a XHR reuqest for the videostreamRequestHandler which is handed over to the function as its first and only paramter.
@@ -867,7 +871,7 @@ function FVSL(OakName){
                         thisRequest.answerStream.push(null);
                         thisRequest.bytesInAnswerStream = 0;
                         var res = thisRequest.answerStream;
-                        thisRequest.answerStream = new MyReadableStream({highWaterMark: 50000000});
+                        thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
                         //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                         if (thisRequest.webTorrentStream){
                            thisRequest.webTorrentStream.pause();
@@ -886,7 +890,7 @@ function FVSL(OakName){
                         thisRequest.answerStream.push(null);
                         thisRequest.bytesInAnswerStream = 0;
                         var res = thisRequest.answerStream;
-                        thisRequest.answerStream = new MyReadableStream({highWaterMark: 50000000});
+                        thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
                         //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                         if (thisRequest.webTorrentStream){
                            thisRequest.webTorrentStream.pause();
@@ -909,7 +913,7 @@ function FVSL(OakName){
                   thisRequest.answerStream.push(null);
                   thisRequest.bytesInAnswerStream = 0;
                   var res = thisRequest.answerStream;
-                  thisRequest.answerStream = new MyReadableStream({highWaterMark: 50000000});
+                  thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
                   var theCallbackFunction = thisRequest.currentlyExpectedCallback;
                   thisRequest.currentlyExpectedCallback = null;
                   //console.log("XHREnd: called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
@@ -943,6 +947,9 @@ function FVSL(OakName){
                   if (contentRange) {
                      //console.log("parseInt(contentRange.split('/')[1], 10) XHR: " + parseInt(contentRange.split('/')[1], 10));
                      SIZE_OF_VIDEO_FILE = parseInt(contentRange.split('/')[1], 10);
+                     if(thisRequest.end === 0){
+                        thisRequest.end = SIZE_OF_VIDEO_FILE;
+                     }               
                   }
                   //////////console.log("I return currentlyExpectedCallback with http response stream");
                   ////////////console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thisCallbackNumber);
