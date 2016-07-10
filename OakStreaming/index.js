@@ -559,7 +559,7 @@ function FVSL(OakName){
                thisRequest.oldStartWebTorrent += chunk.length;
                done();
             };
-            thisRequest.collectorStreamForWebtorrent = new MyWriteableStream({highWaterMark: 500000000});
+            thisRequest.collectorStreamForWebtorrent = new MyWriteableStream({highWaterMark: 8});
             videostreamRequestHandlers.push(thisRequest);
 
             if(webTorrentFile){ // Um Einhaltung des Upload limits kümmert sich doch chokeIfNecessary   && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
@@ -622,9 +622,9 @@ function FVSL(OakName){
                   }
 
                   if(deliveryByServer && inCritical && !thisRequest.XHRConducted){
-                     //if(deliveryByWebtorrent && theTorrent.progress <1){     Sollte rein wenn ich das nicht elegant gelöst bekomme
-                        conductXHR(thisRequest);
-                     //}
+                     if(!deliveryByWebtorrent || theTorrent.progress <1){
+                        conductXHR(thisRequest);                      
+                     }
                   }
                }
             }
@@ -963,7 +963,7 @@ function FVSL(OakName){
             thisRequest.req = http.get(XHROptionObject, function (res){
                   var contentRange = res.headers['content-range'];
                   if (contentRange) {
-                     console.log("parseInt(contentRange.split('/')[1], 10) XHR: " + parseInt(contentRange.split('/')[1], 10));
+                     //console.log("parseInt(contentRange.split('/')[1], 10) XHR: " + parseInt(contentRange.split('/')[1], 10));
                      /* Hat zu bugs geführt. Hat geringe priorität einzubauen das file_size auch vom XHR server erfragt wird.
                      SIZE_OF_VIDEO_FILE = parseInt(contentRange.split('/')[1], 10);
                      if(thisRequest.end === 0){

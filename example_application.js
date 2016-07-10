@@ -7,6 +7,7 @@ var OakStreaming = require('./OakStreaming');
 var myStreaming = new OakStreaming();
 
 var theSharedMap = null;
+var theSharedArray = null;
 var streamSource = false;
 
 /*
