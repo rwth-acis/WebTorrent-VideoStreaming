@@ -14,6 +14,7 @@ var connect = require('gulp-connect');
 var jasmineBrowser = require('gulp-jasmine-browser');
 var rename = require("gulp-rename");
 var cors = require('cors');
+var pump = require('pump');
 
 /*
 gulp.task('html', function (){
@@ -74,17 +75,29 @@ function errorLog(error){
    this.emit('end');
 }
 
-/* Takes to long for developement. Therefore commented out till deployment. Didn't work when commented out.
-// Uglifies output of browserify
+// Takes to long for developement. Therefore commented out till deployment. Didn't work when commented out.
+/* Uglifies output of browserify
 gulp.task('uglify_example_app.js', ['browserify2'], function(){
-   return gulp.src('./web/example_application_temp.js')
+   return gulp.src('./web/example_application.js')
    .pipe(uglify())
-   //.on('error', errorLog)
-   .pipe(rename("example_application.js"))
+   .on('error', errorLog)
+   //.pipe(rename("example_application.js"))
    .pipe(gulp.dest('./web/'));
    console.log("Uglified bundle");
 });
 */
+
+gulp.task('uglify_example_app.js', ['browserify2'],  function (cb) {
+  pump([
+        gulp.src('./web/example_application.js'),
+        uglify(),
+        gulp.dest('./web/')
+    ],
+    cb
+  );
+});
+
+
 
 // Uglifies index.html
 gulp.task('minify_example_app.html', ['browserify2'], function(){
@@ -169,4 +182,5 @@ gulp.task('watch', ['tests', 'connect'], function(){
 });
 
 
+// 'uglify_example_app.js',   schien zu funktionieren bis auf "Unexpected token: name (YArray)"
 gulp.task('default', ['browserify', 'connect', 'browserify2', 'minify_example_app.html', 'tests', 'watch']);
