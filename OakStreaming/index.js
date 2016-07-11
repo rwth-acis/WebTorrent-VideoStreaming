@@ -300,23 +300,22 @@ function FVSL(OakName){
          console.log("stream_information_object.size_of_video_file: "  + stream_information_object.size_of_video_file);
 
          var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20;
-         var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 10000000;
+         var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 50000000;
          
-         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 3;
+         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 5;
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
          var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 500000;
          
          
-         var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 500000; // in byte
-         var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = stream_information_object.thresholdForReturningAnswerStream || 500000; // in byte
-         var WATERMARK_HEIGHT_OF_ANSWERSTREAM = stream_information_object.watermarkHeightOfAnswerStream || 5000000; // in byte
+         var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 1000000; // in byte
+         var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = stream_information_object.thresholdForReturningAnswerStream || 1000000; // in byte
+         var WATERMARK_HEIGHT_OF_ANSWERSTREAM = stream_information_object.watermarkHeightOfAnswerStream || 500000;
          
-         
-         var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = stream_information_object.checkIfBufferFullEnoughInterval || 200; // in miliseconds
-         var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = stream_information_object.checkIfAnswerstreamReadyInterval || 500; // in miliseconds
+         var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = stream_information_object.checkIfBufferFullEnoughInterval || 300; // in miliseconds
+         var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = stream_information_object.checkIfAnswerstreamReadyInterval || 200; // in miliseconds
          var UPDATE_CHART_INTERVAL = stream_information_object.updateChartInterval || 1000; // in miliseconds
          var CHOKE_IF_NECESSARY_INTERVAL = stream_information_object.chokeIfNecessaryInterval || 500; // in miliseconds
-         var CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL = stream_information_object.checkIfNewCreateReadstreamInterval || 2000 ;
+         var CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL = stream_information_object.checkIfNewCreateReadstreamInterval || 500 ;
          
          
          // From here on most newly declared variables are not indeted to function as constants
