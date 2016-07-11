@@ -509,6 +509,7 @@ function FVSL(OakName){
             };
             util.inherits(MyWriteableStream, readableStream.Writable);
             MyWriteableStream.prototype._write = function(chunk, encoding, done){
+               console.log("A byte range request to the WebTorrent network received a chunk");
                //console.log("MyWriteableStream _write is called");       
                if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
                   ////////console.log("MyWriteableStream _write: pushing received data in answerStream")
@@ -636,6 +637,13 @@ function FVSL(OakName){
                if (thisRequest.req) {
                   thisRequest.req.destroy();
                }
+               thisRequest.currentlyExpectedCallback = null;
+               thisrequest.noMoreData = true;
+               thisRequest.webTorrentStream.pause();
+               thisRequest.webTorrentStream.unpipe();
+               // thisRequest.webTorrentStream.destroy();                  Glaube ich unnötig!!!!
+               //thisRequest.answerStream.destroy();         Glaube ich auch unnötig !
+               // thisRequest.collectorStreamForWebtorrent.destroy(); Verbraucht ja eh nur ein paar byte
                destroy.call(multi);
             };
             return multi;
