@@ -300,21 +300,23 @@ function FVSL(OakName){
          console.log("stream_information_object.size_of_video_file: "  + stream_information_object.size_of_video_file);
 
          var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20;
-         var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 50000000;
+         var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 10000000;
          
-         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 5;
+         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 3;
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
          var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 500000;
          
          
-         var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 50000; // in byte
-         var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = stream_information_object.thresholdForReturningAnswerStream || 50000; // in byte
-
-         var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = stream_information_object.checkIfBufferFullEnoughInterval || 300; // in miliseconds
-         var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = stream_information_object.checkIfAnswerstreamReadyInterval || 200; // in miliseconds
+         var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 500000; // in byte
+         var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = stream_information_object.thresholdForReturningAnswerStream || 500000; // in byte
+         var WATERMARK_HEIGHT_OF_ANSWERSTREAM = stream_information_object.watermarkHeightOfAnswerStream || 5000000; // in byte
+         
+         
+         var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = stream_information_object.checkIfBufferFullEnoughInterval || 200; // in miliseconds
+         var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = stream_information_object.checkIfAnswerstreamReadyInterval || 500; // in miliseconds
          var UPDATE_CHART_INTERVAL = stream_information_object.updateChartInterval || 1000; // in miliseconds
          var CHOKE_IF_NECESSARY_INTERVAL = stream_information_object.chokeIfNecessaryInterval || 500; // in miliseconds
-         var CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL = stream_information_object.checkIfNewCreateReadstreamInterval || 500 ;
+         var CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL = stream_information_object.checkIfNewCreateReadstreamInterval || 2000 ;
          
          
          // From here on most newly declared variables are not indeted to function as constants
@@ -524,7 +526,7 @@ function FVSL(OakName){
                         thisRequest.answerStream.push(null);
                         thisRequest.bytesInAnswerStream = 0;
                         var res = thisRequest.answerStream;
-                        thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
+                        thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
                         //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                         if (thisRequest.webTorrentStream){
                            thisRequest.webTorrentStream.pause();
@@ -543,7 +545,7 @@ function FVSL(OakName){
                         thisRequest.answerStream.push(null);
                         thisRequest.bytesInAnswerStream = 0;
                         var res = thisRequest.answerStream;
-                        thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
+                        thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
                         //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                         if (thisRequest.webTorrentStream){
                            thisRequest.webTorrentStream.pause();
@@ -579,13 +581,14 @@ function FVSL(OakName){
                thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
             }
 
-            function factoryFunctionForStreamCreation(cb){              
-               //console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + "    does a cb request");         
+            function factoryFunctionForStreamCreation(cb){
+               console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + "    does a cb request");         
                if(thisRequest.end >= 0 && thisRequest.start >= thisRequest.end){
-                  //console.log("called cb(null,null) from " + thisRequest.createReadStreamNumber);             
+                  console.log("called cb(null,null) from " + thisRequest.createReadStreamNumber);             
                   // !!!!!!!!!!!!!!!!!!! Testeshalber rausgenommen     thisRequest.req = null;
                   if (thisRequest.req) {
                      thisRequest.req.destroy();
+                     thisRequest.req = null;
                   }
                   console.log("cb(null, null) is called");
                   return cb(null, null);
@@ -630,19 +633,41 @@ function FVSL(OakName){
             
             // A new Multistream gets created which will be the answer the the request from the VideoStream request
             var multi = new MultiStream(factoryFunctionForStreamCreation);
-
+            
+            var deconstructorAlreadyCalled = false;
             ////////console.log(consoleCounter++ + " terminate createReadStream");
             var destroy = multi.destroy;
             multi.destroy = function(){
+               if(deconstructorAlreadyCalled){
+                  console.log("Deconstructor of " + thisRequest.createReadStreamNumber + " has already been called");
+                  return;
+               }
+               console.log("Deconstructor of " + thisRequest.createReadStreamNumber + " is called");
+               console.log("In deconstructor call thisRequest.start has value: " + thisRequest.start);
+               console.log("In deconstructor call thisRequest.end has value: " + thisRequest.end);
+               console.log("In deconstructor call thisRequest.currentlyExpectedCallback === null: " + (thisRequest.currentlyExpectedCallback === null));
+               deconstructorAlreadyCalled = true;
                if (thisRequest.req) {
                   thisRequest.req.destroy();
                }
+               var theCallback = thisRequest.currentlyExpectedCallback;
                thisRequest.currentlyExpectedCallback = null;
-               thisrequest.noMoreData = true;
+               thisRequest.noMoreData = true;
                thisRequest.webTorrentStream.pause();
                thisRequest.webTorrentStream.unpipe();
+               
+               for(var i=0; i<videostreamRequestHandlers.length; i++){
+                  if(videostreamRequestHandlers[i] === thisRequest){
+                     videostreamRequestHandlers.splice(i, 1);
+                  }
+               }
+               /*
+               if(theCallback){
+                  theCallback(null,null);
+               }
+               */
                // thisRequest.webTorrentStream.destroy();                  Glaube ich unnötig!!!!
-               //thisRequest.answerStream.destroy();         Glaube ich auch unnötig !
+               //thisRequest.answerStream.destroy();         Glaube ich auch unnötig ! Wird ja eh übergeben. Sollte sich also Feross drum kümmern. 
                // thisRequest.collectorStreamForWebtorrent.destroy(); Verbraucht ja eh nur ein paar byte
                destroy.call(multi);
             };
@@ -712,7 +737,7 @@ function FVSL(OakName){
                }
                thisRequest.bytesInAnswerStream = 0;
                var res = thisRequest.answerStream;
-               thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
+               thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
                //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                theCallbackFunction(null, res);
                return true;
@@ -749,7 +774,7 @@ function FVSL(OakName){
             this.currentlyExpectedCallback = null;
             this.CallbackNumber = 0;
             this.webTorrentStream = null;
-            this.answerStream = new MyReadableStream({highWaterMark: 5000000});
+            this.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
             this.bytesInAnswerStream = 0;
             this.collectorStreamForWebtorrent = null;
             this.XHRConducted = false;
@@ -899,7 +924,7 @@ function FVSL(OakName){
                         thisRequest.answerStream.push(null);
                         thisRequest.bytesInAnswerStream = 0;
                         var res = thisRequest.answerStream;
-                        thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
+                        thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
                         //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                         if (thisRequest.webTorrentStream){
                            thisRequest.webTorrentStream.pause();
@@ -918,7 +943,7 @@ function FVSL(OakName){
                         thisRequest.answerStream.push(null);
                         thisRequest.bytesInAnswerStream = 0;
                         var res = thisRequest.answerStream;
-                        thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
+                        thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
                         //console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                         if (thisRequest.webTorrentStream){
                            thisRequest.webTorrentStream.pause();
@@ -941,18 +966,30 @@ function FVSL(OakName){
                   thisRequest.answerStream.push(null);
                   thisRequest.bytesInAnswerStream = 0;
                   var res = thisRequest.answerStream;
-                  thisRequest.answerStream = new MyReadableStream({highWaterMark: 5000000});
+                  thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
                   var theCallbackFunction = thisRequest.currentlyExpectedCallback;
                   thisRequest.currentlyExpectedCallback = null;
                   //console.log("XHREnd: called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                   theCallbackFunction(null, res);
                }
                */
+               
+               /*
                if(thisRequest.currentlyExpectedCallback){
-                  conductXHR(thisRequest); // try to solve example_application.js:14013 Uncaught Error: Data too short
+                  if(thisRequest.start < SIZE_OF_VIDEO_FILE && thisRequest.start < thisRequest.XHR_filesize){
+                     if(thisRequest.end > 0 ){
+                        if(thisRequest.start < thisRequest.end){
+                           conductXHR(thisRequest); // try to solve example_application.js:14013 Uncaught Error: Data too short
+                        }
+                     } else {
+                        conductXHR(thisRequest);
+                     }
+                  }
                } else {
+                  */
+                  //console.log("XHREnd from videostreamRequest number " + thisRequest.createReadStreamNumber + " thisRequest.currentlyExpectedCallback === null : " + (thisRequest.currentlyExpectedCallback === null));
                   thisRequest.XHRConducted = false;
-               }                 
+               //}                 
             }
             thisRequest.oldStartServer = reqStart;
             
