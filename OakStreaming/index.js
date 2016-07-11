@@ -358,7 +358,6 @@ function FVSL(OakName){
                webTorrentOptions.path = stream_information_object.pathToFileToSeed;
             }
             */
-            //var url = URL.createObjectURL(stream_information_object.torrentAsBlob);   K42
             
             
             // A magnetURI contains URLs to tracking servers and the info hash of the torrent.
@@ -480,7 +479,7 @@ function FVSL(OakName){
          // The VideoStream object will call createReadStream several times with different values for the start property of ops.
          fileLikeObject.prototype.createReadStream = function (opts){
             if(opts.start >= SIZE_OF_VIDEO_FILE){
-               //console.log("opts.start > SIZE_OF_VIDEO_FILE there cb(null,null) every time");
+               console.log("opts.start > SIZE_OF_VIDEO_FILE therefore cb(null,null) every time");
                return (new MultiStream(function (cb){cb(null, null);}));
             }
             inCritical = true;
@@ -533,11 +532,9 @@ function FVSL(OakName){
                      }
                   } else {
                      if(thisRequest.currentlyExpectedCallback === null){
-                        /*
                         if(thisRequest.webTorrentStream){
                            thisRequest.webTorrentStream.pause();
                         }
-                        */
                         thisRequest.noMoreData = true;
                      } else {
                         var theCallbackFunction = thisRequest.currentlyExpectedCallback;
@@ -559,7 +556,7 @@ function FVSL(OakName){
                thisRequest.oldStartWebTorrent += chunk.length;
                done();
             };
-            thisRequest.collectorStreamForWebtorrent = new MyWriteableStream({highWaterMark: 8});
+            thisRequest.collectorStreamForWebtorrent = new MyWriteableStream({highWaterMark: 16});
             videostreamRequestHandlers.push(thisRequest);
 
             if(webTorrentFile){ // Um Einhaltung des Upload limits kümmert sich doch chokeIfNecessary   && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
@@ -589,6 +586,7 @@ function FVSL(OakName){
                   if (thisRequest.req) {
                      thisRequest.req.destroy();
                   }
+                  console.log("cb(null, null) is called");
                   return cb(null, null);
                }
               
@@ -622,7 +620,7 @@ function FVSL(OakName){
                   }
 
                   if(deliveryByServer && inCritical && !thisRequest.XHRConducted){
-                     if(!deliveryByWebtorrent || theTorrent.progress <1){
+                     if(!theTorrent || theTorrent.progress <1){
                         conductXHR(thisRequest);                      
                      }
                   }
@@ -754,6 +752,7 @@ function FVSL(OakName){
             this.noMoreData = false;
             this.req = null;
             this.lastEndCreateReadStream = -42;
+            this.XHR_filesize = -42;
          }
 
          // This function frequently checks for every videostreamRequestHandler if there is enough data buffer to call the corresponding callback function with the buffered data
@@ -837,10 +836,13 @@ function FVSL(OakName){
             thisRequest.XHRConducted = true;
             var reqStart = thisRequest.start;
             var reqEnd = reqStart + XHR_REQUEST_SIZE;
-
-            if (thisRequest.end >= 0 && reqEnd > thisRequest.end) {
+   
+            if(thisRequest.XHR_filesize > 0 && reqEnd > thisRequest.XHR_filesize){
+               reqEnd = thisRequest.XHR_filesize;
+            } else if (thisRequest.end >= 0 && reqEnd > thisRequest.end) {
                reqEnd = thisRequest.end;
             }
+            
             if (reqStart >= reqEnd){
                //console.log("called cb(null,null)");
                
@@ -902,7 +904,7 @@ function FVSL(OakName){
                         }
                      }
                   } else {
-                     if (thisRequest.start >= SIZE_OF_VIDEO_FILE && thisRequest.currentlyExpectedCallback !== null){
+                     if (thisRequest.start >= thisRequest.end && thisRequest.currentlyExpectedCallback !== null){
                         var theCallbackFunction = thisRequest.currentlyExpectedCallback;
                         thisRequest.currentlyExpectedCallback = null;
                         thisRequest.answerStream.push(null);
@@ -922,11 +924,11 @@ function FVSL(OakName){
             }
 
             var XHREnd = function (){
-               //console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + " XHREnd");
+               console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + " XHREnd");
                if (consoleCounter < 1000000000000){
                   //////////console.log("XHREnd from videostreamRequest number " + thisRequest.createReadStreamNumber);
                }
-               /* Want to solve example_application.js:14013 Uncaught Error: Data too short
+               /* Want to solve example_application.js:14013 Uncaught Error: Data too short   Daher das hier auskommentiert
                if(thisRequest.bytesInAnswerStream > 0 && thisRequest.currentlyExpectedCallback !== null){
                   thisRequest.answerStream.push(null);
                   thisRequest.bytesInAnswerStream = 0;
@@ -964,12 +966,12 @@ function FVSL(OakName){
                   var contentRange = res.headers['content-range'];
                   if (contentRange) {
                      //console.log("parseInt(contentRange.split('/')[1], 10) XHR: " + parseInt(contentRange.split('/')[1], 10));
-                     /* Hat zu bugs geführt. Hat geringe priorität einzubauen das file_size auch vom XHR server erfragt wird.
-                     SIZE_OF_VIDEO_FILE = parseInt(contentRange.split('/')[1], 10);
-                     if(thisRequest.end === 0){
-                        thisRequest.end = SIZE_OF_VIDEO_FILE;
-                     }
-                     */
+                     // Hat zu bugs geführt. Hat geringe priorität einzubauen das file_size auch vom XHR server erfragt wird.
+                     //SIZE_OF_VIDEO_FILE = parseInt(contentRange.split('/')[1], 10);
+                     //if(thisRequest.end === 0){
+                     thisRequest.XHR_filesize = parseInt(contentRange.split('/')[1], 10);
+                     //}
+                     
                   }
                   //////////console.log("I return currentlyExpectedCallback with http response stream");
                   ////////////console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thisCallbackNumber);
