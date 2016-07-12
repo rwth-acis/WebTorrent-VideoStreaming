@@ -59,13 +59,22 @@ Y({
    });
 });
 
-window.handleFiles = function(files){     // {XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name} ,["wss://tracker.webtorrent.io"]   "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  XHR_server_URL : "localhost"     hash_value : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e", webTorrent_trackers: [["wss://tracker.webtorrent.io"]]}, 
+window.handleFiles = function (files){     // {XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name} ,["wss://tracker.webtorrent.io"]   "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  XHR_server_URL : "localhost"     hash_value : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e", webTorrent_trackers: [["wss://tracker.webtorrent.io"]]}, 
    streamSource = true;
    myStreaming.streamVideo(files[0],{}, function(streamInformationObject){
       //console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
       console.log("In example.js video file got seeded.");
-      theSharedArray.insert(0, [streamInformationObject]);
+           
+      addToSharedArray();
    });
+}
+
+function addToSharedArray(){
+   if(theSharedArray !== null){
+      theSharedArray.insert(0, [streamInformationObject]);
+   } else {
+      setTimeout(addToSharedArray,250);
+   }   
 }
 
 // This function updates the statistics that is shown above the video

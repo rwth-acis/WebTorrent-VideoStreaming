@@ -682,15 +682,16 @@ function FVSL(OakName){
          function frequentlyCheckIfNewCreateReadStreamNecessary(){
             if(videoCompletelyLoadedByVideoPlayer){
                return;
-            }            
+            }  
+            console.log("frequentlyCheckIfNewCreateReadStreamNecessary gets executed");
             if(myVideo.duration){
                var timeRanges = myVideo.buffered;          
                for (var i = 0, length = timeRanges.length; i < length; i++){
                   if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)+3) {
                      if (timeRanges.end(i) - myVideo.currentTime <= DOWNLOAD_FROM_P2P_TIME_RANGE) {
-                        for (var j = 0, length = videostreamRequestHandlers.length; j < length; j++) {
+                        for (var j = 0, length2 = videostreamRequestHandlers.length; j < length2; j++) {
                            var thisRequest = videostreamRequestHandlers[j];
-                           
+                           console.log("createReadStream enlargement for request " + thisRequest.createReadStreamNumber);
                            if(thisRequest.currentlyExpectedCallback !== null && thisRequest.start > thisRequest.lastEndCreateReadStream && thisRequest.start < SIZE_OF_VIDEO_FILE){
                               var endCreateReadStream;
                               if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
@@ -995,7 +996,8 @@ function FVSL(OakName){
                thisRequest.XHRConducted = false;
                   //ceckIfAnswerStreamReady(thisRequest);  // Unsicher ob es drinn bleiben soll
                //}                 
-            }
+            };
+            
             thisRequest.oldStartServer = reqStart;
             
             ////console.log("At htto.get   reqStart: " + reqStart + "     reqEnd: " + reqEnd);
@@ -1013,22 +1015,21 @@ function FVSL(OakName){
             }
             
             thisRequest.req = http.get(XHROptionObject, function (res){
-                  var contentRange = res.headers['content-range'];
-                  if (contentRange) {
-                     ////console.log("parseInt(contentRange.split('/')[1], 10) XHR: " + parseInt(contentRange.split('/')[1], 10));
-                     // Hat zu bugs geführt. Hat geringe priorität einzubauen das file_size auch vom XHR server erfragt wird.
-                     //SIZE_OF_VIDEO_FILE = parseInt(contentRange.split('/')[1], 10);
-                     //if(thisRequest.end === 0){
-                     thisRequest.XHR_filesize = parseInt(contentRange.split('/')[1], 10);
-                     //}
-                     
-                  }
-                  ////////////console.log("I return currentlyExpectedCallback with http response stream");
-                  //////////////console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thisCallbackNumber);
-                  res.on('end', XHREnd);
-                  res.on('data', XHRDataHandler);
+               var contentRange = res.headers['content-range'];
+               if (contentRange) {
+                  ////console.log("parseInt(contentRange.split('/')[1], 10) XHR: " + parseInt(contentRange.split('/')[1], 10));
+                  // Hat zu bugs geführt. Hat geringe priorität einzubauen das file_size auch vom XHR server erfragt wird.
+                  //SIZE_OF_VIDEO_FILE = parseInt(contentRange.split('/')[1], 10);
+                  //if(thisRequest.end === 0){
+                  thisRequest.XHR_filesize = parseInt(contentRange.split('/')[1], 10);
+                  //}
+                  
                }
-            );
+               ////////////console.log("I return currentlyExpectedCallback with http response stream");
+               //////////////console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thisCallbackNumber);
+               res.on('end', XHREnd);
+               res.on('data', XHRDataHandler);
+            });
          }
          frequentlyCheckIfNewCreateReadStreamNecessary();
          chokeIfNecessary();
