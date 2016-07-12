@@ -299,22 +299,22 @@ function FVSL(OakName){
          SIZE_OF_VIDEO_FILE = stream_information_object.size_of_video_file;
          //console.log("stream_information_object.size_of_video_file: "  + stream_information_object.size_of_video_file);
 
-         var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 5;
+         var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20; // eigentlich 20
          var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 12000000;
          
-         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 2; // eigentlich 5
+         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 4; // eigentlich 5
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
          var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 500000;
          
          
-         var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 10000000; // in byte
-         var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = stream_information_object.thresholdForReturningAnswerStream || 2000000; // in byte
+         var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 5000000; // in byte
+         var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = stream_information_object.thresholdForReturningAnswerStream || 1000000; // in byte
          var WATERMARK_HEIGHT_OF_ANSWERSTREAM = stream_information_object.watermarkHeightOfAnswerStream || 6000000;
          
          var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = stream_information_object.checkIfBufferFullEnoughInterval || 2000; // in miliseconds
-         var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = stream_information_object.checkIfAnswerstreamReadyInterval || 500; // in miliseconds
+         var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = stream_information_object.checkIfAnswerstreamReadyInterval || 250; // in miliseconds
          var UPDATE_CHART_INTERVAL = stream_information_object.updateChartInterval || 1000; // in miliseconds
-         var CHOKE_IF_NECESSARY_INTERVAL = stream_information_object.chokeIfNecessaryInterval || 1000; // in miliseconds    Eigentlich ist 500 angebracht
+         var CHOKE_IF_NECESSARY_INTERVAL = stream_information_object.chokeIfNecessaryInterval || 500; // in miliseconds    Eigentlich ist 500 angebracht
          var CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL = stream_information_object.checkIfNewCreateReadstreamInterval || 2000 ;
          
          
@@ -333,6 +333,7 @@ function FVSL(OakName){
          var bytesTakenFromWebTorrent = 0;
          var bytesTakenFromServer = 0;
          var consoleCounter = 0; // This variable is only for debugging purposes
+         var firstBytesOfVideo = null;
          
       
          var myVideo = document.querySelector('video');
@@ -601,6 +602,19 @@ function FVSL(OakName){
                }
                thisRequest.currentlyExpectedCallback = cb;
                thisRequest.noMoreData = false;
+               
+               if(thisRequest.start < firstBytesOfVideo.length -1000){ //&& thisRequest.webTorrentStream === null && thisRequest.bytesInAnswerStream == 0 &&  ){
+                  thisRequest.answerStream.push(firstBytesOfVideo.slice(thisRequest.start, chunk.length));
+                  thisRequest.start += firstBytesOfVideo.length - thisRequest.start;
+                  var theCallbackFunction = thisRequest.currentlyExpectedCallback;
+                  thisRequest.currentlyExpectedCallback = null;
+                  thisRequest.answerStream.push(null);
+                  thisRequest.bytesInAnswerStream = 0;
+                  var res = thisRequest.answerStream;
+                  thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
+                  theCallbackFunction(null, res);
+                  return;
+               }
             
                if(!ceckIfAnswerStreamReady(thisRequest)){
                   if(thisRequest.webTorrentStream){
@@ -779,7 +793,11 @@ function FVSL(OakName){
             this.currentlyExpectedCallback = null;
             this.CallbackNumber = 0;
             this.webTorrentStream = null;
-            this.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
+            if(createReadStreamNumber === 1){
+               this.answerStream = new MyReadableStream({highWaterMark: 20000});
+            } else {
+               this.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
+            }        
             this.bytesInAnswerStream = 0;
             this.collectorStreamForWebtorrent = null;
             this.XHRConducted = false;
@@ -871,8 +889,13 @@ function FVSL(OakName){
             }
             thisRequest.XHRConducted = true;
             var reqStart = thisRequest.start;
-            var reqEnd = reqStart + XHR_REQUEST_SIZE;
-   
+            
+            if(thisRequest.createReadStreamCounter === 1){
+               var reqEnd = reqStart + 20000;
+            } else {
+               var reqEnd = reqStart + XHR_REQUEST_SIZE;
+            }
+            
             if(thisRequest.XHR_filesize > 0 && reqEnd > thisRequest.XHR_filesize){
                reqEnd = thisRequest.XHR_filesize;
             } else if (thisRequest.end >= 0 && reqEnd > thisRequest.end) {
@@ -910,6 +933,23 @@ function FVSL(OakName){
             var XHRDataHandler = function (chunk){
                bytesReceivedFromServer += chunk.length;
                ////console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + " received a chunk of length " + chunk.length);
+               if(thisRequest.start === 0){
+                  console.log("Size of firstBytesOfVideo in bytes: " + firstBytesOfVideo.length);
+                  firstBytesOfVideo = chunk;
+                  
+                  bytesTakenFromServer += chunk.length;
+                  thisRequest.answerStream.push(chunk);         
+                  var theCallbackFunction = thisRequest.currentlyExpectedCallback;
+                  thisRequest.currentlyExpectedCallback = null;
+                  thisRequest.answerStream.push(null);
+                  var res = thisRequest.answerStream;
+                  thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
+                  theCallbackFunction(null, res); 
+                  thisRequest.start = chunk.length;            
+                  thisRequest.oldStartServer = chunk.length;
+                  return;
+               }
+               
                if(thisRequest.noMoreData){
                   thisRequest.oldStartServer += chunk.length;
                   return;
