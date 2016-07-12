@@ -65,15 +65,15 @@ window.handleFiles = function (files){     // {XHR_server_URL : "localhost", XHR
       //console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
       console.log("In example.js video file got seeded.");
            
-      addToSharedArray();
+      addToSharedArray(streamInformationObject);
    });
 }
 
-function addToSharedArray(){
+function addToSharedArray(streamInformationObject){
    if(theSharedArray !== null){
       theSharedArray.insert(0, [streamInformationObject]);
    } else {
-      setTimeout(addToSharedArray,250);
+   setTimeout(function(){addToSharedArray(streamInformationObject);},250);
    }   
 }
 

@@ -464,9 +464,11 @@ function FVSL(OakName){
                      
                      // Every videostreamRequestHandler has to save the byte index that it expects next
                      thisRequest.oldStartWebTorrent = thisRequest.start;
+                     thisRequest.lastEndCreateReadStream = endCreateReadStream;
                      
                      // Data that is received from the WebTorrent readable gets immmediately pumped into a writeable stream called  collectorStreamForWebtorrent which processes the new data.
                      thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
+               
                   }
                }
             });
@@ -575,9 +577,8 @@ function FVSL(OakName){
                thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
                thisRequest.lastEndCreateReadStream = endCreateReadStream;
                thisRequest.oldStartWebTorrent = thisRequest.start;
-               
-               thisRequest.webTorrentStream.unpipe();
                thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
+  
             }
 
             
@@ -618,8 +619,6 @@ function FVSL(OakName){
                      thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
                      thisRequest.lastEndCreateReadStream = endCreateReadStream;
                      thisRequest.oldStartWebTorrent = thisRequest.start;
-                     
-                     thisRequest.webTorrentStream.unpipe();
                      thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
                   }
 
@@ -692,7 +691,7 @@ function FVSL(OakName){
                         for (var j = 0, length2 = videostreamRequestHandlers.length; j < length2; j++) {
                            var thisRequest = videostreamRequestHandlers[j];
                            console.log("createReadStream enlargement for request " + thisRequest.createReadStreamNumber);
-                           if(thisRequest.currentlyExpectedCallback !== null && thisRequest.start > thisRequest.lastEndCreateReadStream && thisRequest.start < SIZE_OF_VIDEO_FILE){
+                           if(theTorrent && thisRequest.currentlyExpectedCallback !== null && thisRequest.start > thisRequest.lastEndCreateReadStream && thisRequest.start < SIZE_OF_VIDEO_FILE){
                               var endCreateReadStream;
                               if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
                                  endCreateReadStream = webTorrentFile.length-1;
@@ -701,8 +700,9 @@ function FVSL(OakName){
                               }
                               thisRequest.webTorrentStream.unpipe();
                               thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
-                              thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
+                              thisRequest.lastEndCreateReadStream = endCreateReadStream;
                               thisRequest.oldStartWebTorrent = thisRequest.start;
+                              thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
                            }
                         }
                      }
@@ -819,6 +819,7 @@ function FVSL(OakName){
                   if(timeRanges.start(0) == 0 && timeRanges.end(0) == myVideo.duration){
                     // //console.log("In checkIfBufferFullEnough: callback should be called");
                      videoCompletelyLoadedByVideoPlayer = true;   // brauche da verschiende boolean werte
+                     console.log("My program thinks the wohjle video has been loaded into the video Player buffer");
                      if(callback){
                         if(end_streaming_when_video_loaded){
                            callback();
