@@ -24,7 +24,7 @@ function FVSL(OakName){
    var self = this;
    (function(){
       var peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);   
-      //console.log("Version: Shams        In OakStreaming constructor. this.name: " + OakName);
+      console.log("Version: Docs        In OakStreaming constructor. this.name: " + OakName);
       var OakName = OakName || "NoName FVSL instance";
       
       // Only methods should be part of the API, i.e. only methods should be publically accessible.
@@ -299,10 +299,10 @@ function FVSL(OakName){
          SIZE_OF_VIDEO_FILE = stream_information_object.size_of_video_file;
          //console.log("stream_information_object.size_of_video_file: "  + stream_information_object.size_of_video_file);
 
-         var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20;
+         var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 5;
          var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 12000000;
          
-         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 5;
+         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 2; // eigentlich 5
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
          var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 500000;
          
@@ -507,11 +507,11 @@ function FVSL(OakName){
             
             
             // This writeable Node.js stream will process every data that is received from sequential WebTorrent streams
-            var MyWriteableStream = function(highWaterMark){
+            thisRequest.MyWriteableStream = function(highWaterMark){
                readableStream.Writable.call(this, highWaterMark);
             };
-            util.inherits(MyWriteableStream, readableStream.Writable);
-            MyWriteableStream.prototype._write = function(chunk, encoding, done){
+            util.inherits(thisRequest.MyWriteableStream, readableStream.Writable);
+            thisRequest.MyWriteableStream.prototype._write = function(chunk, encoding, done){
                //console.log("A byte range request to the WebTorrent network received a chunk");
                ////console.log("MyWriteableStream _write is called");       
                if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
@@ -560,7 +560,7 @@ function FVSL(OakName){
                thisRequest.oldStartWebTorrent += chunk.length;
                done();
             };
-            thisRequest.collectorStreamForWebtorrent = new MyWriteableStream({highWaterMark: 10000});
+            thisRequest.collectorStreamForWebtorrent = new thisRequest.MyWriteableStream({highWaterMark: 16});
             videostreamRequestHandlers.push(thisRequest);
 
             if(webTorrentFile){ // Um Einhaltung des Upload limits kümmert sich doch chokeIfNecessary   && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
@@ -586,7 +586,6 @@ function FVSL(OakName){
                //console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + "    does a cb request");         
                if(thisRequest.end >= 0 && thisRequest.start >= thisRequest.end){
                   //console.log("called cb(null,null) from " + thisRequest.createReadStreamNumber);             
-                  // !!!!!!!!!!!!!!!!!!! Testeshalber rausgenommen     thisRequest.req = null;
                   if (thisRequest.req) {
                      thisRequest.req.destroy();
                      thisRequest.req = null;
@@ -684,7 +683,8 @@ function FVSL(OakName){
             }  
             console.log("frequentlyCheckIfNewCreateReadStreamNecessary gets executed");
             if(myVideo.duration){
-               var timeRanges = myVideo.buffered;          
+               console.log("In if(myvideo.duration)");
+               var timeRanges = myVideo.buffered;
                for (var i = 0, length = timeRanges.length; i < length; i++){
                   if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)+3) {
                      if (timeRanges.end(i) - myVideo.currentTime <= DOWNLOAD_FROM_P2P_TIME_RANGE) {
@@ -698,10 +698,12 @@ function FVSL(OakName){
                               } else {
                                  endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE;
                               }
+                              console.log("I set a new createReadstream for videostream request number " + thisRequest.createReadStreamNumber);
                               thisRequest.webTorrentStream.unpipe();
                               thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
                               thisRequest.lastEndCreateReadStream = endCreateReadStream;
                               thisRequest.oldStartWebTorrent = thisRequest.start;
+                              thisRequest.collectorStreamForWebtorrent = new thisRequest.MyWriteableStream({highWaterMark:16});
                               thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
                            }
                         }
@@ -789,6 +791,7 @@ function FVSL(OakName){
             this.req = null;
             this.lastEndCreateReadStream = -42;
             this.XHR_filesize = -42;
+            this.MyWriteableStream = null;
          }
 
          // This function frequently checks for every videostreamRequestHandler if there is enough data buffer to call the corresponding callback function with the buffered data
@@ -819,7 +822,7 @@ function FVSL(OakName){
                   if(timeRanges.start(0) == 0 && timeRanges.end(0) == myVideo.duration){
                     // //console.log("In checkIfBufferFullEnough: callback should be called");
                      videoCompletelyLoadedByVideoPlayer = true;   // brauche da verschiende boolean werte
-                     console.log("My program thinks the wohjle video has been loaded into the video Player buffer");
+                     console.log("My program thinks the wohle video has been loaded into the video Player buffer");
                      if(callback){
                         if(end_streaming_when_video_loaded){
                            callback();
