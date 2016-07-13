@@ -1,8 +1,8 @@
 var Y = require("yjs");
 require("y-array")(Y);
 require("y-memory")(Y);
-//require("y-websockets-client")(Y);
-require("y-webrtc")(Y);
+require("y-websockets-client")(Y);
+//require("y-webrtc")(Y);
 require("y-map")(Y);
 var OakStreaming = require('./OakStreaming');
 var myStreaming = new OakStreaming();
@@ -27,7 +27,7 @@ Y({
   connector: {
      //url : "https://yjs.dbis.rwth-aachen.de:5078",
     name: 'websockets-client',
-    name: 'webrtc',
+    //name: 'webrtc',
     room: 'WebTorrent-Streaming-yeah'
   },
   share: {

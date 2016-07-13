@@ -58,8 +58,10 @@ function bundle2(){
     .pipe(gulp.dest('./Jasmine_testsuites_build/'));
 }
 
+
+
 function bundle() {
-  return b.transform("babelify", {presets: ["es2015", "react"], blacklist: ['strict']}) //      , "es2016"
+  return b       //.transform("babelify", {presets: ["es2015"]}) //   , "react"   , "es2016"
    .bundle()
     // log errors if they happen
     .on('error', gutil.log.bind(gutil, 'Browserify Error'))
