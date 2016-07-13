@@ -1,8 +1,7 @@
 var Y = require("yjs");
 require("y-array")(Y);
 require("y-memory")(Y);
-//require("y-websockets-client")(Y);
-require("y-webrtc")(Y);
+require("y-websockets-client")(Y);
 require("y-map")(Y);
 var OakStreaming = require('./OakStreaming');
 var myStreaming = new OakStreaming();
@@ -18,14 +17,16 @@ document.querySelector('form').addEventListener('submit', function (ev) {
 });
 */
 
+console.log("THis is the WebRTC version of example_application 1");
+
 Y({
   db: {
     name: 'memory'
   },
   connector: {
      //url : "https://yjs.dbis.rwth-aachen.de:5078",
-    //name: 'websockets-client',
-    name: 'webrtc',
+    name: 'websockets-client',
+    //name: 'webrtc',
     room: 'WebTorrent-Streaming-yeah'
   },
   share: {
@@ -33,6 +34,7 @@ Y({
      myArray : 'Array'
   }
 }).then(function (y){
+   console.log("Yjs then gets executed");
   //theSharedMap = y.share.myMap;
   theSharedArray = y.share.myArray;
   /*
