@@ -15,6 +15,9 @@ var jasmineBrowser = require('gulp-jasmine-browser');
 var rename = require("gulp-rename");
 var cors = require('cors');
 var pump = require('pump');
+var babelify = require("babelify");
+
+
 
 /*
 gulp.task('html', function (){
@@ -26,6 +29,7 @@ gulp.task('html', function (){
 // add custom browserify options here
 var customOpts = {
   entries: ['./example_application.js'],
+  extensions: [".js", ".json", ".es6"],
   debug: true
 };
 var customOpts2 = {
@@ -55,13 +59,14 @@ function bundle2(){
 }
 
 function bundle() {
-  return b.bundle()
+  return b.transform("babelify", {presets: ["es2015", "react"], blacklist: ['strict']}) //      , "es2016"
+   .bundle()
     // log errors if they happen
     .on('error', gutil.log.bind(gutil, 'Browserify Error'))
     .pipe(source('example_application.js'))
     //.pipe(rename("example_application_temp.js")) own work
     // optional, remove if you don't need to buffer file contents
-    //.pipe(buffer())
+    .pipe(buffer())
     // optional, remove if you dont want sourcemaps
     //.pipe(sourcemaps.init({loadMaps: true})) // loads map from browserify file
     // Add transformation tasks to the pipeline here.
@@ -87,7 +92,7 @@ gulp.task('uglify_example_app.js', ['browserify2'], function(){
 });
 */
 
-gulp.task('uglify_example_app.js', ['browserify2'],  function (cb) {
+gulp.task('uglify_example_app.js', ['browserify'],  function (cb) {
   pump([
         gulp.src('./web/example_application.js'),
         uglify(),
@@ -100,7 +105,7 @@ gulp.task('uglify_example_app.js', ['browserify2'],  function (cb) {
 
 
 // Uglifies index.html
-gulp.task('minify_example_app.html', ['browserify2'], function(){
+gulp.task('minify_example_app.html', function(){  // ['browserify2']
    gulp.src('./example_application.html')
    .pipe(htmlmin({collapseWhitespace: true}))
    .on('error', errorLog)
@@ -182,5 +187,13 @@ gulp.task('watch', ['tests', 'connect'], function(){
 });
 
 
+gulp.task('watch_production', ['connect'], function(){
+   gulp.watch('./example_application.js', ['browserify', 'uglify_example_app.js']);
+   gulp.watch('./index.html', ['minify_example_app.html']);
+});
+
+
 // 'uglify_example_app.js',   schien zu funktionieren bis auf "Unexpected token: name (YArray)"
 gulp.task('default', ['browserify', 'connect', 'browserify2', 'minify_example_app.html', 'tests', 'watch']);
+
+gulp.task('production', ['browserify', 'connect', 'uglify_example_app.js', 'minify_example_app.html', 'watch_production']);
