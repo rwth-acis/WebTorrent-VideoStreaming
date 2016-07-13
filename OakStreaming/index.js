@@ -290,7 +290,7 @@ function FVSL(OakName){
          var deliveryByWebtorrent = stream_information_object.torrentFile ? true : false;
          var XHRServerURL = stream_information_object.XHR_server_URL || false;
          var XHR_PORT = stream_information_object.XHR_port || 80;
-         var pathToFileOnXHRServer = stream_information_object.path_to_file_on_XHR_server;      
+         var pathToFileOnXHRServer = stream_information_object.path_to_file_on_XHR_server;
          var hashValue = stream_information_object.hash_value;
          //var webTorrentTrackers = stream_information_object.webTorrent_trackers;
          var MAGNET_URI = stream_information_object.magnetURI;
@@ -302,17 +302,17 @@ function FVSL(OakName){
          var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20; // eigentlich 20
          var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 12000000;
          
-         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 4; // eigentlich 5
+         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 2; // eigentlich 5
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
          var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 500000;
          
          
-         var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 5000000; // in byte
+         var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 10000000; // in byte
          var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = stream_information_object.thresholdForReturningAnswerStream || 1000000; // in byte
-         var WATERMARK_HEIGHT_OF_ANSWERSTREAM = stream_information_object.watermarkHeightOfAnswerStream || 6000000;
+         var WATERMARK_HEIGHT_OF_ANSWERSTREAM = stream_information_object.watermarkHeightOfAnswerStream || 1000000;
          
-         var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = stream_information_object.checkIfBufferFullEnoughInterval || 2000; // in miliseconds
-         var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = stream_information_object.checkIfAnswerstreamReadyInterval || 250; // in miliseconds
+         var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = stream_information_object.checkIfBufferFullEnoughInterval || 500; // in miliseconds
+         var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = stream_information_object.checkIfAnswerstreamReadyInterval || 100; // in miliseconds
          var UPDATE_CHART_INTERVAL = stream_information_object.updateChartInterval || 1000; // in miliseconds
          var CHOKE_IF_NECESSARY_INTERVAL = stream_information_object.chokeIfNecessaryInterval || 500; // in miliseconds    Eigentlich ist 500 angebracht
          var CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL = stream_information_object.checkIfNewCreateReadstreamInterval || 2000 ;
@@ -487,11 +487,11 @@ function FVSL(OakName){
                return (new MultiStream(function (cb){cb(null, null);}));
             }
             inCritical = true;
-            /*
-            //console.log(consoleCounter++ + " called createreadStream ");
-            //console.log(consoleCounter++ + " opts.start: " + opts.start);
-            //console.log(consoleCounter++ + " opts.end: " + opts.end);
-            */
+            
+            console.log(consoleCounter++ + " called createreadStream ");
+            console.log(consoleCounter++ + " opts.start: " + opts.start);
+            console.log(consoleCounter++ + " opts.end: " + opts.end);
+            
             var thisRequest = new VideostreamRequestHandler(++globalvideostreamRequestNumber, opts, this);
            
             // Everytime I printed out the value of opts.end is was NaN.
@@ -603,8 +603,8 @@ function FVSL(OakName){
                thisRequest.currentlyExpectedCallback = cb;
                thisRequest.noMoreData = false;
                
-               if(thisRequest.start < firstBytesOfVideo.length -1000){ //&& thisRequest.webTorrentStream === null && thisRequest.bytesInAnswerStream == 0 &&  ){
-                  thisRequest.answerStream.push(firstBytesOfVideo.slice(thisRequest.start, chunk.length));
+               if(firstBytesOfVideo && (thisRequest.start < firstBytesOfVideo.length - 500) && thisRequest.createReadStreamNumber >= 5){ // Beim 10 mins big buck bunny video ist eben der erste lange createReadStream (und einzige?) createReadStream Nummer 5
+                  thisRequest.answerStream.push(firstBytesOfVideo.slice(thisRequest.start, firstBytesOfVideo.length));
                   thisRequest.start += firstBytesOfVideo.length - thisRequest.start;
                   var theCallbackFunction = thisRequest.currentlyExpectedCallback;
                   thisRequest.currentlyExpectedCallback = null;
@@ -612,6 +612,7 @@ function FVSL(OakName){
                   thisRequest.bytesInAnswerStream = 0;
                   var res = thisRequest.answerStream;
                   thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
+                  console.log("A CB has been answered with a part of firstBytesOfVideo for readstream number " + thisRequest.createReadStreamNumber + " with callback number " + thisRequest.CallbackNumber);
                   theCallbackFunction(null, res);
                   return;
                }
@@ -826,7 +827,7 @@ function FVSL(OakName){
          // The job of this function is to frequently check to things.
          // First, if the video is completely loaded.
          // Second, if less than DOWNLOAD_FROM_SERVER_TIME_RANGE seconds of video playback are buffered in advance.
-         function checkIfBufferFullEnough(){
+         function checkIfBufferFullEnough(justOnce){
             ////console.log("checkIfBufferFullEnough is called");
             if(videoCompletelyLoadedByVideoPlayer){
                return;
@@ -878,7 +879,9 @@ function FVSL(OakName){
                   }
                }
             }
-            setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
+            if(!justOnce){
+               setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
+            }
          }
 
          
@@ -890,8 +893,9 @@ function FVSL(OakName){
             thisRequest.XHRConducted = true;
             var reqStart = thisRequest.start;
             
-            if(thisRequest.createReadStreamCounter === 1){
-               var reqEnd = reqStart + 20000;
+            if(thisRequest.createReadStreamNumber === 1){
+               console.log("Because createReadStreamNumber === 1 only a 2000byte XHR is conducted");
+               var reqEnd = reqStart + 2000;
             } else {
                var reqEnd = reqStart + XHR_REQUEST_SIZE;
             }
@@ -934,7 +938,7 @@ function FVSL(OakName){
                bytesReceivedFromServer += chunk.length;
                ////console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + " received a chunk of length " + chunk.length);
                if(thisRequest.start === 0){
-                  console.log("Size of firstBytesOfVideo in bytes: " + firstBytesOfVideo.length);
+                  console.log("Size of firstBytesOfVideo in bytes: " + chunk.length);
                   firstBytesOfVideo = chunk;
                   
                   bytesTakenFromServer += chunk.length;
@@ -1038,6 +1042,7 @@ function FVSL(OakName){
                */
                   ////console.log("XHREnd from videostreamRequest number " + thisRequest.createReadStreamNumber + " thisRequest.currentlyExpectedCallback === null : " + (thisRequest.currentlyExpectedCallback === null));
                thisRequest.XHRConducted = false;
+               checkIfBufferFullEnough(true);
                   //ceckIfAnswerStreamReady(thisRequest);  // Unsicher ob es drinn bleiben soll
                //}                 
             };

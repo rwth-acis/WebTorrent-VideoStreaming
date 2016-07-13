@@ -1,7 +1,8 @@
 var Y = require("yjs");
 require("y-array")(Y);
 require("y-memory")(Y);
-require("y-websockets-client")(Y);
+//require("y-websockets-client")(Y);
+require("y-webrtc")(Y);
 require("y-map")(Y);
 var OakStreaming = require('./OakStreaming');
 var myStreaming = new OakStreaming();
@@ -23,7 +24,8 @@ Y({
   },
   connector: {
      //url : "https://yjs.dbis.rwth-aachen.de:5078",
-    name: 'websockets-client',
+    //name: 'websockets-client',
+    name: 'webrtc',
     room: 'WebTorrent-Streaming-yeah'
   },
   share: {
@@ -59,7 +61,7 @@ Y({
    });
 });
 
-window.handleFiles = function (files){     // {XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name} ,["wss://tracker.webtorrent.io"]   "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  XHR_server_URL : "localhost"     hash_value : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e", webTorrent_trackers: [["wss://tracker.webtorrent.io"]]}, 
+window.handleFiles = function (files){     // {XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name, webTorrent_trackers: [["wss://tracker.webtorrent.io"]]} , "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  XHR_server_URL : "localhost"     hash_value : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e", 
    streamSource = true;
    myStreaming.streamVideo(files[0], {webTorrent_trackers: [["wss://tracker.webtorrent.io"]], XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name}, function(streamInformationObject){
       //console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
