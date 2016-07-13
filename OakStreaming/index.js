@@ -8,6 +8,9 @@ var WebTorrent = require('webtorrent');
 var SimplePeer = require('simple-peer');
 //var parseTorrent = require('parse-torrent'); // unnötig
 //var createTorrent = require('create-torrent'); // unnötig
+var Pass = require('readable-stream').PassThrough;
+
+
 
 
 /**
@@ -333,7 +336,7 @@ function FVSL(OakName){
          var bytesTakenFromWebTorrent = 0;
          var bytesTakenFromServer = 0;
          var consoleCounter = 0; // This variable is only for debugging purposes
-         var firstBytesOfVideo = null;
+         var first2000BytesOfVideo = null;
          
       
          var myVideo = document.querySelector('video');
@@ -475,6 +478,7 @@ function FVSL(OakName){
             });
          }
          
+         first2000BytesOfVideo = new MyReadableStream({highWaterMark: 2000});
          
          
          var fileLikeObject = function (pathToFileOnXHRServer){
@@ -579,7 +583,6 @@ function FVSL(OakName){
                thisRequest.lastEndCreateReadStream = endCreateReadStream;
                thisRequest.oldStartWebTorrent = thisRequest.start;
                thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
-  
             }
 
             
@@ -936,21 +939,60 @@ function FVSL(OakName){
 
             var XHRDataHandler = function (chunk){
                bytesReceivedFromServer += chunk.length;
+               thisRequest.oldStartServer += chunk.length;
                ////console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + " received a chunk of length " + chunk.length);
-               if(thisRequest.start === 0){
+               
+               /*
+               a = spawn('echo', ['hi user']);
+               b = new pass;
+               c = new pass;
+
+               a.stdout.pipe(b);
+               a.stdout.pipe(c);
+
+               count = 0;
+               b.on('data', function(chunk) { count += chunk.length; });
+               b.on('end', function() {console.log(count); c.pipe(process.stdout);});
+               */
+               
+               if(numberBytesInfirst2000BytesOfVideo < 2000){
                   console.log("Size of firstBytesOfVideo in bytes: " + chunk.length);
-                  firstBytesOfVideo = chunk;
+                  numberBytesInfirst2000BytesOfVideo += chunk.length <= 2000 ? chunk.length : 2000;
+                  first2000BytesOfVideo.push(chunk.slice(numberBytesInfirst2000BytesOfVideo, 2000));
                   
-                  bytesTakenFromServer += chunk.length;
-                  thisRequest.answerStream.push(chunk);         
-                  var theCallbackFunction = thisRequest.currentlyExpectedCallback;
-                  thisRequest.currentlyExpectedCallback = null;
-                  thisRequest.answerStream.push(null);
-                  var res = thisRequest.answerStream;
-                  thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
-                  theCallbackFunction(null, res); 
-                  thisRequest.start = chunk.length;            
-                  thisRequest.oldStartServer = chunk.length;
+                  /*
+                  if(thisRequest.bytesInAnswerStream > 0){
+                     var theCallbackFunction = thisRequest.currentlyExpectedCallback;
+                     thisRequest.currentlyExpectedCallback = null;
+                     thisRequest.answerStream.push(null);
+                     thisRequest.bytesInAnswerStream = 0;
+                     var res = thisRequest.answerStream;
+                     thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
+                     theCallbackFunction(null, res);
+                  } 
+                  */
+                  
+                  if(!receivedBytesFromWebTorrent)  
+                     // TODO!!!
+                  
+                  
+                  
+                     if(numberBytesInfirst2000BytesOfVideo-thisRequest.start > 200){
+                        
+                        // Hier irgendwie first2000BytesOfVideo kopieren in returnStream
+                        var returnStream = new Pass();
+                        returnStream.on('end', function() {returnStream.push(null);});                  
+                        first2000BytesOfVideo.pipe(returnStream);     
+
+                        
+                        bytesTakenFromServer += numberBytesInfirst2000BytesOfVideo;  
+                        
+                        var theCallbackFunction = thisRequest.currentlyExpectedCallback;
+                        thisRequest.currentlyExpectedCallback = null;
+                        theCallbackFunction(null, returnStream);
+                        thisRequest.start += numberBytesInfirst2000BytesOfVideo;            
+                     }
+                  }
                   return;
                }
                
