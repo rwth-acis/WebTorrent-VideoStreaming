@@ -98,7 +98,7 @@ function FVSL(OakName){
       self.createSignalingDataResponse = function (signalingData, callback){
          var oakNumber = signalingData.oakNumber;
          //console.log("In createSignalingDataResponse. In the beginning oakNumber: " + oakNumber);
-         delete signalingData.oakNumber;
+         signalingData.oakNumber = undefined;
          
          var myPeer = new SimplePeer({initiator: false, tickle: false});
          var index = simplePeerCreationCounter;
@@ -124,7 +124,7 @@ function FVSL(OakName){
       self.processSignalingResponse = function (signalingData, callback){
          //console.log("In processSignalingResponse,  signalingData paramter: " + JSON.stringify(signalingData));
          var oakNumber = signalingData.oakNumber;
-         delete signalingData.oakNumber;
+         signalingData.oakNumber = undefined;
          //console.log("In processSignalingResponse,  oakNumber: " + oakNumber);
          //console.log("connectionsWaitingForSignalingData: " + connectionsWaitingForSignalingData);
          var self = this;
@@ -253,7 +253,7 @@ function FVSL(OakName){
                   if(destroyTorrent){
                      notificationsBecauseNewWires = 0;
                      torrent.destroy();
-                     delete webTorrentClient;
+                     webTorrentClient = undefined;
                   }
                   callback(stream_information_object, torrent);
                } else {
@@ -788,7 +788,7 @@ function FVSL(OakName){
                /* mache ich schon in einer anderen frequent methode
                if(videoCompletelyLoaded){
                   theTorrent.destroy();
-                  delete webTorrentClient;
+                  webTorrentClient = undefined;
                   endStreaming = true;
                   return;
                }
@@ -868,7 +868,7 @@ function FVSL(OakName){
                      if(end_streaming_when_video_loaded){
                         if(theTorrent){
                            theTorrent.destroy();
-                           delete webTorrentClient;
+                           webTorrentClient = null;
                         }
                         endStreaming = true;
                         return;                 

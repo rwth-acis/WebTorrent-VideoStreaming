@@ -16,6 +16,7 @@ var rename = require("gulp-rename");
 var cors = require('cors');
 var pump = require('pump');
 var babelify = require("babelify");
+var combiner = require('stream-combiner2');
 
 
 
@@ -29,7 +30,7 @@ gulp.task('html', function (){
 // add custom browserify options here
 var customOpts = {
   entries: ['./example_application.js'],
-  extensions: [".js", ".json", ".es6"],
+  extensions: [".js", ".json", ".es6", ".es", ".jsx"],
   debug: true
 };
 var customOpts2 = {
@@ -41,8 +42,6 @@ var opts2 = assign({}, watchify.args, customOpts2);
 var b = watchify(browserify(opts));
 var b2 = watchify(browserify(opts2));
 
-// add transformations here
-// i.e. b.transform(coffeeify);
 
 gulp.task('browserify', function(cb){bundle(); cb()}); // so you can run `gulp js` to build the file
 gulp.task('browserify2', [], function(cb){bundle2(); cb()});
@@ -60,19 +59,39 @@ function bundle2(){
 
 
 
+gulp.task('test', function() {
+  var combined = combiner.obj([
+    gulp.src('bootstrap/js/*.js'),
+    uglify(),
+    gulp.dest('public/bootstrap')
+  ]);
+
+  // any errors in the above streams will get caught
+  // by this listener, instead of being thrown:
+  combined.on('error', console.error.bind(console));
+
+  return combined;
+});
+
+
+
 function bundle() {
-  return b       //.transform("babelify", {presets: ["es2015"]}) //   , "react"   , "es2016"
+  return b.transform("babelify", {presets: ["es2015"]}) //   , "react"   , "es2016"
    .bundle()
+   //.on('error', errorLog)
     // log errors if they happen
-    .on('error', gutil.log.bind(gutil, 'Browserify Error'))
+    //.on('error', gutil.log.bind(gutil, 'Browserify Error'))
     .pipe(source('example_application.js'))
     //.pipe(rename("example_application_temp.js")) own work
     // optional, remove if you don't need to buffer file contents
     .pipe(buffer())
+
     // optional, remove if you dont want sourcemaps
-    //.pipe(sourcemaps.init({loadMaps: true})) // loads map from browserify file
+    .pipe(sourcemaps.init({loadMaps: true})) // loads map from browserify file
     // Add transformation tasks to the pipeline here.
-    //.pipe(sourcemaps.write('./')) // writes .map file
+   // .pipe(uglify().on('error', gutil.log))   //Das mit uglify lass ich jetzt da Kevin der Yjs Entwickler da auch nicht weiter weiß       {outSourceMap: true, inSourceMap: "example_application.js.map"}
+   // writes .map file
+    .pipe(sourcemaps.write('./'))
     .pipe(gulp.dest('./web/'));
 }
 
@@ -197,5 +216,5 @@ gulp.task('watch_production', ['connect'], function(){
 
 // 'uglify_example_app.js',   schien zu funktionieren bis auf "Unexpected token: name (YArray)"
 gulp.task('default', ['browserify', 'connect', 'browserify2', 'minify_example_app.html', 'tests', 'watch']);
-
-gulp.task('production', ['browserify', 'connect', 'uglify_example_app.js', 'minify_example_app.html', 'watch_production']);
+//'uglify_example_app.js',
+gulp.task('production', ['browserify', 'connect',  'minify_example_app.html', 'watch_production']);
