@@ -524,9 +524,9 @@ function FVSL(OakName){
             };
             util.inherits(thisRequest.MyWriteableStream, readableStream.Writable);
             thisRequest.MyWriteableStream.prototype._write = function(chunk, encoding, done){
+               //console.log("MyWriteableStream _write is called");   
                //console.log("A byte range request to the WebTorrent network received a chunk");
-               ////console.log("MyWriteableStream _write is called");       
-               thisRequest.oldStartWebTorrent += chunk.length;
+               
                if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
                   //////////console.log("MyWriteableStream _write: pushing received data in answerStream")
                   bytesTakenFromWebTorrent += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
@@ -568,7 +568,8 @@ function FVSL(OakName){
                         theCallbackFunction(null, res);
                      }
                   }
-               }
+               }    
+               thisRequest.oldStartWebTorrent += chunk.length;
                //ceckIfAnswerStreamReady(thisRequest);
                done();
             };
@@ -717,7 +718,7 @@ function FVSL(OakName){
                //console.log("In if(myvideo.duration)");
                var timeRanges = myVideo.buffered;
                for (var i = 0, length = timeRanges.length; i < length; i++){
-                  if (myVideo.currentTime >= timeRanges.start(i)-1 && myVideo.currentTime <= timeRanges.end(i)+3){
+                  if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)+1){ // war vorher timeRanges.end(i)+3
                      if (timeRanges.end(i) - myVideo.currentTime <= DOWNLOAD_FROM_P2P_TIME_RANGE) {
                         for (var j = 0, length2 = videostreamRequestHandlers.length; j < length2; j++) {
                            var thisRequest = videostreamRequestHandlers[j];
