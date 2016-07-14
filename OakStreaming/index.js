@@ -304,7 +304,7 @@ function FVSL(OakName){
 
          var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20; // eigentlich 20
          var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 10000000; // 12000000
-         
+         var MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST = stream_information_object.minimal_timespan_before_new_webtorrent_request || 3; // in seconds
          var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 2; // eigentlich 5
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
          var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 500000;
@@ -339,6 +339,7 @@ function FVSL(OakName){
          // var first2000BytesOfVideo = null; war zu verwirrend
          // var numberBytesInFirst2000BytesOfVideo = 0; war zu verwirrend
          var VideoCompletelyLoadedByWebtorrent = false;
+         var timeLastWebTorrentByteRangRequest = 0;
          
       
          var myVideo = document.querySelector('video');
@@ -446,7 +447,13 @@ function FVSL(OakName){
                   if(thisRequest.currentlyExpectedCallback !== null){
                      //console.log("In onTorrent nachträglich webtorrent stream erzeugen  thisRequest.start: " + thisRequest.start);
                      ////console.log("In onTorrent  webTorrentFile.length: " + webTorrentFile.length);
-                                 
+                      
+                     if(myVideo.duration){
+                        timeOfLastWebTorrentRequest = myVideo.currentTime;
+                     } else {
+                        timeOfLastWebTorrentRequest = 0;
+                     }
+               
                      var endCreateReadStream;
                      if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE > webTorrentFile.length-1){
                         endCreateReadStream = webTorrentFile.length-1;
@@ -580,7 +587,12 @@ function FVSL(OakName){
                //////////console.log("after new videostreamRequest creating a corresponding webtorrent stream");
                //////console.log("opts.start: " + opts.start);
                //////console.log("webTorrentFile.length: " + webTorrentFile.length);
-                
+               
+               if(myVideo.duration){
+                  timeOfLastWebTorrentRequest = myVideo.currentTime;
+               } else {
+                  timeOfLastWebTorrentRequest = 0;
+               }
                var endCreateReadStream;
                if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
                   endCreateReadStream = webTorrentFile.length-1;
@@ -715,7 +727,32 @@ function FVSL(OakName){
             }  
             //console.log("frequentlyCheckIfNewCreateReadStreamNecessary gets executed");
             if(myVideo.duration){
-               //console.log("In if(myvideo.duration)");
+               //console.log("In if(myvideo.duration)");                 
+               if(theTorrent && (myVideo.currentTime - timeOfLastWebTorrentRequest >= MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST)){
+                  for (var j = 0, length = videostreamRequestHandlers.length; j < length; j++) {
+                     var thisRequest = videostreamRequestHandlers[j];
+                     console.log("createReadStream enlargement for request " + thisRequest.createReadStreamNumber);
+                     if(thisRequest.currentlyExpectedCallback !== null && thisRequest.start > thisRequest.lastEndCreateReadStream && thisRequest.start < SIZE_OF_VIDEO_FILE){
+                        timeOfLastWebTorrentRequest = myVideo.currentTime;
+                        var endCreateReadStream;
+                        if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
+                           endCreateReadStream = webTorrentFile.length-1;
+                        } else {
+                           endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE;
+                        }
+                        console.log("I set a new createReadstream for videostream request number " + thisRequest.createReadStreamNumber);
+                        thisRequest.webTorrentStream.unpipe();
+                        thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
+                        thisRequest.lastEndCreateReadStream = endCreateReadStream;
+                        thisRequest.oldStartWebTorrent = thisRequest.start;
+                        thisRequest.collectorStreamForWebtorrent = new thisRequest.MyWriteableStream({highWaterMark:16});
+                        thisRequest.webTorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
+                     }
+                  }                                   
+               }
+            }        
+               
+               /* Alte Variante wo ich mir noch die Buffer Bereiche des video players angeschaut habe
                var timeRanges = myVideo.buffered;
                for (var i = 0, length = timeRanges.length; i < length; i++){
                   if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)+1){ // war vorher timeRanges.end(i)+3
@@ -743,6 +780,7 @@ function FVSL(OakName){
                   }
                }
             }
+            */
             setTimeout(frequentlyCheckIfNewCreateReadStreamNecessary, CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL);
          }   
          
