@@ -286,7 +286,7 @@ function FVSL(OakName){
        */
       function loadVideo(stream_information_object, callback, end_streaming_when_video_loaded){       
          //console.log("loadVideo is called");
-         ////console.log("option paramter:\n" + JSON.stringify(stream_information_object));
+         //console.log("option paramter:\n" + JSON.stringify(stream_information_object));
          
          // All these declared varibales until 'var self = this' are intended to be constants
          var deliveryByServer = (stream_information_object.path_to_file_on_XHR_server || stream_information_object.hash_value) ? true : false;
@@ -336,7 +336,8 @@ function FVSL(OakName){
          var bytesTakenFromWebTorrent = 0;
          var bytesTakenFromServer = 0;
          var consoleCounter = 0; // This variable is only for debugging purposes
-         var first2000BytesOfVideo = null;
+         // var first2000BytesOfVideo = null; war zu verwirrend
+         // var numberBytesInFirst2000BytesOfVideo = 0; war zu verwirrend
          
       
          var myVideo = document.querySelector('video');
@@ -598,27 +599,34 @@ function FVSL(OakName){
                   return cb(null, null);
                }
               
-               thisRequest.CallbackNumber++;
+               thisRequest.callbackNumber++;
                if(consoleCounter<20){
-                  ////////console.log(consoleCounter++ + "    " + thisRequest.CallbackNumber + ". call of function(cb) from " + videostreamRequestNumber);
+                  ////////console.log(consoleCounter++ + "    " + thisRequest.callbackNumber + ". call of function(cb) from " + videostreamRequestNumber);
                   //////////console.log(consoleCounter++ + "    start: " + thisRequest.start);
                }
                thisRequest.currentlyExpectedCallback = cb;
                thisRequest.noMoreData = false;
                
-               if(firstBytesOfVideo && (thisRequest.start < firstBytesOfVideo.length - 500) && thisRequest.createReadStreamNumber >= 5){ // Beim 10 mins big buck bunny video ist eben der erste lange createReadStream (und einzige?) createReadStream Nummer 5
+               /* Erstmal rausgenommen, da ich mich beim XHRHanlder part dazu irgendwie verhäddert habe
+               if(firstBytesOfVideo && (thisRequest.start < firstBytesOfVideo.length - 200) && thisRequest.createReadStreamNumber < 5){ // Beim 10 mins big buck bunny video ist eben der erste lange createReadStream (und einzige?) createReadStream Nummer 5
                   thisRequest.answerStream.push(firstBytesOfVideo.slice(thisRequest.start, firstBytesOfVideo.length));
+                  bytesTakenFromServer += firstBytesOfVideo.length - thisRequest.start;
                   thisRequest.start += firstBytesOfVideo.length - thisRequest.start;
                   var theCallbackFunction = thisRequest.currentlyExpectedCallback;
                   thisRequest.currentlyExpectedCallback = null;
                   thisRequest.answerStream.push(null);
                   thisRequest.bytesInAnswerStream = 0;
                   var res = thisRequest.answerStream;
-                  thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
-                  console.log("A CB has been answered with a part of firstBytesOfVideo for readstream number " + thisRequest.createReadStreamNumber + " with callback number " + thisRequest.CallbackNumber);
+                  if(thisRequest.createReadStreamNumber < 4){
+                     thisRequest.answerStream = new MyReadableStream({highWaterMark: 2000});
+                  } else {
+                     thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});                    
+                  }
+                  console.log("A CB has been answered with a part of firstBytesOfVideo for readstream number " + thisRequest.createReadStreamNumber + " with callback number " + thisRequest.callbackNumber);
                   theCallbackFunction(null, res);
                   return;
                }
+               */
             
                if(!ceckIfAnswerStreamReady(thisRequest)){
                   if(thisRequest.webTorrentStream){
@@ -749,8 +757,8 @@ function FVSL(OakName){
          function ceckIfAnswerStreamReady(thisRequest){
             //////////console.log("At the beginning of thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
             //////////console.log("In ceckIfAnswerStreamReady of videostreamRequest number " + thisRequest.createReadStreamNumber +  ". thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream + "     thisRequest.currentlyExpectedCallback: " + thisRequest.currentlyExpectedCallback);
-            if (thisRequest.currentlyExpectedCallback && ((thisRequest.bytesInAnswerStream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM) || (thisRequest.start >= SIZE_OF_VIDEO_FILE))){
-               //////////console.log("answerStream from videostream Request number " + thisRequest.createReadStreamNumber + " and CB number " + thisRequest.CallbackNumber + " gets returned");
+            if ((thisRequest.createReadStreamNumber < 4 && thisRequest.currentlyExpectedCallback) || (thisRequest.currentlyExpectedCallback && ((thisRequest.bytesInAnswerStream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM) || (thisRequest.start >= SIZE_OF_VIDEO_FILE)))){
+               //////////console.log("answerStream from videostream Request number " + thisRequest.createReadStreamNumber + " and CB number " + thisRequest.callbackNumber + " gets returned");
                // ////////console.log("Returing answerStream out of ceckIfAnswerStreamReady()");
                var theCallbackFunction = thisRequest.currentlyExpectedCallback;
                thisRequest.currentlyExpectedCallback = null;
@@ -795,10 +803,10 @@ function FVSL(OakName){
             this.oldStartWebTorrent = -42;
             this.oldStartServer = -42;
             this.currentlyExpectedCallback = null;
-            this.CallbackNumber = 0;
+            this.callbackNumber = 0;
             this.webTorrentStream = null;
-            if(createReadStreamNumber === 1){
-               this.answerStream = new MyReadableStream({highWaterMark: 20000});
+            if(createReadStreamNumber < 4){ // war vorher === 1 stat < 4
+               this.answerStream = new MyReadableStream({highWaterMark: 2000});
             } else {
                this.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
             }        
@@ -896,8 +904,8 @@ function FVSL(OakName){
             thisRequest.XHRConducted = true;
             var reqStart = thisRequest.start;
             
-            if(thisRequest.createReadStreamNumber === 1){
-               console.log("Because createReadStreamNumber === 1 only a 2000byte XHR is conducted");
+            if(thisRequest.createReadStreamNumber < 4){    // War vorher === 1     statt < 4
+               console.log("Because createReadStreamNumber <4 only a 2000byte XHR is conducted");
                var reqEnd = reqStart + 2000;
             } else {
                var reqEnd = reqStart + XHR_REQUEST_SIZE;
@@ -933,68 +941,53 @@ function FVSL(OakName){
             }
             */
             if (consoleCounter < 10000000) {
-               ////////////console.log(consoleCounter++ + "  videoStream " + thisRequest.createReadStreamNumber + "  CB number " + thisRequest.CallbackNumber + "    reqStart: " + reqStart);
-               ////////////console.log(consoleCounter++ + "  Multistream " + thisRequest.createReadStreamNumber + "   CB number " + thisRequest.CallbackNumber + "    reqEnd: " + reqEnd);
+               ////////////console.log(consoleCounter++ + "  videoStream " + thisRequest.createReadStreamNumber + "  CB number " + thisRequest.callbackNumber + "    reqStart: " + reqStart);
+               ////////////console.log(consoleCounter++ + "  Multistream " + thisRequest.createReadStreamNumber + "   CB number " + thisRequest.callbackNumber + "    reqEnd: " + reqEnd);
             }
 
             var XHRDataHandler = function (chunk){
                bytesReceivedFromServer += chunk.length;
-               thisRequest.oldStartServer += chunk.length;
+               // thisRequest.oldStartServer += chunk.length; War noch vom meinem 2000 byte buffer versuch
                ////console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + " received a chunk of length " + chunk.length);
                
-               /*
-               a = spawn('echo', ['hi user']);
-               b = new pass;
-               c = new pass;
-
-               a.stdout.pipe(b);
-               a.stdout.pipe(c);
-
-               count = 0;
-               b.on('data', function(chunk) { count += chunk.length; });
-               b.on('end', function() {console.log(count); c.pipe(process.stdout);});
-               */
                
-               if(numberBytesInfirst2000BytesOfVideo < 2000){
+               /* Erstmal rausgenommen weil ich darauf net klar kam. Etwas zu verwirrend
+               if(numberBytesInfirst2000BytesOfVideo < 2000 && thisRequest.start == numberBytesInfirst2000BytesOfVideo){
                   console.log("Size of firstBytesOfVideo in bytes: " + chunk.length);
-                  numberBytesInfirst2000BytesOfVideo += chunk.length <= 2000 ? chunk.length : 2000;
-                  first2000BytesOfVideo.push(chunk.slice(numberBytesInfirst2000BytesOfVideo, 2000));
-                  
-                  /*
-                  if(thisRequest.bytesInAnswerStream > 0){
-                     var theCallbackFunction = thisRequest.currentlyExpectedCallback;
-                     thisRequest.currentlyExpectedCallback = null;
-                     thisRequest.answerStream.push(null);
-                     thisRequest.bytesInAnswerStream = 0;
-                     var res = thisRequest.answerStream;
-                     thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
-                     theCallbackFunction(null, res);
-                  } 
-                  */
-                  
-                  if(!receivedBytesFromWebTorrent)  
-                     // TODO!!!
-                  
-                  
-                  
-                     if(numberBytesInfirst2000BytesOfVideo-thisRequest.start > 200){
-                        
-                        // Hier irgendwie first2000BytesOfVideo kopieren in returnStream
-                        var returnStream = new Pass();
-                        returnStream.on('end', function() {returnStream.push(null);});                  
-                        first2000BytesOfVideo.pipe(returnStream);     
-
-                        
-                        bytesTakenFromServer += numberBytesInfirst2000BytesOfVideo;  
-                        
+                  numberBytesInFirst2000BytesOfVideo += chunk.length; //<= (2000-numberBytesInFirst2000BytesOfVideo) ? chunk.length : 2000;
+                  first2000BytesOfVideo = Buffer.concat([first2000BytesOfVideo, chunk]); // chunk.slice(0, 2000-numberBytesInFirst2000BytesOfVideo)
+               }
+               if(thisRequest.currentlyExpectedCallback){
+                  if(thisRequest.createReadStreamNumber<5 && thisRequest.callbackNumber <5){
+                     if(thisRequest.bytesInAnswerStream > 0){
+                        thisRequest.answerStream.push(chunk);
+                        thisRequest.start += chunk.length;
+                        thisRequest.bytesTakenFromServer += chunk.length;
                         var theCallbackFunction = thisRequest.currentlyExpectedCallback;
                         thisRequest.currentlyExpectedCallback = null;
-                        theCallbackFunction(null, returnStream);
-                        thisRequest.start += numberBytesInfirst2000BytesOfVideo;            
+                        thisRequest.answerStream.push(null);
+                        thisRequest.bytesInAnswerStream = 0;
+                        var res = thisRequest.answerStream;
+                        if(thisRequest.createReadStreamNumber <4){
+                           thisRequest.answerStream = new MyReadableStream({highWaterMark: 2000});
+                        } else {
+                           thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});                              
+                        }
+                        theCallbackFunction(null, res);
+                     } else {
+                        var returnStream = new MyReadableStream(numberBytesInfirst2000BytesOfVideo - thisRequest.start);
+                        returnStream.push(first2000BytesOfVideo.slice(this.start, numberBytesInFirst2000BytesOfVideo);
+                        returnStream.push(null);
+                        bytesTakenFromServer += numberBytesInfirst2000BytesOfVideo-thisRequest.start;  
+                        thisRequest.start += numberBytesInfirst2000BytesOfVideo;
+                        var theCallbackFunction = thisRequest.currentlyExpectedCallback;
+                        thisRequest.currentlyExpectedCallback = null;
+                        theCallbackFunction(null, returnStream);    
                      }
                   }
-                  return;
                }
+               */        
+ 
                
                if(thisRequest.noMoreData){
                   thisRequest.oldStartServer += chunk.length;
@@ -1050,6 +1043,32 @@ function FVSL(OakName){
                if (consoleCounter < 1000000000000){
                   ////////////console.log("XHREnd from videostreamRequest number " + thisRequest.createReadStreamNumber);
                }
+               
+               
+               if(thisRequest.createReadStreamNumber < 4 && thisRequest.currentlyExpectedCallback){
+                  var theCallbackFunction = thisRequest.currentlyExpectedCallback;
+                  thisRequest.currentlyExpectedCallback = null;
+                  thisRequest.answerStream.push(null);
+                  thisRequest.bytesInAnswerStream = 0;
+                  var res = thisRequest.answerStream;
+                  if(thisRequest.createReadStreamNumber <3){
+                     thisRequest.answerStream = new MyReadableStream({highWaterMark: 2000});
+                  } else {
+                     thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});                              
+                  }
+                  theCallbackFunction(null, res);
+                  
+                  thisRequest.XHRConducted = false;
+                  return;
+               }
+               
+               
+               
+               
+               
+               
+               
+               
                /* Want to solve example_application.js:14013 Uncaught Error: Data too short   Daher das hier auskommentiert
                if(thisRequest.bytesInAnswerStream > 0 && thisRequest.currentlyExpectedCallback !== null){
                   thisRequest.answerStream.push(null);
@@ -1117,7 +1136,7 @@ function FVSL(OakName){
                   
                }
                ////////////console.log("I return currentlyExpectedCallback with http response stream");
-               //////////////console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thisCallbackNumber);
+               //////////////console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thiscallbackNumber);
                res.on('end', XHREnd);
                res.on('data', XHRDataHandler);
             });
