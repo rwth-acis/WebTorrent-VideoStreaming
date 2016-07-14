@@ -338,6 +338,7 @@ function FVSL(OakName){
          var consoleCounter = 0; // This variable is only for debugging purposes
          // var first2000BytesOfVideo = null; war zu verwirrend
          // var numberBytesInFirst2000BytesOfVideo = 0; war zu verwirrend
+         var VideoCompletelyLoadedByWebtorrent = false;
          
       
          var myVideo = document.querySelector('video');
@@ -375,6 +376,10 @@ function FVSL(OakName){
                //console.log("webTorrentClient.add   torrent meta data ready");         
                theTorrent = torrent;
                webTorrentFile = torrent.files[0];
+                     
+               torrent.on('done', function () {
+                  VideoCompletelyLoadedByWebtorrent = true;
+               });
                
                // Peers which used the offered methods to manually connect to this FVSL instance
                // before a torrent file was loaded are added now to the set of peers that are used for video data exchange.
@@ -479,7 +484,7 @@ function FVSL(OakName){
             });
          }
          
-         first2000BytesOfVideo = new MyReadableStream({highWaterMark: 2000});
+         // first2000BytesOfVideo = new MyReadableStream({highWaterMark: 2000});    hatte ich ja rausgenommen weil verfangen
          
          
          var fileLikeObject = function (pathToFileOnXHRServer){
@@ -588,7 +593,7 @@ function FVSL(OakName){
 
             
             function factoryFunctionForStreamCreation(cb){
-               //console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + "    does a cb request");         
+               console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + "    does a cb request");         
                if(thisRequest.end >= 0 && thisRequest.start >= thisRequest.end){
                   //console.log("called cb(null,null) from " + thisRequest.createReadStreamNumber);             
                   if (thisRequest.req) {
@@ -648,7 +653,7 @@ function FVSL(OakName){
                   }
 
                   if(deliveryByServer && inCritical && !thisRequest.XHRConducted){
-                     if(!theTorrent || theTorrent.progress <1){
+                     if(!webTorrentFile || !VideoCompletelyLoadedByWebtorrent){
                         conductXHR(thisRequest);                      
                      }
                   }
@@ -666,7 +671,7 @@ function FVSL(OakName){
                   //console.log("Deconstructor of " + thisRequest.createReadStreamNumber + " has already been called");
                   return;
                }
-               //console.log("Deconstructor of " + thisRequest.createReadStreamNumber + " is called");
+               console.log("Deconstructor of " + thisRequest.createReadStreamNumber + " is called");
                //console.log("In deconstructor call thisRequest.start has value: " + thisRequest.start);
                //console.log("In deconstructor call thisRequest.end has value: " + thisRequest.end);
                //console.log("In deconstructor call thisRequest.currentlyExpectedCallback === null: " + (thisRequest.currentlyExpectedCallback === null));
@@ -757,7 +762,7 @@ function FVSL(OakName){
          function ceckIfAnswerStreamReady(thisRequest){
             //////////console.log("At the beginning of thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
             //////////console.log("In ceckIfAnswerStreamReady of videostreamRequest number " + thisRequest.createReadStreamNumber +  ". thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream + "     thisRequest.currentlyExpectedCallback: " + thisRequest.currentlyExpectedCallback);
-            if ((thisRequest.createReadStreamNumber < 4 && thisRequest.currentlyExpectedCallback) || (thisRequest.currentlyExpectedCallback && ((thisRequest.bytesInAnswerStream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM) || (thisRequest.start >= SIZE_OF_VIDEO_FILE)))){
+            if ((thisRequest.createReadStreamNumber < 4 && thisRequest.currentlyExpectedCallback && thisRequest.bytesInAnswerStream >= 2000) || (thisRequest.currentlyExpectedCallback && ((thisRequest.bytesInAnswerStream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM) || (thisRequest.start >= SIZE_OF_VIDEO_FILE)))){
                //////////console.log("answerStream from videostream Request number " + thisRequest.createReadStreamNumber + " and CB number " + thisRequest.callbackNumber + " gets returned");
                // ////////console.log("Returing answerStream out of ceckIfAnswerStreamReady()");
                var theCallbackFunction = thisRequest.currentlyExpectedCallback;
@@ -796,7 +801,7 @@ function FVSL(OakName){
             setTimeout(chokeIfNecessary, CHOKE_IF_NECESSARY_INTERVAL);
          }
          
-         function VideostreamRequestHandler(createReadStreamNumber, opts, self) {
+         function VideostreamRequestHandler(createReadStreamNumber, opts, self){
             this.createReadStreamNumber = createReadStreamNumber;
             this.opts = opts;
             this.start = opts.start || 0;
@@ -884,7 +889,7 @@ function FVSL(OakName){
                }
                if (deliveryByServer && inCritical) {
                   for (var j = 0, length = videostreamRequestHandlers.length; j < length; j++) {
-                     if (videostreamRequestHandlers[j].currentlyExpectedCallback !== null && videostreamRequestHandlers[j].XHRConducted === false) {
+                     if ((!webTorrentFile || !VideoCompletelyLoadedByWebtorrent) && videostreamRequestHandlers[j].currentlyExpectedCallback !== null && videostreamRequestHandlers[j].XHRConducted === false) {
                         conductXHR(videostreamRequestHandlers[j]);
                      }
                   }
@@ -898,6 +903,7 @@ function FVSL(OakName){
          
          // This function conductes a XHR reuqest for the videostreamRequestHandler which is handed over to the function as its first and only paramter.
          function conductXHR(thisRequest) {
+            console.log("In conductXHR");
             if(thisRequest.currentlyExpectedCallback === null){
                return;
             }
