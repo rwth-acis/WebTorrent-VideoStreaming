@@ -303,22 +303,22 @@ function FVSL(OakName){
          //console.log("stream_information_object.size_of_video_file: "  + stream_information_object.size_of_video_file);
 
          var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20; // eigentlich 20
-         var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 12000000;
+         var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 10000000; // 12000000
          
          var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 2; // eigentlich 5
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
          var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 500000;
          
          
-         var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 2000000; // in byte
-         var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = stream_information_object.thresholdForReturningAnswerStream || 1000000; // in byte
-         var WATERMARK_HEIGHT_OF_ANSWERSTREAM = stream_information_object.watermarkHeightOfAnswerStream || 1999999;
+         var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 5000000; // in byte    2000000
+         var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = stream_information_object.thresholdForReturningAnswerStream || 2000000; // in byte  1000000
+         var WATERMARK_HEIGHT_OF_ANSWERSTREAM = stream_information_object.watermarkHeightOfAnswerStream || 5000000; // in byte 1999999
          
          var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = stream_information_object.checkIfBufferFullEnoughInterval || 500; // in miliseconds
          var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = stream_information_object.checkIfAnswerstreamReadyInterval || 200; // in miliseconds
          var UPDATE_CHART_INTERVAL = stream_information_object.updateChartInterval || 1000; // in miliseconds
          var CHOKE_IF_NECESSARY_INTERVAL = stream_information_object.chokeIfNecessaryInterval || 500; // in miliseconds    Eigentlich ist 500 angebracht
-         var CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL = stream_information_object.checkIfNewCreateReadstreamInterval || 2000 ;
+         var CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL = stream_information_object.checkIfNewCreateReadstreamInterval || 1000 ; // 2000
          
          
          // From here on most newly declared variables are not indeted to function as constants
@@ -498,12 +498,13 @@ function FVSL(OakName){
             }
             inCritical = true;
             
-            console.log(consoleCounter++ + " called createreadStream ");
-            console.log(consoleCounter++ + " opts.start: " + opts.start);
-            console.log(consoleCounter++ + " opts.end: " + opts.end);
-            
             var thisRequest = new VideostreamRequestHandler(++globalvideostreamRequestNumber, opts, this);
            
+            console.log(" called createreadStream: createRequestNumber: " + thisRequest.createReadStreamNumber);
+            console.log("opts.start: " + opts.start);
+            console.log(" opts.end: " + opts.end);
+            
+            
             // Everytime I printed out the value of opts.end is was NaN.
             // I suppose that should be interpreted as "till the end of the file"
             // Of course, our returned stream should, nevertheless, not buffer a giant amount of video data in advance but instead retrieve and put out chunks of video data on-demand
@@ -525,12 +526,14 @@ function FVSL(OakName){
             thisRequest.MyWriteableStream.prototype._write = function(chunk, encoding, done){
                //console.log("A byte range request to the WebTorrent network received a chunk");
                ////console.log("MyWriteableStream _write is called");       
+               thisRequest.oldStartWebTorrent += chunk.length;
                if(thisRequest.start-thisRequest.oldStartWebTorrent < chunk.length){
                   //////////console.log("MyWriteableStream _write: pushing received data in answerStream")
                   bytesTakenFromWebTorrent += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
                   var streamHasMemoryLeft = thisRequest.answerStream.push(chunk.slice(thisRequest.start-thisRequest.oldStartWebTorrent, chunk.length));
                   thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
-                  
+                  thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
+                                                
                   if(streamHasMemoryLeft){            
                      if(thisRequest.currentlyExpectedCallback !== null && thisRequest.start >= thisRequest.end){
                         var theCallbackFunction = thisRequest.currentlyExpectedCallback;
@@ -541,7 +544,7 @@ function FVSL(OakName){
                         thisRequest.answerStream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
                         ////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                         if (thisRequest.webTorrentStream){
-                           //thisRequest.webTorrentStream.pause();   11.07.16  more a try
+                           //thisRequest.webTorrentStream.pause();   11.07.16  more a try   Sollte höchst wahrscheinlich aus code raus
                         }
                         theCallbackFunction(null, res);
                      }
@@ -565,10 +568,8 @@ function FVSL(OakName){
                         theCallbackFunction(null, res);
                      }
                   }
-                  thisRequest.start += chunk.length - (thisRequest.start-thisRequest.oldStartWebTorrent);
                }
                //ceckIfAnswerStreamReady(thisRequest);
-               thisRequest.oldStartWebTorrent += chunk.length;
                done();
             };
             thisRequest.collectorStreamForWebtorrent = new thisRequest.MyWriteableStream({highWaterMark: 16});
@@ -605,10 +606,9 @@ function FVSL(OakName){
                }
               
                thisRequest.callbackNumber++;
-               if(consoleCounter<20){
-                  ////////console.log(consoleCounter++ + "    " + thisRequest.callbackNumber + ". call of function(cb) from " + videostreamRequestNumber);
-                  //////////console.log(consoleCounter++ + "    start: " + thisRequest.start);
-               }
+                  ////////console.log(thisRequest.callbackNumber + ". call of function(cb) from " + videostreamRequestNumber);
+                  //////////console.log(start: " + thisRequest.start);
+
                thisRequest.currentlyExpectedCallback = cb;
                thisRequest.noMoreData = false;
                
@@ -664,7 +664,7 @@ function FVSL(OakName){
             var multi = new MultiStream(factoryFunctionForStreamCreation);
             
             var deconstructorAlreadyCalled = false;
-            //////////console.log(consoleCounter++ + " terminate createReadStream");
+            //////////console.log(" terminate createReadStream");
             var destroy = multi.destroy;
             multi.destroy = function(){
                if(deconstructorAlreadyCalled){
@@ -712,12 +712,12 @@ function FVSL(OakName){
             if(videoCompletelyLoadedByVideoPlayer){
                return;
             }  
-            console.log("frequentlyCheckIfNewCreateReadStreamNecessary gets executed");
+            //console.log("frequentlyCheckIfNewCreateReadStreamNecessary gets executed");
             if(myVideo.duration){
-               console.log("In if(myvideo.duration)");
+               //console.log("In if(myvideo.duration)");
                var timeRanges = myVideo.buffered;
                for (var i = 0, length = timeRanges.length; i < length; i++){
-                  if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i)+3) {
+                  if (myVideo.currentTime >= timeRanges.start(i)-1 && myVideo.currentTime <= timeRanges.end(i)+3){
                      if (timeRanges.end(i) - myVideo.currentTime <= DOWNLOAD_FROM_P2P_TIME_RANGE) {
                         for (var j = 0, length2 = videostreamRequestHandlers.length; j < length2; j++) {
                            var thisRequest = videostreamRequestHandlers[j];
