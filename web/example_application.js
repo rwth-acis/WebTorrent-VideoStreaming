@@ -328,13 +328,24 @@ function FVSL(OakName) {
             play = true;
             if (canplay) {
                startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
+               timePlaybackWasStalled += startUpTime;
             }
          };
          myVideo.oncanplay = function () {
             canplay = true;
             if (play) {
                startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
+               timePlaybackWasStalled += startUpTime;
             }
+         };
+         var lastTimeWhenVideoHolded = -42;
+         myVideo.onwaiting = function () {
+            console.log("Video is holded at " + Date.now() - timeLoadVideoMethodWasCalled + " miliseconds after loadVideo has been called.");
+            lastTimeWhenVideoHolded = Date.now();
+         };
+         myVideo.onplaying = function () {
+            console.log("Video is playing again after " + timePlaybackWasStalled + " miliseconds.");
+            timePlaybackWasStalled += Date.now() - lastTimeWhenVideoHolded;
          };
          myVideo.onended = function () {
             console.log("!!!!!!! Test report !!!!!!!");
@@ -364,16 +375,6 @@ function FVSL(OakName) {
             console.log(" ");
             console.log(" ");
          };
-
-         /*
-         // For the technical evaluation
-         var timeReceiptStreamInformationObject = -42;
-         var timeLoadVideoMethodWasCalled = -42;
-         var timePlaybackWasStalled = 0;
-         var startUpTime = 0;
-         var timeTillTorrentOnDone = -42;
-         var startPlayingOffset = Math.floor(Math.random() * 10) + 1;  
-         */
 
          // All these declared varibales until 'var self = this' are intended to be constants
          var deliveryByServer = stream_information_object.path_to_file_on_XHR_server || stream_information_object.hash_value ? true : false;
@@ -457,7 +458,7 @@ function FVSL(OakName) {
 
                torrent.on('done', function () {
                   VideoCompletelyLoadedByWebtorrent = true;
-                  timeTillTorrentOnDone = new Date() - timeReceiptStreamInformationObject; // For technical evaluation
+                  timeTillTorrentOnDone = Date.now() - timeLoadVideoMethodWasCalled; // For technical evaluation
                });
 
                // Peers which used the offered methods to manually connect to this FVSL instance
@@ -1325,7 +1326,7 @@ Y({
       name: 'memory'
    },
    connector: {
-      //url : "https://yjs.dbis.rwth-aachen.de:5078",
+      url: "http://localhost:8897", // "https://yjs.dbis.rwth-aachen.de:5078",
       //name: 'websockets-client',
       name: 'webrtc',
       room: 'WebTorrent-Streaming-yeah'

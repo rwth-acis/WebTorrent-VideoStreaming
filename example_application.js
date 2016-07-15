@@ -27,7 +27,7 @@ Y({
     name: 'memory'
   },
   connector: {
-     //url : "https://yjs.dbis.rwth-aachen.de:5078",
+    url : "http://localhost:8897",  // "https://yjs.dbis.rwth-aachen.de:5078",
     //name: 'websockets-client',
     name: 'webrtc',
     room: 'WebTorrent-Streaming-yeah'
