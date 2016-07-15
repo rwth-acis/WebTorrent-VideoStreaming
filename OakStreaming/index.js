@@ -46,12 +46,14 @@ function FVSL(OakName){
       var timePlaybackWasStalled = 0;
       var startUpTime = 0;
       var timeTillTorrentOnDone = -42;
-      var startPlayingOffset = Math.floor(Math.random() * 10) + 1;  
+      var startPlayingOffset = Math.floor(Math.random() * 1000*10) + 1;  // in miliseconds
       
       
       self.streamVideo = streamVideo;
       self.loadVideo = loadVideo;
       self.forTesting_connectedToNewWebTorrentPeer = null;
+      
+      self.loadVideo_technical_evaluation = loadVideo_technical_evaluation;  // For Technical Evaluation
                 
       self.get_number_of_bytes_downloaded_from_server = function(){
          return bytesReceivedFromServer;
@@ -185,7 +187,7 @@ function FVSL(OakName){
              
          if(video_file){
             var seedingOptions = {
-               name: "OakStreaming_Torrent"
+               name: video_file.name + " - (Created by an OakStreaming_Client)"
             };
             if(options.webTorrent_trackers){
                seedingOptions.announceList = options.webTorrent_trackers;
@@ -282,17 +284,20 @@ function FVSL(OakName){
          }  
       }
 
-      
-      //A Wrapper for the Technical Evaluation
-      function loadVideo_technical_evaluation(stream_information_object, callback, end_streaming_when_video_loaded){
-         timeReceiptStreamInformationObject = Date.now();
+      function waitStartPlayingOffset(stream_information_object, callback, end_streaming_when_video_loaded){
          if(Date.now() - timeReceiptStreamInformationObject >= startPlayingOffset){
             console.log("Video gets loaded");
             timeLoadVideoMethodWasCalled = Date.now();
-            self.loadVideo(theSharedArray.get(0), function(){console.log("loadVideo callback: All video data has been received");});  
+            self.loadVideo(stream_information_object, callback, end_streaming_when_video_loaded);  
          } else {
-            setTimeout(function(){loadVideo_technical_evaluation(stream_information_object, callback, end_streaming_when_video_loaded);},10);
+            setTimeout(function(){waitStartPlayingOffset(stream_information_object, callback, end_streaming_when_video_loaded);},10);
          }
+      }
+      
+      //A Wrapper for the Technical Evaluation
+      function loadVideo_technical_evaluation(stream_information_object, callback, end_streaming_when_video_loaded){
+         timeReceiptStreamInformationObject = Date.now();      
+         waitStartPlayingOffset(stream_information_object, callback, end_streaming_when_video_loaded);      
       }
 
 
@@ -342,14 +347,16 @@ function FVSL(OakName){
          };
          var lastTimeWhenVideoHolded = -42;
          myVideo.onwaiting = function() {
-            console.log("Video is holded at " + Date.now() - timeLoadVideoMethodWasCalled + " miliseconds after loadVideo has been called.");
+            console.log("Video is holded at " + (Date.now() - timeLoadVideoMethodWasCalled) + " miliseconds after loadVideo has been called.");
             lastTimeWhenVideoHolded = Date.now();
          };
          myVideo.onplaying = function() {
-            console.log("Video is playing again after " + timePlaybackWasStalled + " miliseconds.");
+            console.log("Video is playing again after " + (Date.now() - lastTimeWhenVideoHolded) + " miliseconds.");
             timePlaybackWasStalled += Date.now() - lastTimeWhenVideoHolded;
          };
          myVideo.onended = function(){
+            console.log(" ");
+            console.log(" ");
             console.log("!!!!!!! Test report !!!!!!!");
             console.log(" ");
             console.log("This is the used paramter setting:");
@@ -362,7 +369,7 @@ function FVSL(OakName){
             console.log("DOWNLOAD_FROM_SERVER_TIME_RANGE: " + DOWNLOAD_FROM_SERVER_TIME_RANGE);
             console.log("UPLOAD_LIMIT: " + UPLOAD_LIMIT);
             console.log(" ");
-            console.log("This are the test results (time unit is miliseconds:");
+            console.log("This are the test results (time unit is miliseconds):");
             console.log("timePlaybackWasStalled: " + timePlaybackWasStalled);
             console.log("start-up Time: " + startUpTime);
             console.log("bytesReceivedFromServer: " + bytesReceivedFromServer);
