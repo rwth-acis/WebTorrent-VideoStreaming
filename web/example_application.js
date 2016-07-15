@@ -281,10 +281,10 @@ function FVSL(OakName) {
 
       //A Wrapper for the Technical Evaluation
       function loadVideo_technical_evaluation(stream_information_object, callback, end_streaming_when_video_loaded) {
-         timeReceiptStreamInformationObject = new Date();
-         if (new Date() - timeReceiptStreamInformationObject >= startPlayingOffset) {
+         timeReceiptStreamInformationObject = Date.now();
+         if (Date.now() - timeReceiptStreamInformationObject >= startPlayingOffset) {
             console.log("Video gets loaded");
-            timeLoadVideoMethodWasCalled = new Date();
+            timeLoadVideoMethodWasCalled = Date.now();
             self.loadVideo(theSharedArray.get(0), function () {
                console.log("loadVideo callback: All video data has been received");
             });
@@ -309,12 +309,33 @@ function FVSL(OakName) {
          //console.log("loadVideo is called");
          //console.log("option paramter:\n" + JSON.stringify(stream_information_object));
 
-         // This block is all solely for the Technical Evaluation               
+         // This block is all solely for the Technical Evaluation   
 
+         /*
+         var timeLoadVideoMethodWasCalled = -42;
+         var timePlaybackWasStalled = 0;
+         var startUpTime = 0;
+         var timeTillTorrentOnDone = -42;
+         var startPlayingOffset = Math.floor(Math.random() * 10) + 1;  
+         */
          var myVideo = document.getElementById("myVideo");
          myVideo.addEventListener('error', function (err) {
             console.error(myVideo.error);
          });
+         var play = false;
+         var canplay = false;
+         myVideo.onplay = function () {
+            play = true;
+            if (canplay) {
+               startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
+            }
+         };
+         myVideo.oncanplay = function () {
+            canplay = true;
+            if (play) {
+               startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
+            }
+         };
          myVideo.onended = function () {
             console.log("!!!!!!! Test report !!!!!!!");
             console.log(" ");
@@ -328,7 +349,7 @@ function FVSL(OakName) {
             console.log("DOWNLOAD_FROM_SERVER_TIME_RANGE: " + DOWNLOAD_FROM_SERVER_TIME_RANGE);
             console.log("UPLOAD_LIMIT: " + UPLOAD_LIMIT);
             console.log(" ");
-            console.log("This are the test results:");
+            console.log("This are the test results (time unit is miliseconds:");
             console.log("timePlaybackWasStalled: " + timePlaybackWasStalled);
             console.log("start-up Time: " + startUpTime);
             console.log("bytesReceivedFromServer: " + bytesReceivedFromServer);

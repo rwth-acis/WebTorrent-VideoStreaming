@@ -285,10 +285,10 @@ function FVSL(OakName){
       
       //A Wrapper for the Technical Evaluation
       function loadVideo_technical_evaluation(stream_information_object, callback, end_streaming_when_video_loaded){
-         timeReceiptStreamInformationObject = new Date();
-         if((new Date())-timeReceiptStreamInformationObject >= startPlayingOffset){
+         timeReceiptStreamInformationObject = Date.now();
+         if(Date.now() - timeReceiptStreamInformationObject >= startPlayingOffset){
             console.log("Video gets loaded");
-            timeLoadVideoMethodWasCalled = new Date();
+            timeLoadVideoMethodWasCalled = Date.now();
             self.loadVideo(theSharedArray.get(0), function(){console.log("loadVideo callback: All video data has been received");});  
          } else {
             setTimeout(function(){loadVideo_technical_evaluation(stream_information_object, callback, end_streaming_when_video_loaded);},10);
@@ -324,9 +324,20 @@ function FVSL(OakName){
          myVideo.addEventListener('error', function (err){
             console.error(myVideo.error);
          });
-         myVideo.addEventListener('error', function (err){
-            console.error(myVideo.error);
-         });
+         var play = false;
+         var canplay = false;
+         myVideo.onplay = function(){
+            play = true;
+            if(canplay){
+               startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
+            }
+         };
+         myVideo.oncanplay = function(){
+            canplay = true;
+            if(play){
+               startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
+            }       
+         };
          myVideo.onended = function(){
             console.log("!!!!!!! Test report !!!!!!!");
             console.log(" ");
@@ -340,7 +351,7 @@ function FVSL(OakName){
             console.log("DOWNLOAD_FROM_SERVER_TIME_RANGE: " + DOWNLOAD_FROM_SERVER_TIME_RANGE);
             console.log("UPLOAD_LIMIT: " + UPLOAD_LIMIT);
             console.log(" ");
-            console.log("This are the test results:");
+            console.log("This are the test results (time unit is miliseconds:");
             console.log("timePlaybackWasStalled: " + timePlaybackWasStalled);
             console.log("start-up Time: " + startUpTime);
             console.log("bytesReceivedFromServer: " + bytesReceivedFromServer);
