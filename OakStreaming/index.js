@@ -40,6 +40,14 @@ function FVSL(OakName){
       var notificationsBecauseNewWires = 0;
       var SIZE_OF_VIDEO_FILE = 0;
       
+      // For the technical evaluation
+      var timeReceiptStreamInformationObject = -42;
+      var timeLoadVideoMethodWasCalled = -42;
+      var timePlaybackWasStalled = 0;
+      var startUpTime = 0;
+      var timeTillTorrentOnDone = -42;
+      var startPlayingOffset = Math.floor(Math.random() * 10) + 1;  
+      
       
       self.streamVideo = streamVideo;
       self.loadVideo = loadVideo;
@@ -274,6 +282,19 @@ function FVSL(OakName){
          }  
       }
 
+      
+      //A Wrapper for the Technical Evaluation
+      function loadVideo_technical_evaluation(stream_information_object, callback, end_streaming_when_video_loaded){
+         timeReceiptStreamInformationObject = new Date();
+         if((new Date())-timeReceiptStreamInformationObject >= startPlayingOffset){
+            console.log("Video gets loaded");
+            timeLoadVideoMethodWasCalled = new Date();
+            self.loadVideo(theSharedArray.get(0), function(){console.log("loadVideo callback: All video data has been received");});  
+         } else {
+            setTimeout(function(){loadVideo_technical_evaluation(stream_information_object, callback, end_streaming_when_video_loaded);},10);
+         }
+      }
+
 
       /**
        * @callback OakStreaming~loadedVideoFinished
@@ -290,9 +311,19 @@ function FVSL(OakName){
          //console.log("option paramter:\n" + JSON.stringify(stream_information_object));
          
          
-         // This block is all solely for the Technical Evaluation     
+         // This block is all solely for the Technical Evaluation   
          
+         /*
+         var timeLoadVideoMethodWasCalled = -42;
+         var timePlaybackWasStalled = 0;
+         var startUpTime = 0;
+         var timeTillTorrentOnDone = -42;
+         var startPlayingOffset = Math.floor(Math.random() * 10) + 1;  
+         */
          var myVideo = document.getElementById("myVideo");
+         myVideo.addEventListener('error', function (err){
+            console.error(myVideo.error);
+         });
          myVideo.addEventListener('error', function (err){
             console.error(myVideo.error);
          });
@@ -318,14 +349,22 @@ function FVSL(OakName){
             if(timeTillTorrentOnDone > 0){
                console.log("timeTillTorrentOnDone: " + timeTillTorrentOnDone);
             } else {
-                console.log("timeTillTorrentOnDone: " + Has not happend yet!);
+                console.log("timeTillTorrentOnDone: " + "Has not happend yet!");
             }
             console.log(" ");
             console.log(" ");
             console.log(" ");
          };
          
-         
+         /*
+         // For the technical evaluation
+         var timeReceiptStreamInformationObject = -42;
+         var timeLoadVideoMethodWasCalled = -42;
+         var timePlaybackWasStalled = 0;
+         var startUpTime = 0;
+         var timeTillTorrentOnDone = -42;
+         var startPlayingOffset = Math.floor(Math.random() * 10) + 1;  
+         */
          
          
          
