@@ -40,6 +40,7 @@ function FVSL(OakName){
       var notificationsBecauseNewWires = 0;
       var SIZE_OF_VIDEO_FILE = 0;
       
+      
       self.streamVideo = streamVideo;
       self.loadVideo = loadVideo;
       self.forTesting_connectedToNewWebTorrentPeer = null;
@@ -288,6 +289,49 @@ function FVSL(OakName){
          //console.log("loadVideo is called");
          //console.log("option paramter:\n" + JSON.stringify(stream_information_object));
          
+         
+         var timeReceiptStreamInformationObject = new Date();
+         
+         var timePlaybackWasStalled = 0;
+         var startUpTime = 0;
+         var timeTillTorrentOnDone = -42;
+         var startPlayingOffset = -42;
+         
+         
+         var myVideo = document.getElementById("myVideo");
+         myVideo.addEventListener('error', function (err){
+            console.error(myVideo.error);
+         });
+         myVideo.onended = function(){
+            console.log("!!!!!!! Test report !!!!!!!");
+            console.log(" ");
+            console.log("This is the used paramter setting:");
+            console.log("webTorrentFile.name: " + webTorrentFile.name);
+            console.log("SIZE_OF_VIDEO_FILE: " + SIZE_OF_VIDEO_FILE);
+            console.log("startPlayingOffset: " + startPlayingOffset);
+            console.log("deliveryByServer: " + deliveryByServer);
+            console.log("deliveryByWebTorrent: " + deliveryByWebtorrent);           
+            console.log("DOWNLOAD_FROM_P2P_TIME_RANGE: " + DOWNLOAD_FROM_P2P_TIME_RANGE);
+            console.log("DOWNLOAD_FROM_SERVER_TIME_RANGE: " + DOWNLOAD_FROM_SERVER_TIME_RANGE);
+            console.log("UPLOAD_LIMIT: " + UPLOAD_LIMIT);
+            console.log(" ");
+            console.log("This are the test results:");
+            console.log("timePlaybackWasStalled: " + timePlaybackWasStalled);
+            console.log("start-up Time: " + startUpTime);
+            console.log("bytesReceivedFromServer: " + bytesReceivedFromServer);
+            console.log("theTorrent.download: " + theTorrent.downloaded);
+            console.log("theTorrent.progress: " + theTorrent.progress);
+            if(timeTillTorrentOnDone > 0){
+               console.log("timeTillTorrentOnDone: " + timeTillTorrentOnDone);
+            } else {
+                console.log("timeTillTorrentOnDone: " + Has not happend yet!);
+            }
+            console.log(" ");
+            console.log(" ");
+            console.log(" ");
+         };
+         
+         
          // All these declared varibales until 'var self = this' are intended to be constants
          var deliveryByServer = (stream_information_object.path_to_file_on_XHR_server || stream_information_object.hash_value) ? true : false;
          var deliveryByWebtorrent = stream_information_object.torrentFile ? true : false;
@@ -342,10 +386,6 @@ function FVSL(OakName){
          var timeOfLastWebTorrentRequest = 0;
          
       
-         var myVideo = document.querySelector('video');
-         myVideo.addEventListener('error', function (err){
-            console.error(myVideo.error);
-         });
          
          // Node.js readable streams are used to buffer video data before it gets put into the source buffer
          function MyReadableStream(options){
@@ -380,6 +420,7 @@ function FVSL(OakName){
                      
                torrent.on('done', function () {
                   VideoCompletelyLoadedByWebtorrent = true;
+                  timeTillTorrentOnDone = (new Date()) - timeReceiptStreamInformationObject; // For technical evaluation
                });
                
                // Peers which used the offered methods to manually connect to this FVSL instance
