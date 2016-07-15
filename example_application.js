@@ -5,7 +5,7 @@ require("y-memory")(Y);
 //require("y-webrtc")(Y);
 require("y-map")(Y);
 var OakStreaming = require('./OakStreaming');
-var myStreaming = new OakStreaming();
+var myStreaming = null; new OakStreaming();
 
 var theSharedMap = null;
 var theSharedArray = null;
@@ -19,6 +19,17 @@ document.querySelector('form').addEventListener('submit', function (ev) {
 */
 
 console.log("THis is the WebRTC version of example_application 1");
+
+
+
+// For the Techical Evaluation
+var timeReceiptStreamInformationObject = -42;
+var timePlaybackWasStalled = 0;
+var startUpTime = 0;
+var timeTillTorrentOnDone = -42;
+var startPlayingOffset = Math.floor(Math.random() * 10) + 1; 
+         
+         
 
 Y({
   db: {
@@ -51,15 +62,16 @@ Y({
       }
   });
   */
+  
    theSharedArray.observe(function(event){
+      timeReceiptStreamInformationObject = new Date();
       console.log("The following event-type was thrown: "+ event.type)
       console.log("The event was executed on: "+ event.name)
       console.log("The event object has more information:")
       console.log(event);
       if(!streamSource){
-         console.log("Video gets loaded");
-         myStreaming.loadVideo(theSharedArray.get(0), function(){console.log("All video data has been received");});
-         console.log("After myStreaming.loadVideo(..) in myMap.observe(..)");    
+         myStreaming = new OakStreaming();         
+         callLoadVideoWhenTimeOffsetOver();
       }
    });
 });
@@ -69,10 +81,21 @@ window.handleFiles = function (files){     // {XHR_server_URL : "localhost", XHR
    myStreaming.streamVideo(files[0], {webTorrent_trackers: [["wss://tracker.webtorrent.io"]], XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name}, function(streamInformationObject){
       //console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
       console.log("In example.js video file got seeded.");
-           
+      
       addToSharedArray(streamInformationObject);
    });
 }
+
+//For Technical Evaluation
+function callLoadVideoWhenTimeOffsetOver(){
+   if((new Date())-timeReceiptStreamInformationObject >= startPlayingOffset){
+      console.log("Video gets loaded");
+      myStreaming.loadVideo(theSharedArray.get(0), function(){console.log("loadVideo callback: All video data has been received");});  
+   } else {
+      setTimeout(function(){callLoadVideoWhenTimeOffsetOver();},10);
+   }
+}
+
 
 function addToSharedArray(streamInformationObject){
    if(theSharedArray !== null){

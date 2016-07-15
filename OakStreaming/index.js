@@ -290,13 +290,7 @@ function FVSL(OakName){
          //console.log("option paramter:\n" + JSON.stringify(stream_information_object));
          
          
-         var timeReceiptStreamInformationObject = new Date();
-         
-         var timePlaybackWasStalled = 0;
-         var startUpTime = 0;
-         var timeTillTorrentOnDone = -42;
-         var startPlayingOffset = -42;
-         
+         // This block is all solely for the Technical Evaluation     
          
          var myVideo = document.getElementById("myVideo");
          myVideo.addEventListener('error', function (err){
@@ -330,6 +324,14 @@ function FVSL(OakName){
             console.log(" ");
             console.log(" ");
          };
+         
+         
+         
+         
+         
+         
+         
+         
          
          
          // All these declared varibales until 'var self = this' are intended to be constants
