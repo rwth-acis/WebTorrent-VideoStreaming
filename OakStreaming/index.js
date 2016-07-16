@@ -187,7 +187,7 @@ function FVSL(OakName){
              
          if(video_file){
             var seedingOptions = {
-               name: video_file.name + " - (Created by an OakStreaming_Client)"
+               name: video_file.name + " - (Created by an OakStreaming client)"
             };
             if(options.webTorrent_trackers){
                seedingOptions.announceList = options.webTorrent_trackers;
@@ -316,7 +316,7 @@ function FVSL(OakName){
          //console.log("option paramter:\n" + JSON.stringify(stream_information_object));
          
          
-         // This block is all solely for the Technical Evaluation   
+         // This block is solely for the Technical Evaluation   
          
          /*
          var timeLoadVideoMethodWasCalled = -42;
@@ -346,13 +346,22 @@ function FVSL(OakName){
             }       
          };
          var lastTimeWhenVideoHolded = -42;
+         //var userPausedVideo = false;
+         /*
+         myVideo.pause = function(){
+            userPausedVideo = true;
+         };
+         */
          myVideo.onwaiting = function() {
             console.log("Video is holded at " + (Date.now() - timeLoadVideoMethodWasCalled) + " miliseconds after loadVideo has been called.");
             lastTimeWhenVideoHolded = Date.now();
          };
-         myVideo.onplaying = function() {
-            console.log("Video is playing again after " + (Date.now() - lastTimeWhenVideoHolded) + " miliseconds.");
-            timePlaybackWasStalled += Date.now() - lastTimeWhenVideoHolded;
+         myVideo.onplaying = function(){
+            if(lastTimeWhenVideoHolded >= 0){// && !userPausedVideo){
+               console.log("Video is playing again after " + (Date.now() - lastTimeWhenVideoHolded) + " miliseconds.");
+               timePlaybackWasStalled += Date.now() - lastTimeWhenVideoHolded;
+            }
+            //userPausedVideo = false;
          };
          myVideo.onended = function(){
             console.log(" ");
@@ -407,7 +416,7 @@ function FVSL(OakName){
          //console.log("stream_information_object.size_of_video_file: "  + stream_information_object.size_of_video_file);
 
          var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20; // eigentlich 20
-         var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 10000000; // 12000000
+         var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 6000000; // 12000000
          var MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST = stream_information_object.minimal_timespan_before_new_webtorrent_request || 3; // in seconds
          var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 3; // eigentlich 5
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
