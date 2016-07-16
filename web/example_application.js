@@ -409,7 +409,7 @@ function FVSL(OakName) {
          var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20; // eigentlich 20
          var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 6000000; // 12000000
          var MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST = stream_information_object.minimal_timespan_before_new_webtorrent_request || 3; // in seconds
-         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 3; // eigentlich 5
+         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 4; // vorher 3  (Das mit den 6MB beim start-up) eigentlich 5
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
          var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 500000;
 
@@ -1245,7 +1245,8 @@ function FVSL(OakName) {
             var XHROptionObject = {
                path: thisRequest.self.pathToFileOnXHRServer,
                headers: {
-                  range: 'bytes=' + reqStart + '-' + (reqEnd - 1)
+                  range: 'bytes=' + reqStart + '-' + (reqEnd - 1),
+                  connection: 'keep-alive'
                }
             };
             if (XHRServerURL) {
@@ -1267,6 +1268,12 @@ function FVSL(OakName) {
                //////////////console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thiscallbackNumber);
                res.on('end', XHREnd);
                res.on('data', XHRDataHandler);
+               res.on('error', function (err) {
+                  console.log("The http.get response object has yield the following error");console.error(err);
+               });
+            });
+            thisRequest.req.on('error', function (err) {
+               console.log("thisRequest.req has yield the following error message: " + err.message);
             });
          }
          frequentlyCheckIfNewCreateReadStreamNecessary();
