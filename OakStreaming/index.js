@@ -8,7 +8,7 @@ var WebTorrent = require('webtorrent');
 var SimplePeer = require('simple-peer');
 //var parseTorrent = require('parse-torrent'); // unnötig
 //var createTorrent = require('create-torrent'); // unnötig
-var Pass = require('readable-stream').PassThrough;
+// var Pass = require('readable-stream').PassThrough; // unnötig
 
 
 
