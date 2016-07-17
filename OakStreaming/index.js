@@ -325,6 +325,9 @@ function FVSL(OakName){
          var timeTillTorrentOnDone = -42;
          var startPlayingOffset = Math.floor(Math.random() * 10) + 1;  
          */
+         var videoPlaybackStarted = false;
+         var videoStartUpOver  = false;        
+                  
          var myVideo = document.getElementById("myVideo");
          myVideo.addEventListener('error', function (err){
             console.error(myVideo.error);
@@ -335,7 +338,8 @@ function FVSL(OakName){
             play = true;
             if(canplay){
                startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
-               timePlaybackWasStalled += startUpTime; 
+               timePlaybackWasStalled += startUpTime;
+               videoStartUpOver = true;
             }
          };
          myVideo.oncanplay = function(){
@@ -343,6 +347,7 @@ function FVSL(OakName){
             if(play){
                startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
                timePlaybackWasStalled += startUpTime;
+               videoStartUpOver = true;
             }       
          };
          var lastTimeWhenVideoHolded = -42;
@@ -352,17 +357,60 @@ function FVSL(OakName){
             userPausedVideo = true;
          };
          */
+         
+         /*
          myVideo.onwaiting = function() {
             console.log("Video is holded at " + (Date.now() - timeLoadVideoMethodWasCalled) + " miliseconds after loadVideo has been called.");
             lastTimeWhenVideoHolded = Date.now();
          };
-         myVideo.onplaying = function(){
-            if(lastTimeWhenVideoHolded >= 0){// && !userPausedVideo){
+         */
+         
+         /*
+         myVideo.onstalled = function() {
+            console.log("Video is stalled at " + (Date.now() - timeLoadVideoMethodWasCalled) + " miliseconds after loadVideo has been called.");
+            lastTimeWhenVideoHolded = Date.now();
+         };
+         */
+         
+         var playbackStopped = false;
+         var oldPlaybackTime = -1;
+         var oldPlaybackTime2 = 0;
+         
+         function checkIfVideoIsHolded(){
+            if(!playbackStopped && videoStartUpOver && myVideo.currentTime === oldPlaybackTime){
+               console.log("Video is stopped at " + (Date.now() - timeLoadVideoMethodWasCalled) + " miliseconds after loadVideo has been called.");
+               lastTimeWhenVideoHolded = Date.now();
+               playbackStopped = true;
+            }
+            oldPlaybackTime = myVideo.currentTime;
+            setTimeout(checkIfVideoIsHolded, 1500);
+         }
+         checkIfVideoIsHolded();
+         
+         
+         function checkIfVideoIsPlaying(){
+            if(playbackStopped && videoStartUpOver && myVideo.currentTime > oldPlaybackTime2){
                console.log("Video is playing again after " + (Date.now() - lastTimeWhenVideoHolded) + " miliseconds.");
                timePlaybackWasStalled += Date.now() - lastTimeWhenVideoHolded;
+               playbackStopped = false;
+            }
+            oldPlaybackTime2 = myVideo.currentTime;
+            setTimeout(checkIfVideoIsPlaying, 1500);            
+         }
+         checkIfVideoIsPlaying();
+         
+         
+         /*
+         myVideo.onplaying = function(){
+            if(playbackStopped){// && !userPausedVideo){
+               console.log("Video is playing again after " + (Date.now() - lastTimeWhenVideoHolded) + " miliseconds.");
+               timePlaybackWasStalled += Date.now() - lastTimeWhenVideoHolded;
+               playbackStopped = false;
             }
             //userPausedVideo = false;
          };
+         */
+         
          myVideo.onended = function(){
             console.log(" ");
             console.log(" ");
@@ -418,7 +466,7 @@ function FVSL(OakName){
          var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20; // eigentlich 20
          var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 6000000; // 12000000
          var MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST = stream_information_object.minimal_timespan_before_new_webtorrent_request || 3; // in seconds
-         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 4; // vorher 3  (Das mit den 6MB beim start-up) eigentlich 5
+         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 5; // vorher 3  (Das mit den 6MB beim start-up) eigentlich 5
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
          var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 500000;
          
