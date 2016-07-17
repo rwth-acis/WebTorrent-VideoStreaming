@@ -689,6 +689,7 @@ function FVSL(OakName){
             };
             util.inherits(thisRequest.MyWriteableStream, readableStream.Writable);
             thisRequest.MyWriteableStream.prototype._write = function(chunk, encoding, done){
+               console.log("A chunk from the WebTorrent network has been received. It's size is: " + chunk.length);
                //console.log("MyWriteableStream _write is called");   
                //console.log("A byte range request to the WebTorrent network received a chunk");
                
@@ -712,6 +713,8 @@ function FVSL(OakName){
                            //thisRequest.webTorrentStream.pause();   11.07.16  more a try   Sollte höchst wahrscheinlich aus code raus
                         }
                         theCallbackFunction(null, res);
+                     } else {
+                        ceckIfAnswerStreamReady(thisRequest);
                      }
                   } else {
                      if(thisRequest.currentlyExpectedCallback === null){
@@ -1031,6 +1034,7 @@ function FVSL(OakName){
          }
 
          // This function frequently checks for every videostreamRequestHandler if there is enough data buffer to call the corresponding callback function with the buffered data
+         /* Brauche ich soviel ich weiß nicht
          function frequentlyCeckIfAnswerStreamReady(){
             if(videoCompletelyLoadedByVideoPlayer){
                return;
@@ -1040,7 +1044,8 @@ function FVSL(OakName){
             }
             setTimeout(frequentlyCeckIfAnswerStreamReady, CHECK_IF_ANSWERSTREAM_READY_INTERVAL);
          }
-
+         */
+         
          // The job of this function is to frequently check to things.
          // First, if the video is completely loaded.
          // Second, if less than DOWNLOAD_FROM_SERVER_TIME_RANGE seconds of video playback are buffered in advance.
@@ -1268,13 +1273,7 @@ function FVSL(OakName){
                   thisRequest.XHRConducted = false;
                   return;
                }
-               
-               
-               
-               
-               
-               
-               
+      
                
                /* Want to solve example_application.js:14013 Uncaught Error: Data too short   Daher das hier auskommentiert
                if(thisRequest.bytesInAnswerStream > 0 && thisRequest.currentlyExpectedCallback !== null){
@@ -1310,8 +1309,9 @@ function FVSL(OakName){
                */
                   ////console.log("XHREnd from videostreamRequest number " + thisRequest.createReadStreamNumber + " thisRequest.currentlyExpectedCallback === null : " + (thisRequest.currentlyExpectedCallback === null));
                thisRequest.XHRConducted = false;
+               ceckIfAnswerStreamReady(thisRequest);
                checkIfBufferFullEnough(true);
-                  //ceckIfAnswerStreamReady(thisRequest);  // Unsicher ob es drinn bleiben soll
+               //ceckIfAnswerStreamReady(thisRequest);  // Unsicher ob es drinn bleiben soll
                //}                 
             };
             
@@ -1357,7 +1357,7 @@ function FVSL(OakName){
          frequentlyCheckIfNewCreateReadStreamNecessary();
          chokeIfNecessary();
          updateChart();
-         frequentlyCeckIfAnswerStreamReady();
+         // frequentlyCeckIfAnswerStreamReady(); Am 17.07 entschlossen das rauszunehmen. Ich hatte mir das ja schon mehrmals überlegt
          checkIfBufferFullEnough();
 
          ////////console.log("I call Videostream constructor");
