@@ -4,6 +4,7 @@ test.mp4
 grassland.mp4
 Jasmine_testsuites_build/
 node_modules/
+<<<<<<< HEAD
 build/index.html
 build/example_application.js
 Jasmine_testsuites_build/Jasmine_testsuites_help.js
@@ -11,4 +12,13 @@ grassland_for_technical_evaluation.mp4
 web/index.html
 web/example_application.js.map
 web/example_application.js
+=======
+build/**/index.html
+build/**/example_application.js
+Jasmine_testsuites_build/**/Jasmine_testsuites_help.js
+grassland_for_technical_evaluation.mp4
+web/**/index.html
+web/**/example_application.js.map
+web/**/example_application.js
+>>>>>>> technical_evaluation
 Jasmine_testsuites_build/*

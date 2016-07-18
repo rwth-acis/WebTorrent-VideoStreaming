@@ -9,7 +9,8 @@ var myStreaming = new OakStreaming();
 
 var theSharedMap = null;
 var theSharedArray = null;
-var streamSource = false;
+var streamSource = false;  
+     
 
 /*
 document.querySelector('form').addEventListener('submit', function (ev) {
@@ -20,12 +21,13 @@ document.querySelector('form').addEventListener('submit', function (ev) {
 
 console.log("THis is the WebRTC version of example_application 1");
 
+
 Y({
   db: {
     name: 'memory'
   },
   connector: {
-     //url : "https://yjs.dbis.rwth-aachen.de:5078",
+    url : "http://gaudi.informatik.rwth-aachen.de:9914",  // "https://yjs.dbis.rwth-aachen.de:5078",  http://localhost:8897
     //name: 'websockets-client',
     name: 'webrtc',
     room: 'WebTorrent-Streaming-yeah'
@@ -51,28 +53,28 @@ Y({
       }
   });
   */
+  
    theSharedArray.observe(function(event){
       console.log("The following event-type was thrown: "+ event.type)
       console.log("The event was executed on: "+ event.name)
       console.log("The event object has more information:")
       console.log(event);
-      if(!streamSource){
-         console.log("Video gets loaded");
-         myStreaming.loadVideo(theSharedArray.get(0), function(){console.log("All video data has been received");});
-         console.log("After myStreaming.loadVideo(..) in myMap.observe(..)");    
+      if(!streamSource){         
+         myStreaming.loadVideo_technical_evaluation(theSharedArray.get(0), function(){console.log("loadVideo callback: All video data has been received");});  
       }
    });
 });
 
-window.handleFiles = function (files){     // {XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name, webTorrent_trackers: [["wss://tracker.webtorrent.io"]]} , "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  XHR_server_URL : "localhost"     hash_value : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e", 
-   streamSource = true;
-   myStreaming.streamVideo(files[0], {webTorrent_trackers: [["wss://tracker.webtorrent.io"]], XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name}, function(streamInformationObject){
+window.handleFiles = function (files){     //webTorrent_trackers: [["ws://gaudi.informatik.rwth-aachen.de:9913"]]   "wss://tracker.webtorrent.io"  {XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name, webTorrent_trackers: [["wss://tracker.webtorrent.io"]]} , "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  XHR_server_URL : "localhost"     hash_value : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e", 
+   streamSource = true;   /// WICHTIG: Config XHR Server: XHR_server_URL : "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, path_to_file_on_XHR_server: "/" + files[0].name
+   myStreaming.streamVideo(files[0], {}, function(streamInformationObject){
       //console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
       console.log("In example.js video file got seeded.");
-           
+      
       addToSharedArray(streamInformationObject);
    });
 }
+
 
 function addToSharedArray(streamInformationObject){
    if(theSharedArray !== null){

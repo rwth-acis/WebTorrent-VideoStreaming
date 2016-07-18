@@ -161,6 +161,27 @@ app.get("/example_application.js", function(req, res){
   res.sendFile(__dirname + "/web/" + "example_application.js");
 });
 
+app.get("/y-webrtc.es6", function(req, res){
+  res.sendFile(__dirname + "/web/" + "y-webrtc.es6");
+});
+
+app.get("/y-webrtc.js.map", function(req, res){
+  res.sendFile(__dirname + "/web/" + "y-webrtc.js.map");
+});
+
+app.get("/y-webrtc.es6.map", function(req, res){
+  res.sendFile(__dirname + "/web/" + "y-webrtc.es6.map");
+});
+
+app.get("/y-webrtc.js", function(req, res){
+  res.sendFile(__dirname + "/web/" + "y-webrtc.js");
+});
+
+app.get("/example_application.js.map", function(req, res){
+  res.sendFile(__dirname + "/web/" + "example_application.js.map");
+});
+
+
 
 
 http.listen(9912, function(){
