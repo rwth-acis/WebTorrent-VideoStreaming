@@ -61,7 +61,7 @@ tracker.on('listening', function (){
 
 // start tracker server listening! Use 0 to listen on a random free port.
 //server.listen(port, hostname, onlistening)
-tracker.listen(9913, "http://gaudi.informatik.rwth-aachen.de", function(){console.log("the onlisten function from tracker.listen is called");});
+tracker.listen(9913, "gaudi.informatik.rwth-aachen.de", function(){console.log("the onlisten function from tracker.listen is called");});
 
 // listen for individual tracker messages from peers:
 

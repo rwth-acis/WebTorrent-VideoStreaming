@@ -331,7 +331,9 @@ function FVSL(OakName){
          });
          var play = false;
          var canplay = false;
+         /*
          myVideo.onplay = function(){
+            onsole.log("event onplay is thrown");
             play = true;
             if(canplay){
                startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
@@ -339,13 +341,15 @@ function FVSL(OakName){
                videoStartUpOver = true;
             }
          };
+         */
          myVideo.oncanplay = function(){
+            console.log("event oncanplay is thrown");
             canplay = true;
-            if(play){
+           // if(play){
                startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
                timePlaybackWasStalled += startUpTime;
                videoStartUpOver = true;
-            }       
+           // }       
          };
          var lastTimeWhenVideoHolded = -42;
          //var userPausedVideo = false;
@@ -396,6 +400,17 @@ function FVSL(OakName){
          }
          checkIfVideoIsPlaying();
          
+         function checkIfVideoIsPlaying(){
+            if(playbackStopped && videoStartUpOver && myVideo.currentTime > oldPlaybackTime2){
+               //console.log("Video is playing again after " + (Date.now() - lastTimeWhenVideoHolded) + " miliseconds.");
+               timePlaybackWasStalled += Date.now() - lastTimeWhenVideoHolded;
+               playbackStopped = false;
+            }
+            oldPlaybackTime2 = myVideo.currentTime;
+            setTimeout(checkIfVideoIsPlaying, 1500);            
+         }
+         checkIfVideoIsPlaying();
+         
          
          /*
          myVideo.onplaying = function(){
@@ -407,8 +422,10 @@ function FVSL(OakName){
             //userPausedVideo = false;
          };
          */
+         var testResultsPrintedOut = false;       
          
-         myVideo.onended = function(){
+         function printOutTestResults(){
+            testResultsPrintedOut = true;
             console.log(" ");
             console.log(" ");
             console.log("!!!!!!! Test report !!!!!!!");
@@ -422,6 +439,7 @@ function FVSL(OakName){
             console.log("DOWNLOAD_FROM_P2P_TIME_RANGE: " + DOWNLOAD_FROM_P2P_TIME_RANGE);
             console.log("DOWNLOAD_FROM_SERVER_TIME_RANGE: " + DOWNLOAD_FROM_SERVER_TIME_RANGE);
             console.log("UPLOAD_LIMIT: " + UPLOAD_LIMIT);
+            console.log("ADDITION_TO_UPLOAD_LIMIT: " + ADDITION_TO_UPLOAD_LIMIT);
             console.log(" ");
             console.log("This are the test results (time unit is miliseconds):");
             console.log("timePlaybackWasStalled: " + timePlaybackWasStalled);
@@ -437,8 +455,23 @@ function FVSL(OakName){
             }
             console.log(" ");
             console.log(" ");
-            console.log(" ");
-         };  
+            console.log(" ");            
+         } 
+         
+
+         function checkIfVideoEnded(){
+            if(!testResultsPrintedOut){
+               if(myVideo.currentTime >= 178){
+                  printOutTestResults();
+               } else {
+                  setTimeout(checkIfVideoEnded, 500);               
+               }
+            } 
+         }
+         checkIfVideoEnded();
+         
+         
+         myVideo.onended = function(){if(!testResultsPrintedOut){printOutTestResults();}};
          
          
          // All these declared varibales until 'var self = this' are intended to be constants
@@ -460,7 +493,7 @@ function FVSL(OakName){
          var MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST = stream_information_object.minimal_timespan_before_new_webtorrent_request || 3; // in seconds
          var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 3; // vorher 3  (Das mit den 6MB beim start-up) eigentlich 5
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
-         var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 500000;
+         var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 3000000; // war vorer 500000
          
          
          var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 2000000; // in byte    2000000
@@ -1342,11 +1375,11 @@ function FVSL(OakName){
                res.on('end', XHREnd);
                res.on('data', XHRDataHandler);
                res.on('error', function(err){//console.log("The http.get response object has yield the following error"); console.error(err);});
+               });
+               thisRequest.req.on('error', function(err){
+                  //console.log("thisRequest.req has yield the following error message: " + err.message);
+               });
             });
-            thisRequest.req.on('error', function(err){
-               //console.log("thisRequest.req has yield the following error message: " + err.message);
-            });
-         });
          }
          frequentlyCheckIfNewCreateReadStreamNecessary();
          chokeIfNecessary();

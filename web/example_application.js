@@ -326,21 +326,25 @@ function FVSL(OakName) {
          });
          var play = false;
          var canplay = false;
-         myVideo.onplay = function () {
+         /*
+         myVideo.onplay = function(){
+            onsole.log("event onplay is thrown");
             play = true;
-            if (canplay) {
+            if(canplay){
                startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
                timePlaybackWasStalled += startUpTime;
                videoStartUpOver = true;
             }
          };
+         */
          myVideo.oncanplay = function () {
+            console.log("event oncanplay is thrown");
             canplay = true;
-            if (play) {
-               startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
-               timePlaybackWasStalled += startUpTime;
-               videoStartUpOver = true;
-            }
+            // if(play){
+            startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
+            timePlaybackWasStalled += startUpTime;
+            videoStartUpOver = true;
+            // }       
          };
          var lastTimeWhenVideoHolded = -42;
          //var userPausedVideo = false;
@@ -390,6 +394,17 @@ function FVSL(OakName) {
          }
          checkIfVideoIsPlaying();
 
+         function checkIfVideoIsPlaying() {
+            if (playbackStopped && videoStartUpOver && myVideo.currentTime > oldPlaybackTime2) {
+               //console.log("Video is playing again after " + (Date.now() - lastTimeWhenVideoHolded) + " miliseconds.");
+               timePlaybackWasStalled += Date.now() - lastTimeWhenVideoHolded;
+               playbackStopped = false;
+            }
+            oldPlaybackTime2 = myVideo.currentTime;
+            setTimeout(checkIfVideoIsPlaying, 1500);
+         }
+         checkIfVideoIsPlaying();
+
          /*
          myVideo.onplaying = function(){
             if(playbackStopped){// && !userPausedVideo){
@@ -400,8 +415,10 @@ function FVSL(OakName) {
             //userPausedVideo = false;
          };
          */
+         var testResultsPrintedOut = false;
 
-         myVideo.onended = function () {
+         function printOutTestResults() {
+            testResultsPrintedOut = true;
             console.log(" ");
             console.log(" ");
             console.log("!!!!!!! Test report !!!!!!!");
@@ -415,6 +432,7 @@ function FVSL(OakName) {
             console.log("DOWNLOAD_FROM_P2P_TIME_RANGE: " + DOWNLOAD_FROM_P2P_TIME_RANGE);
             console.log("DOWNLOAD_FROM_SERVER_TIME_RANGE: " + DOWNLOAD_FROM_SERVER_TIME_RANGE);
             console.log("UPLOAD_LIMIT: " + UPLOAD_LIMIT);
+            console.log("ADDITION_TO_UPLOAD_LIMIT: " + ADDITION_TO_UPLOAD_LIMIT);
             console.log(" ");
             console.log("This are the test results (time unit is miliseconds):");
             console.log("timePlaybackWasStalled: " + timePlaybackWasStalled);
@@ -431,6 +449,23 @@ function FVSL(OakName) {
             console.log(" ");
             console.log(" ");
             console.log(" ");
+         }
+
+         function checkIfVideoEnded() {
+            if (!testResultsPrintedOut) {
+               if (myVideo.currentTime >= 178) {
+                  printOutTestResults();
+               } else {
+                  setTimeout(checkIfVideoEnded, 500);
+               }
+            }
+         }
+         checkIfVideoEnded();
+
+         myVideo.onended = function () {
+            if (!testResultsPrintedOut) {
+               printOutTestResults();
+            }
          };
 
          // All these declared varibales until 'var self = this' are intended to be constants
@@ -452,7 +487,7 @@ function FVSL(OakName) {
          var MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST = stream_information_object.minimal_timespan_before_new_webtorrent_request || 3; // in seconds
          var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 3; // vorher 3  (Das mit den 6MB beim start-up) eigentlich 5
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
-         var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 500000;
+         var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 3000000; // war vorer 500000
 
          var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 2000000; // in byte    2000000
          var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = stream_information_object.thresholdForReturningAnswerStream || 1000000; // in byte  1000000
@@ -1436,9 +1471,9 @@ Y({
 });
 
 window.handleFiles = function (files) {
-   //"wss://tracker.webtorrent.io"  {XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name, webTorrent_trackers: [["wss://tracker.webtorrent.io"]]} , "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  XHR_server_URL : "localhost"     hash_value : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e", 
-   streamSource = true;
-   myStreaming.streamVideo(files[0], { webTorrent_trackers: [["http://gaudi.informatik.rwth-aachen.de:9913"]], XHR_server_URL: "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, path_to_file_on_XHR_server: "/" + files[0].name }, function (streamInformationObject) {
+   //webTorrent_trackers: [["ws://gaudi.informatik.rwth-aachen.de:9913"]]   "wss://tracker.webtorrent.io"  {XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name, webTorrent_trackers: [["wss://tracker.webtorrent.io"]]} , "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  XHR_server_URL : "localhost"     hash_value : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e", 
+   streamSource = true; /// WICHTIG: Config XHR Server: XHR_server_URL : "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, path_to_file_on_XHR_server: "/" + files[0].name
+   myStreaming.streamVideo(files[0], {}, function (streamInformationObject) {
       //console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
       console.log("In example.js video file got seeded.");
 
