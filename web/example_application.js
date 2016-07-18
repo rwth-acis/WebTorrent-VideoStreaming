@@ -10,9 +10,6 @@ var Videostream = require('videostream');
 var ut_pex = require('ut_pex');
 var WebTorrent = require('webtorrent');
 var SimplePeer = require('simple-peer');
-//var parseTorrent = require('parse-torrent'); // unnötig
-//var createTorrent = require('create-torrent'); // unnötig
-// var Pass = require('readable-stream').PassThrough; // unnötig
 
 /**
  * @module FVSL
@@ -46,7 +43,7 @@ function FVSL(OakName) {
       var timePlaybackWasStalled = 0;
       var startUpTime = 0;
       var timeTillTorrentOnDone = -42;
-      var startPlayingOffset = Math.floor(Math.random() * 1000 * 10) + 1; // in miliseconds
+      var startPlayingOffset = Math.floor(Math.random() * 1000 * 5); // in miliseconds
 
       self.streamVideo = streamVideo;
       self.loadVideo = loadVideo;
@@ -426,6 +423,7 @@ function FVSL(OakName) {
             console.log("start-up Time: " + startUpTime);
             console.log("bytesReceivedFromServer: " + bytesReceivedFromServer);
             console.log("theTorrent.download: " + theTorrent.downloaded);
+            console.log("theTorrent.uploaded: " + theTorrent.uploaded);
             console.log("theTorrent.progress: " + theTorrent.progress);
             if (timeTillTorrentOnDone > 0) {
                console.log("timeTillTorrentOnDone: " + timeTillTorrentOnDone);
@@ -454,7 +452,7 @@ function FVSL(OakName) {
          var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20; // eigentlich 20
          var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 6000000; // 12000000
          var MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST = stream_information_object.minimal_timespan_before_new_webtorrent_request || 3; // in seconds
-         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 5; // vorher 3  (Das mit den 6MB beim start-up) eigentlich 5
+         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 3; // vorher 3  (Das mit den 6MB beim start-up) eigentlich 5
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
          var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 500000;
 
@@ -1400,7 +1398,7 @@ Y({
       name: 'memory'
    },
    connector: {
-      url: "http://localhost:8897", // "https://yjs.dbis.rwth-aachen.de:5078",
+      url: "http://gaudi.informatik.rwth-aachen.de:9914", // "https://yjs.dbis.rwth-aachen.de:5078",  http://localhost:8897
       //name: 'websockets-client',
       name: 'webrtc',
       room: 'WebTorrent-Streaming-yeah'
@@ -1441,9 +1439,9 @@ Y({
 });
 
 window.handleFiles = function (files) {
-   // {XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name, webTorrent_trackers: [["wss://tracker.webtorrent.io"]]} , "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  XHR_server_URL : "localhost"     hash_value : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e", 
+   //"wss://tracker.webtorrent.io"  {XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name, webTorrent_trackers: [["wss://tracker.webtorrent.io"]]} , "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  XHR_server_URL : "localhost"     hash_value : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e", 
    streamSource = true;
-   myStreaming.streamVideo(files[0], { webTorrent_trackers: [["wss://tracker.webtorrent.io"]], XHR_server_URL: "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name }, function (streamInformationObject) {
+   myStreaming.streamVideo(files[0], { webTorrent_trackers: [["http://gaudi.informatik.rwth-aachen.de:9913"]], XHR_server_URL: "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, path_to_file_on_XHR_server: "/" + files[0].name }, function (streamInformationObject) {
       //console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
       console.log("In example.js video file got seeded.");
 

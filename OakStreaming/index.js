@@ -6,9 +6,6 @@ var Videostream = require('videostream');
 var ut_pex = require('ut_pex');
 var WebTorrent = require('webtorrent');
 var SimplePeer = require('simple-peer');
-//var parseTorrent = require('parse-torrent'); // unnötig
-//var createTorrent = require('create-torrent'); // unnötig
-// var Pass = require('readable-stream').PassThrough; // unnötig
 
 
 
@@ -46,7 +43,7 @@ function FVSL(OakName){
       var timePlaybackWasStalled = 0;
       var startUpTime = 0;
       var timeTillTorrentOnDone = -42;
-      var startPlayingOffset = Math.floor(Math.random() * 1000*10) + 1;  // in miliseconds
+      var startPlayingOffset = Math.floor(Math.random() * 1000*5);  // in miliseconds
       
       
       self.streamVideo = streamVideo;
@@ -431,6 +428,7 @@ function FVSL(OakName){
             console.log("start-up Time: " + startUpTime);
             console.log("bytesReceivedFromServer: " + bytesReceivedFromServer);
             console.log("theTorrent.download: " + theTorrent.downloaded);
+            console.log("theTorrent.uploaded: " + theTorrent.uploaded);
             console.log("theTorrent.progress: " + theTorrent.progress);
             if(timeTillTorrentOnDone > 0){
                console.log("timeTillTorrentOnDone: " + timeTillTorrentOnDone);
@@ -466,7 +464,7 @@ function FVSL(OakName){
          var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20; // eigentlich 20
          var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 6000000; // 12000000
          var MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST = stream_information_object.minimal_timespan_before_new_webtorrent_request || 3; // in seconds
-         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 5; // vorher 3  (Das mit den 6MB beim start-up) eigentlich 5
+         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 3; // vorher 3  (Das mit den 6MB beim start-up) eigentlich 5
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
          var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 500000;
          
@@ -1325,6 +1323,7 @@ function FVSL(OakName){
                headers: {
                   range: 'bytes=' + reqStart + '-' + (reqEnd-1),
                   connection : 'keep-alive',
+                  //protocol: 'http:'
                   //???? method: 'CONNECT',
                }
             };
