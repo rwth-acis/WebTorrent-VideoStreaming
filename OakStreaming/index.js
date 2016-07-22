@@ -24,7 +24,7 @@ function FVSL(OakName){
    var self = this;
    (function(){
       var peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);   
-      //console.log("Version: Docs        In OakStreaming constructor. this.name: " + OakName);
+      console.log("Version: MK   In OakStreaming constructor. this.name: " + OakName);
       var OakName = OakName || "NoName FVSL instance";
       
       // Only methods should be part of the API, i.e. only methods should be publically accessible.
@@ -43,7 +43,10 @@ function FVSL(OakName){
       var timePlaybackWasStalled = 0;
       var startUpTime = 0;
       var timeTillTorrentOnDone = -42;
-      var startPlayingOffset = Math.floor(Math.random() * 1000*5);  // in miliseconds
+      
+      var timeOffsetRange = 60; // in seconds
+      
+      var startPlayingOffset = Math.floor(Math.random() * 1000* timeOffsetRange);  // in miliseconds
       
       
       self.streamVideo = streamVideo;
@@ -175,6 +178,8 @@ function FVSL(OakName){
        */
       function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent){ 
          var webTorrentClient = new WebTorrent();
+         var theTorrent;
+         var webTorrentFile;
          //////console.log("streamVideo is executed");
          //////console.log("videoFile: " + videoFile);
          //////console.log("options: " + options);
@@ -192,6 +197,8 @@ function FVSL(OakName){
 
             var self = this; 
             webTorrentClient.seed(video_file, seedingOptions, function(torrent){
+               theTorrent = torrent;
+               webTorrentFile = torrent.files[0];
                ////console.log("torrent file is seeded");
                
                /* K42 Maybe I will need this later
@@ -280,13 +287,10 @@ function FVSL(OakName){
             */
          }
          function updateChart(){
-            if(endStreaming){
-               return;
-            }
             if(theTorrent && webTorrentFile){
-               document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.received: " + theTorrent.received + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer + "\n Bytes taken from server delivery: " + bytesTakenFromServer + "\n Bytes taken from WebTorrent delivery: " + bytesTakenFromWebTorrent;
+               document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.uploaded: " + theTorrent.uploaded;
             }
-            setTimeout(updateChart, UPDATE_CHART_INTERVAL);
+            setTimeout(updateChart, 1000);
          }      
          updateChart();
       }
@@ -335,7 +339,7 @@ function FVSL(OakName){
          var videoPlaybackStarted = false;
          var videoStartUpOver  = false;        
                   
-         var myVideo = document.getElementById("myVideo");
+         var myVideo = document.getElementsByTagName('video')[0]; // Bei technischen Evaluation war es:  document.getElementById("myVideo");
          myVideo.addEventListener('error', function (err){
             console.error(myVideo.error);
          });
@@ -410,17 +414,6 @@ function FVSL(OakName){
          }
          checkIfVideoIsPlaying();
          
-         function checkIfVideoIsPlaying(){
-            if(playbackStopped && videoStartUpOver && myVideo.currentTime > oldPlaybackTime2){
-               //console.log("Video is playing again after " + (Date.now() - lastTimeWhenVideoHolded) + " miliseconds.");
-               timePlaybackWasStalled += Date.now() - lastTimeWhenVideoHolded;
-               playbackStopped = false;
-            }
-            oldPlaybackTime2 = myVideo.currentTime;
-            setTimeout(checkIfVideoIsPlaying, 1500);            
-         }
-         checkIfVideoIsPlaying();
-         
          
          /*
          myVideo.onplaying = function(){
@@ -441,6 +434,7 @@ function FVSL(OakName){
             console.log("!!!!!!! Test report !!!!!!!");
             console.log(" ");
             console.log("This is the used paramter setting:");
+            console.log("timeOffsetRange: " + timeOffsetRange);
             console.log("webTorrentFile.name: " + webTorrentFile.name);
             console.log("SIZE_OF_VIDEO_FILE: " + SIZE_OF_VIDEO_FILE);
             console.log("startPlayingOffset: " + startPlayingOffset);
@@ -472,7 +466,7 @@ function FVSL(OakName){
 
          function checkIfVideoEnded(){
             if(!testResultsPrintedOut){
-               if(myVideo.currentTime >= 178){
+               if(myVideo.currentTime >= 174){
                   printOutTestResults();
                } else {
                   setTimeout(checkIfVideoEnded, 500);               
@@ -503,7 +497,7 @@ function FVSL(OakName){
          var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 6000000; // 12000000
          var MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST = stream_information_object.minimal_timespan_before_new_webtorrent_request || 3; // in seconds
          var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 3; // vorher 3  (Das mit den 6MB beim start-up) eigentlich 5
-         var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 1;
+         var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
          var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 3000000; // war vorer 500000
          
          
@@ -514,7 +508,7 @@ function FVSL(OakName){
          var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = stream_information_object.checkIfBufferFullEnoughInterval || 500; // in miliseconds
          var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = stream_information_object.checkIfAnswerstreamReadyInterval || 200; // in miliseconds
          var UPDATE_CHART_INTERVAL = stream_information_object.updateChartInterval || 1000; // in miliseconds
-         var CHOKE_IF_NECESSARY_INTERVAL = stream_information_object.chokeIfNecessaryInterval || 500; // in miliseconds    Eigentlich ist 500 angebracht
+         var CHOKE_IF_NECESSARY_INTERVAL = stream_information_object.chokeIfNecessaryInterval || 300; // in miliseconds    Eigentlich erst 500 dann 200 dann 100
          var CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL = stream_information_object.checkIfNewCreateReadstreamInterval || 2000 ; // 2000
          
          
@@ -991,7 +985,7 @@ function FVSL(OakName){
                return;
             }
             if(theTorrent && webTorrentFile){
-               document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer + "\n Bytes taken from server delivery: " + bytesTakenFromServer + "\n Bytes taken from WebTorrent delivery: " + bytesTakenFromWebTorrent;
+               document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.received: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer + "\n Bytes taken from server delivery: " + bytesTakenFromServer + "\n Bytes taken from WebTorrent delivery: " + bytesTakenFromWebTorrent;
             }
             setTimeout(updateChart, UPDATE_CHART_INTERVAL);
          }         
