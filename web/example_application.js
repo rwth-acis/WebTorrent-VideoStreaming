@@ -24,7 +24,7 @@ function FVSL(OakName) {
    var self = this;
    (function () {
       var peerId = Math.floor(Math.random() * Math.pow(10, 300) + 1);
-      console.log("Version: Bloodmage   In OakStreaming constructor. this.name: " + OakName);
+      console.log("Version: MK   In OakStreaming constructor. this.name: " + OakName);
       var OakName = OakName || "NoName FVSL instance";
 
       // Only methods should be part of the API, i.e. only methods should be publically accessible.
@@ -334,7 +334,7 @@ function FVSL(OakName) {
          var videoPlaybackStarted = false;
          var videoStartUpOver = false;
 
-         var myVideo = document.getElementById("myVideo");
+         var myVideo = document.getElementsByTagName('video')[0]; // Bei technischen Evaluation war es:  document.getElementById("myVideo");
          myVideo.addEventListener('error', function (err) {
             console.error(myVideo.error);
          });
@@ -1478,7 +1478,7 @@ Y({
 window.handleFiles = function (files) {
    //webTorrent_trackers: [["ws://gaudi.informatik.rwth-aachen.de:9913"]]   "wss://tracker.webtorrent.io"  {XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name, webTorrent_trackers: [["wss://tracker.webtorrent.io"]]} , "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  XHR_server_URL : "localhost"     hash_value : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e", 
    streamSource = true; /// XHR_server_URL : "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, path_to_file_on_XHR_server: "/" + files[0].name         WICHTIG: Config XHR Server: XHR_server_URL : "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, path_to_file_on_XHR_server: "/" + files[0].name
-   myStreaming.streamVideo(files[0], { XHR_server_URL: "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, path_to_file_on_XHR_server: "/" + files[0].name }, function (streamInformationObject) {
+   myStreaming.streamVideo(files[0], { XHR_server_URL: "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name }, function (streamInformationObject) {
       //console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
       console.log("In example.js video file got seeded.");
 
