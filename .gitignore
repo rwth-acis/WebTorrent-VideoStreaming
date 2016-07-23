@@ -1,13 +1,14 @@
 .DS_Store
 sintel.mp4
 test.mp4
+bfg.jar
 grassland.mp4
+grassland_for_technical_evaluation.mp4
 Jasmine_testsuites_build/
 node_modules/
 build/**/index.html
 build/**/example_application.js
 Jasmine_testsuites_build/**/Jasmine_testsuites_help.js
-grassland_for_technical_evaluation.mp4
 web/**/index.html
 web/**/example_application.js.map
 web/**/example_application.js
