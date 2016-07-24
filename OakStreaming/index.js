@@ -36,28 +36,27 @@ function OakStreaming(OakName){
       var notificationsBecauseNewWires = 0;
       var SIZE_OF_VIDEO_FILE = 0;
       
-      // For the technical evaluation
-      var timeReceiptStreamInformationObject = -42;
-      var timeLoadVideoMethodWasCalled = -42;
-      var timePlaybackWasStalled = 0;
-      var startUpTime = 0;
-      var timeTillTorrentOnDone = -42;
-      
-      var timeOffsetRange = 60; // in seconds
-      
-      var startPlayingOffset = Math.floor(Math.random() * 1000* timeOffsetRange);  // in miliseconds
-      
       
       self.streamVideo = streamVideo;
       self.loadVideo = loadVideo;
       self.forTesting_connectedToNewWebTorrentPeer = null;
+
       
-      self.loadVideo_technical_evaluation = loadVideo_technical_evaluation;  // For Technical Evaluation
-                
+      /** This methods returns the number of bytes downloaded from the XHR server.
+      * @pulic
+      * @method
+      * @returns {Number}
+      */      
       self.get_number_of_bytes_downloaded_from_server = function(){
          return bytesReceivedFromServer;
       };
+
       
+      /** This methods returnss the number of bytes downloaded from the peer-to-peer network. The return value includes bytes received from the seeder. 
+      * @pulic
+      * @method
+      * @returns {Number}
+      */      
       self.get_number_of_bystes_downloaded_P2P = function(){
          if(theTorrent){
             return theTorrent.downloaded;
@@ -65,7 +64,13 @@ function OakStreaming(OakName){
             return 0;
          }
       };
-      
+
+
+      /** This methods returns the number of bytes uploaded to the peer-to-peer network. 
+      * @pulic
+      * @method
+      * @returns {Number}
+      */       
       self.get_number_of_bytes_uploaded_P2P = function(){
          if(theTorrent){
             return theTorrent.uploaded;
@@ -73,7 +78,13 @@ function OakStreaming(OakName){
             return 0;
          }
       };
+
       
+      /** This methods returns the number of bytes uploaded to the peer-to-peer network. 
+      * @pulic
+      * @method
+      * @returns {Number}
+      */      
       self.get_percentage_downloaded_of_torrent = function(){
          if(theTorrent){
             return theTorrent.progress;
@@ -82,11 +93,28 @@ function OakStreaming(OakName){
          }
       };
       
+      
+      /** This methods returns the size in bytes of the video file that is or has been streamed/received.
+      * @pulic
+      * @method
+      * @returns {Number}
+      */   
       self.get_file_size = function(){
          return SIZE_OF_VIDEO_FILE;
       };
       
-      // This method creates (WebRTC-)signaling data that can be put into createSignalingDataResponse method of another FVSL instance to manually connected FVSL instances 
+
+
+      /**
+      * @callback OakStreaming~createSignalingData1_callback
+      * @param {SignalingData} signalingDataObject - Other OakStreaming instances can pass this object as an argument to their createSignalingDataResponse method in order to create another SignalingData object which is necessary for successfully finishing building up the peer-to-peer connection.
+      */ 
+      
+      /** This method creates signaling data that can be put into the createSignalingDataResponse method of another OakStreaming instance to manually build up a peer-to-peer connection between both OakStreaming instances.
+      * @pulic
+      * @method
+      * @param {OakStreaming~createSignalingData_callback} callback - This callback function gets called as soon as the signaling data has been created.
+      */      
       self.createSignalingData = function (callback){
          var alreadyCalledCallback = false;
          var oakNumber = simplePeerCreationCounter;
@@ -103,8 +131,23 @@ function OakStreaming(OakName){
          });
       };
  
-      // This method creates (WebRTC-)signaling data as a response to singaling data from createSignalingDataResponse method of another FVSL instance.
-      // This mehtod returns new (WebRTC-)signaling data which has to put into processSignalingResponse method of the FVSL instance which created the original singaling data.
+      // This method creates (WebRTC-)signaling data as a response to singaling data of a createSignalingData method of another OakStreaming instance.
+      // This mehtod returns new (WebRTC-)signaling data which has to be put into processSignalingResponse method of the OakStreaming instance which created the original singaling data.
+      
+      
+      /**
+      * @callback OakStreaming~createSignalingData2_callback
+      * @param {SignalingData} signalingData - The signaling data object that has been created by the createSignalingDataResponse method.
+      * @returns {SignalingData} signalingData - An object that the OakStreaming instance that created the initial signalingData object can pass as an argument to its processSignalingResponse method in order to build up the peer-to-peer connection.
+      */ 
+      
+      /** This method expects a signaling data object that was created by the createSignalingData method of another OakStreaming instance and generates the respective response signaling data object. In order to complete the signaling data exchange, this response signaling data object then has to be put into the processSignalingResponse method of the OakStreaming instance which has initialized the signaling.
+      * @pulic
+      * @method
+      * @param {SignalingData} signalingData - A signaling data object that was created by the createSignalingData method of another OakStreaming instance.
+      * @param {OakStreaming~createSignalingData2_callback} callback - This callback function gets called as soon as the response signaling data object has been created.
+      * @returns {Number}
+      */   
       self.createSignalingDataResponse = function (signalingData, callback){
          var oakNumber = signalingData.oakNumber;
          ////console.log("In createSignalingDataResponse. In the beginning oakNumber: " + oakNumber);
@@ -130,7 +173,7 @@ function OakStreaming(OakName){
       };
       
 
-      // This method finally establishes a Web-RTC connection between the two FVSL instances. From now on both FVSL instances exchange video fragments.
+      // This method finally establishes a Web-RTC connection between the two OakStreaming instances. From now on both OakStreaming instances exchange video fragments.
       self.processSignalingResponse = function (signalingData, callback){
          ////console.log("In processSignalingResponse,  signalingData paramter: " + JSON.stringify(signalingData));
          var oakNumber = signalingData.oakNumber;
@@ -170,9 +213,9 @@ function OakStreaming(OakName){
        * @param {number} options.Sequential_Requests_time_range - How many seconds of video playback must be buffered in advance such that no more data streams are requested from the WebTorrent network. The default value is 20 (seconds).
        * @param {number} options.create_readStream_request_size - The size of the byte range requests to the WebTorrent network. The default value is 5000000 (bytes).
        * @param {number} options.download_from_server_time_range - How many seconds of video playback must be buffered in advance such that no more data is requested from the XHR server. The default value is 5 (seconds).
-       * @param {number} options.peer_upload_limit_multiplier - The FVSL client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addition >=  bytes_downloaded_from_other_peers) and stop the throtting as soon as this inequality is no longer true. The default value for peer_upload_limit_multiplier is 2.
-       * @param {number} options.peer_upload_limit_addition - The FVSL client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addition >=  bytes_downloaded_from_other_peers) and stop the throtting as soon as this inequality is no longer true. the default value for peer_upload_limit_addition is 500000 (byte).
-       * @param {string[][]} options.webTorrent_trackers - Array of arrays of WebTorrent tracking server URLs (strings). These WebTorrent trackers will be used to connect to other FVSL instances.
+       * @param {number} options.peer_upload_limit_multiplier - The OakStreaming client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addition >=  bytes_downloaded_from_other_peers) and stop the throtting as soon as this inequality is no longer true. The default value for peer_upload_limit_multiplier is 2.
+       * @param {number} options.peer_upload_limit_addition - The OakStreaming client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addition >=  bytes_downloaded_from_other_peers) and stop the throtting as soon as this inequality is no longer true. the default value for peer_upload_limit_addition is 500000 (byte).
+       * @param {string[][]} options.webTorrent_trackers - Array of arrays of WebTorrent tracking server URLs (strings). These WebTorrent trackers will be used to connect to other OakStreaming instances.
        * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated Stream_Information_Object at the end of the execution of streamVideo.
        */
       function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent){ 
@@ -238,7 +281,7 @@ function OakStreaming(OakName){
               
                
                ////console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
-               // This function calls the callback function when this FVSL instance already connected to another peer
+               // This function calls the callback function when this OakStreaming instance already connected to another peer
                // or as soon as it connects to another peer.
                self.forTesting_connectedToNewWebTorrentPeer = function(callback){
                   ////console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets executed");
@@ -258,7 +301,7 @@ function OakStreaming(OakName){
                   }
                };
                
-               // This is necessary such that the forTesting_connectedToNewWebTorrentPeer function knows how many peers already connected to this FVSL instance.
+               // This is necessary such that the forTesting_connectedToNewWebTorrentPeer function knows how many peers already connected to this OakStreaming instance.
                torrent.on('wire', function (wire){
                   notificationsBecauseNewWires++;  
                });
@@ -569,7 +612,7 @@ function OakStreaming(OakName){
                   timeTillTorrentOnDone = Date.now() - timeLoadVideoMethodWasCalled; // For technical evaluation
                });
                
-               // Peers which used the offered methods to manually connect to this FVSL instance
+               // Peers which used the offered methods to manually connect to this OakStreaming instance
                // before a torrent file was loaded are added now to the set of peers that are used for video data exchange.
                for(var j=0; j< peersToAdd.length; j++){
                   theTorrent.addPeer(peersToAdd[j][0]);
@@ -580,7 +623,7 @@ function OakStreaming(OakName){
 
                // This function has the same purpose 
                ////console.log("In loadVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
-               // This function calls the callback function when this FVSL instance already connected to another peer
+               // This function calls the callback function when this OakStreaming instance already connected to another peer
                // or as soon as it connects to another peer.
                self.forTesting_connectedToNewWebTorrentPeer = function(callback){
                   ////console.log("In loadVideo     " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer   gets called");
@@ -1399,7 +1442,7 @@ function OakStreaming(OakName){
          }
       }
 
-      // This function adds a simple-peer connection to the WebTorrent swarm of the FVSL instance.
+      // This function adds a simple-peer connection to the WebTorrent swarm of the OakStreaming instance.
       // A simple-peer is a wrapper for a Web-RTC connection.
       function addSimplePeerInstance(simplePeerInstance, options, callback){
          // The method add a simplePeer to the WebTorrent swarm instance
