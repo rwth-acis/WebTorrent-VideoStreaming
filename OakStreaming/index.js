@@ -11,21 +11,20 @@ var SimplePeer = require('simple-peer');
 
 
 /**
- * @module FVSL
+ * @module OakStreaming
  */
-module.exports = FVSL;
+module.exports = OakStreaming;
 
 
  /**
- * Creates a new FVSL instance which has the methods streamVideo, loadVideo, createSignalingData, createSignalingDataResponse, processSignalingResponse and several simple get methods  
+ * Creates a new OakStreaming instance which has the methods streamVideo, loadVideo, createSignalingData, createSignalingDataResponse, processSignalingResponse and some simple get methods.  
  * @constructor
  */ 
-function FVSL(OakName){
+function OakStreaming(OakName){
    var self = this;
-   (function(){
-      var peerId = Math.floor(Math.random() * Math.pow(10,300) + 1);   
-      console.log("Version: MK   In OakStreaming constructor. this.name: " + OakName);
-      var OakName = OakName || "NoName FVSL instance";
+   (function(){  
+      var OakName = OakName || Math.floor(Math.random() * Math.pow(10,300) + 1);
+      console.log("Version: Archer   In OakStreaming constructor. this.name: " + OakName);
       
       // Only methods should be part of the API, i.e. only methods should be publically accessible.
       // Every method should have access to these variables. Therefore they are definied at this high scope.
@@ -168,7 +167,7 @@ function FVSL(OakName){
        * @param {string} options.hash_value - Hash value of the video file that should by requested from the SVSL WebServer. It is not necessary to set both the pathToFileOnXHRServer and the hashValue paramter for successfull XHR requests. If this property and the hashValue property is undefined, no video data will be requested from the server. 
        * @param {string} options.XHR_server_URL - URL of a XHR server that can serve the video file. If this property is not set, XHR will be send to the Web server that served the Web page.
        * @param {number} options.XHR_port - Port that will be used when communicating with the XHR server that was specified in the XHRServerURL property. This property should only be set when the XHRServerURL property is set too. The default value is 80.
-       * @param {number} options.download_from_p2p_time_range - How many seconds of video playback must be buffered in advance such that no more data streams are requested from the WebTorrent network. The default value is 20 (seconds).
+       * @param {number} options.Sequential_Requests_time_range - How many seconds of video playback must be buffered in advance such that no more data streams are requested from the WebTorrent network. The default value is 20 (seconds).
        * @param {number} options.create_readStream_request_size - The size of the byte range requests to the WebTorrent network. The default value is 5000000 (bytes).
        * @param {number} options.download_from_server_time_range - How many seconds of video playback must be buffered in advance such that no more data is requested from the XHR server. The default value is 5 (seconds).
        * @param {number} options.peer_upload_limit_multiplier - The FVSL client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addition >=  bytes_downloaded_from_other_peers) and stop the throtting as soon as this inequality is no longer true. The default value for peer_upload_limit_multiplier is 2.
@@ -493,7 +492,7 @@ function FVSL(OakName){
          SIZE_OF_VIDEO_FILE = stream_information_object.size_of_video_file;
          ////console.log("stream_information_object.size_of_video_file: "  + stream_information_object.size_of_video_file);
 
-         var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20; // eigentlich 20
+         var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.Sequential_Requests_time_range || 20; // eigentlich 20
          var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 6000000; // 12000000
          var MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST = stream_information_object.minimal_timespan_before_new_webtorrent_request || 3; // in seconds
          var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 3; // vorher 3  (Das mit den 6MB beim start-up) eigentlich 5
