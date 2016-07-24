@@ -201,22 +201,22 @@ function OakStreaming(OakName){
        
        
        /**
-       * @typedef Stream_Information_Object
+       * @typedef Stream_Information
        * @type {object}
        * @property {number} video_file_size - The size in byte of the video file that was passed as an argument.
        */
        
       /**
        * @callback OakStreaming~streamVideoFinished
-       * @param {Stream_Information_Object} stream_information_object - An object that other clients/peers can pass as an argument to their loadVideo method to download the video from other clients/peers and/or a Web Server.
+       * @param {Stream_Information} stream_information_object - An object that other OakStreaming instances can pass as an argument to their loadVideo method to download the video from this and other OakStreaming instances and/or a Web Server.
        */ 
 
       /**
-       * Streams a video file to all other clients/peers.
-       * @param {object} video_file - The video file that should be streamed to the other clients/peers. This paramter can either be a {@link https://developer.mozilla.org/en-US/docs/Web/API/File |W3C File object}, a {@link https://developer.mozilla.org/en-US/docs/Web/API/FileList |W3C FileList}, a {@link https://nodejs.org/api/buffer.html |Node Buffer object} or a {@link https://nodejs.org/api/stream.html#stream_class_stream_readable |Readable stream object}.
-       * @param {object} [options] - Options for the creation of the Stream_Information_Object, that after its creation gets passed as an argument to the callback function.
-       * @param {string} options.path_to_file_on_XHR_server - The path that will be used for the XML HTTP Request (XHR). A valid path would be, for example, "/videos/aVideoFile.mp4". It is not necessary to set both the pathToFileOnXHRServer and the hashValue paramter for successfull XHR requests. If this property and the hashValue property is undefined, no video data will be requested from the server.
-       * @param {string} options.hash_value - Hash value of the video file that should by requested from the SVSL WebServer. It is not necessary to set both the pathToFileOnXHRServer and the hashValue paramter for successfull XHR requests. If this property and the hashValue property is undefined, no video data will be requested from the server. 
+       * This method creates a Stream_Information object that other OakStreaming instances can pass as an argument to their loadVideo method to download the video from this and other OakStreaming instances and/or a Web Server.
+       * @param {object} video_file - The video file that should be streamed to other OakStreaming instances. This paramter can either be a {@link https://developer.mozilla.org/en-US/docs/Web/API/File |W3C File object}, a {@link https://developer.mozilla.org/en-US/docs/Web/API/FileList |W3C FileList}, a {@link https://nodejs.org/api/buffer.html |Node Buffer object} or a {@link https://nodejs.org/api/stream.html#stream_class_stream_readable |Readable stream object}.
+       * @param {object} [options] - Options for the creation of the Stream_Information object. After its creation, the Stream_Information object gets passed by the streamVideo method as an argument to the callback function.
+       * @param {string} options.path_to_file_on_Web_server - This path will be used for the XML HTTP Requests (XHRs). For example, a valid path could be "/videos/aVideoFile.mp4". For successfull XHRs, it is not necessary to set both the path_to_file_on_Web_server and the hash_value paramter. If both properties are definied, the hash_value property will be used for XHRs. If this property and the hash_value property is undefined, no video data will be requested from the Web server.
+       * @param {string} options.hash_value - The SHA-256 hash value of the video file that should by (partially) requested from the Web server. It is not necessary to set both the path_to_file_on_Web_server and the hash_value paramter for successfull XML HTTP Requests (XHRs). If both properties are definied, the hash_value property will be used for XHRs. If this property and the path_to_file_on_Web_server property is undefined, no video data will be requested from the Web server.
        * @param {string} options.XHR_server_URL - URL of a XHR server that can serve the video file. If this property is not set, XHR will be send to the Web server that served the Web page.
        * @param {number} options.XHR_port - Port that will be used when communicating with the XHR server that was specified in the XHRServerURL property. This property should only be set when the XHRServerURL property is set too. The default value is 80.
        * @param {number} options.Sequential_Requests_time_range - How many seconds of video playback must be buffered in advance such that no more data streams are requested from the WebTorrent network. The default value is 20 (seconds).
@@ -225,7 +225,7 @@ function OakStreaming(OakName){
        * @param {number} options.peer_upload_limit_multiplier - The OakStreaming client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addition >=  bytes_downloaded_from_other_peers) and stop the throtting as soon as this inequality is no longer true. The default value for peer_upload_limit_multiplier is 2.
        * @param {number} options.peer_upload_limit_addition - The OakStreaming client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addition >=  bytes_downloaded_from_other_peers) and stop the throtting as soon as this inequality is no longer true. the default value for peer_upload_limit_addition is 500000 (byte).
        * @param {string[][]} options.webTorrent_trackers - Array of arrays of WebTorrent tracking server URLs (strings). These WebTorrent trackers will be used to connect to other OakStreaming instances.
-       * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated Stream_Information_Object at the end of the execution of streamVideo.
+       * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated Stream_Information object at the end of the execution of streamVideo.
        */
       function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent){ 
          var webTorrentClient = new WebTorrent();
