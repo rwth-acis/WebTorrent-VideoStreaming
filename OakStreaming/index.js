@@ -131,14 +131,12 @@ function OakStreaming(OakName){
          });
       };
  
+ 
       // This method creates (WebRTC-)signaling data as a response to singaling data of a createSignalingData method of another OakStreaming instance.
-      // This mehtod returns new (WebRTC-)signaling data which has to be put into processSignalingResponse method of the OakStreaming instance which created the original singaling data.
-      
-      
+      // This mehtod returns new (WebRTC-)signaling data which has to be put into processSignalingResponse method of the OakStreaming instance which created the original singaling data.     
       /**
       * @callback OakStreaming~createSignalingData2_callback
-      * @param {SignalingData} signalingData - The signaling data object that has been created by the createSignalingDataResponse method.
-      * @returns {SignalingData} signalingData - An object that the OakStreaming instance that created the initial signalingData object can pass as an argument to its processSignalingResponse method in order to build up the peer-to-peer connection.
+      * @param {SignalingData} signalingData - An object that the OakStreaming instance that created the initial signalingData object can pass as an argument to its processSignalingResponse method in order to build up the peer-to-peer connection.
       */ 
       
       /** This method expects a signaling data object that was created by the createSignalingData method of another OakStreaming instance and generates the respective response signaling data object. In order to complete the signaling data exchange, this response signaling data object then has to be put into the processSignalingResponse method of the OakStreaming instance which has initialized the signaling.
@@ -174,6 +172,16 @@ function OakStreaming(OakName){
       
 
       // This method finally establishes a Web-RTC connection between the two OakStreaming instances. From now on both OakStreaming instances exchange video fragments.
+      /**
+      * @callback OakStreaming~createSignalingData3_callback
+      */ 
+      
+      /** This method expects a signaling data object that a createSignalingResponse method of another OakStreaming has generated based on a signaling data object that the createSignalingData method of this OakStreaming method created. After the signaling data object has been processed this OakStreaming instance automatically build up a peer-to-peer connection to the other OakStreaming instance. After the peer-to-peer connection has been established, both OakStreaming instances automatically exchange video fragments.
+      * @pulic
+      * @method
+      * @param {SignalingData} signalingData - A signaling data object that was created by the createSignalingResponse method of another OakStreaming instance. A necessary requirement is that the createSigngalingResponse method created the signaling data object based on a singaling data object that the createSignalingData method of this OakStreaming instance generated.
+      * @param {OakStreaming~createSignalingData3_callback} callback - This callback function gets called as soon as the peer-to-peer connection between the two OakStreaming instances has been established.
+      */ 
       self.processSignalingResponse = function (signalingData, callback){
          ////console.log("In processSignalingResponse,  signalingData paramter: " + JSON.stringify(signalingData));
          var oakNumber = signalingData.oakNumber;
@@ -190,6 +198,7 @@ function OakStreaming(OakName){
          ////console.log("In processSignalingResponse,  object that is passed to .signal(): " + JSON.stringify(signalingData));
          connectionsWaitingForSignalingData[oakNumber].signal(signalingData);
       };
+       
        
        /**
        * @typedef Stream_Information_Object
