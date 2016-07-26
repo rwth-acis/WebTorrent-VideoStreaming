@@ -1374,7 +1374,7 @@ var oakStreaming = new OakStreaming();
 var theSharedArray = null;
 var streamSource = false;
 
-console.log("This is task 2");
+console.log("This is task 3");
 
 Y({
    db: {
@@ -1383,7 +1383,7 @@ Y({
    connector: {
       url: "http://gaudi.informatik.rwth-aachen.de:9914",
       name: 'webrtc',
-      room: 'WebTorrent-Streaming-yeah'
+      room: 'User1'
    },
    share: {
       myArray: 'Array'
@@ -1396,19 +1396,25 @@ Y({
       console.log("The event object has more information:");
       console.log(event);
       if (!streamSource) {
-         oakStreaming.loadVideo(theSharedArray.get(0), function () {
-            console.log("loadVideo callback: All video data has been received");
-         });
+         // theSharedArray.get(0) returns the received Stream_Information object.   
+         // Task 3.2
       }
    });
 });
 
 window.handleFiles = function (files) {
    streamSource = true;
-   oakStreaming.streamVideo(files[0], { webTorrent_trackers: [["wss://tracker.webtorrent.io"]], peer_upload_limit_multiplier: 1.5 }, function (streamInformationObject) {
-      addToSharedArray(streamInformationObject);
-   });
+   // files[0] contains the file from the user
+   // addToSharedArray(content)  sends content to all other peers
+   // Task 3.1
 };
+
+// Task 3.3
+function updateChart() {
+   document.getElementById("statistics").innerHTML = "Size of video file in byte: " + oakStreaming.get_file_size() + " Number ob bytes downloaded from peer-to-peer network: "; // add something here
+   setTimeout(updateChart, 500);
+}
+updateChart();
 
 function addToSharedArray(streamInformationObject) {
    if (theSharedArray !== null) {
@@ -1419,12 +1425,6 @@ function addToSharedArray(streamInformationObject) {
       }, 250);
    }
 }
-
-function updateChart() {
-   document.getElementById("statistics").innerHTML = "webTorrentFile.length: " + oakStreaming.get_file_size() + "\n torrent.downloaded: " + oakStreaming.get_number_of_bystes_downloaded_P2P() + "\n torrent.uploaded: " + oakStreaming.get_number_of_bytes_uploaded_P2P() + "\n torrent.progress: " + oakStreaming.get_percentage_downloaded_of_torrent() + "\n Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
-   setTimeout(updateChart, 500);
-}
-updateChart();
 
 },{"./OakStreaming":1,"y-array":141,"y-map":142,"y-memory":143,"yjs":151}],3:[function(require,module,exports){
 var ADDR_RE = /^\[?([^\]]+)\]?:(\d+)$/ // ipv4/ipv6/hostname + port
