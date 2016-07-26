@@ -42,7 +42,7 @@ function OakStreaming(OakName){
       self.forTesting_connectedToNewWebTorrentPeer = null;
 
       
-      /** This methods returns the number of bytes downloaded from the XHR server.
+      /** This method returns the number of bytes downloaded from the Web server server.
       * @pulic
       * @method
       * @returns {Number}
@@ -52,7 +52,7 @@ function OakStreaming(OakName){
       };
 
       
-      /** This methods returnss the number of bytes downloaded from the peer-to-peer network. The return value includes bytes received from the seeder. 
+      /** This method returns the number of bytes downloaded from the peer-to-peer network. The return value includes bytes that were sent by the seeder. 
       * @pulic
       * @method
       * @returns {Number}
@@ -66,7 +66,7 @@ function OakStreaming(OakName){
       };
 
 
-      /** This methods returns the number of bytes uploaded to the peer-to-peer network. 
+      /** This method returns the number of bytes uploaded to the peer-to-peer network. 
       * @pulic
       * @method
       * @returns {Number}
@@ -80,7 +80,7 @@ function OakStreaming(OakName){
       };
 
       
-      /** This methods returns the number of bytes uploaded to the peer-to-peer network. 
+      /** This method returns the number of bytes downloaded from the peer-to-peer network. 
       * @pulic
       * @method
       * @returns {Number}
@@ -94,7 +94,7 @@ function OakStreaming(OakName){
       };
       
       
-      /** This methods returns the size in bytes of the video file that is or has been streamed/received.
+      /** This method returns the size in bytes of the video file that is or has been streamed/received.
       * @pulic
       * @method
       * @returns {Number}
@@ -110,7 +110,7 @@ function OakStreaming(OakName){
       * @param {SignalingData} signalingDataObject - Other OakStreaming instances can pass this object as an argument to their createSignalingDataResponse method in order to create another SignalingData object which is necessary for successfully finishing building up the peer-to-peer connection.
       */ 
       
-      /** This method creates signaling data that can be put into the createSignalingDataResponse method of another OakStreaming instance to manually build up a peer-to-peer connection between both OakStreaming instances.
+      /** This method creates signaling data that can be put into the createSignalingDataResponse method of another OakStreaming instance in order to manually building up a peer-to-peer connection between both OakStreaming instances.
       * @pulic
       * @method
       * @param {OakStreaming~createSignalingData_callback} callback - This callback function gets called as soon as the signaling data has been created.
@@ -176,7 +176,7 @@ function OakStreaming(OakName){
       * @callback OakStreaming~createSignalingData3_callback
       */ 
       
-      /** This method expects a signaling data object that a createSignalingResponse method of another OakStreaming has generated based on a signaling data object that the createSignalingData method of this OakStreaming method created. After the signaling data object has been processed this OakStreaming instance automatically build up a peer-to-peer connection to the other OakStreaming instance. After the peer-to-peer connection has been established, both OakStreaming instances automatically exchange video fragments.
+      /** This method expects a signaling data object that a createSignalingResponse method of another OakStreaming has generated based on a signaling data object that the createSignalingData method of this OakStreaming method created. After the signaling data object has been processed, this OakStreaming instance automatically builds up a peer-to-peer connection to the other OakStreaming instance. After the peer-to-peer connection has been established, both OakStreaming instances automatically exchange video fragments.
       * @pulic
       * @method
       * @param {SignalingData} signalingData - A signaling data object that was created by the createSignalingResponse method of another OakStreaming instance. A necessary requirement is that the createSigngalingResponse method created the signaling data object based on a singaling data object that the createSignalingData method of this OakStreaming instance generated.
@@ -213,18 +213,18 @@ function OakStreaming(OakName){
 
       /**
        * This method creates a Stream_Information object that other OakStreaming instances can pass as an argument to their loadVideo method to download the video from this and other OakStreaming instances and/or a Web Server.
-       * @param {object} video_file - The video file that should be streamed to other OakStreaming instances. This paramter can either be a {@link https://developer.mozilla.org/en-US/docs/Web/API/File |W3C File object}, a {@link https://developer.mozilla.org/en-US/docs/Web/API/FileList |W3C FileList}, a {@link https://nodejs.org/api/buffer.html |Node Buffer object} or a {@link https://nodejs.org/api/stream.html#stream_class_stream_readable |Readable stream object}.
+       * @param {object} [video_file] - The video file that should be streamed peer-to-peer to other OakStreaming instances. This paramter can either be a {@link https://developer.mozilla.org/en-US/docs/Web/API/File |W3C File object}, a {@link https://developer.mozilla.org/en-US/docs/Web/API/FileList |W3C FileList}, a {@link https://nodejs.org/api/buffer.html |Node Buffer object} or a {@link https://nodejs.org/api/stream.html#stream_class_stream_readable |Readable stream object}.
        * @param {object} [options] - Options for the creation of the Stream_Information object. After its creation, the Stream_Information object gets passed by the streamVideo method as an argument to the callback function.
+       * @param {string} [options.web_server_URL] - URL of a Web server that can serve the video file. If this property is not set, XHRs will be send to the Web server that served the Web page. If this property is set to false, no Web server will be requested.
+       * @param {number} [options.web_server_port = 80] - Port that will be used when communicating with the Web server that was specified in the web_server_URL property. This property should only be set when the web_server_URL property is set too.
        * @param {string} [options.path_to_file_on_Web_server] - This path will be used for the XML HTTP Requests (XHRs). For example, a valid path could be "/videos/aVideoFile.mp4". For successfull XHRs, it is not necessary to set both the path_to_file_on_Web_server and the hash_value paramter. If both properties are definied, the hash_value property will be used for XHRs. If this property and the hash_value property is undefined, no video data will be requested from the Web server.
        * @param {string} [options.hash_value] - The SHA-256 hash value of the video file that should by (partially) requested from the Web server. It is not necessary to set both the path_to_file_on_Web_server and the hash_value paramter for successfull XML HTTP Requests (XHRs). If both properties are definied, the hash_value property will be used for XHRs. If this property and the path_to_file_on_Web_server property is undefined, no video data will be requested from the Web server.
-       * @param {string} [options.web_server_URL] - URL of a Web server that can serve the video file. If this property is not set, XHRs will be send to the Web server that served the Web page.
-       * @param {number} [options.web_server_port = 80] - Port that will be used when communicating with the Web server that was specified in the web_server_URL property. This property should only be set when the web_server_URL property is set too.
+       * @param {number} [options.download_from_server_time_range = 5] - How many seconds of video playback must be buffered in advance such that no data is requested from the Web server.
+       * @param {string[][]} options.webTorrent_trackers - Array of arrays of WebTorrent tracking server URLs (strings). These WebTorrent trackers will be used to connect to other OakStreaming instances. In which order these tracking server a contacted is described in {@link http://www.bittorrent.org/beps/bep_0012.html}.
        * @param {number} [options.Sequential_Requests_time_range = 20] - How many seconds of video playback must be buffered in advance such that no data streams are requested from the WebTorrent network.
        * @param {number} [options.create_readStream_request_size = 5000000] - The size of the sequential byte range requests to the WebTorrent network. Keeping the default value is sufficient for most use cases.
-       * @param {number} [options.download_from_server_time_range = 5] - How many seconds of video playback must be buffered in advance such that no data is requested from the Web server.
        * @param {number} [options.peer_upload_limit_multiplier = 2] - The OakStreaming client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throtting as soon as the before mentioned inequality is no longer true.
        * @param {number} [options.peer_upload_limit_addend = 3000000] - The OakStreaming client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throtting as soon as the before mentioned inequality is no longer true.
-       * @param {string[][]} options.webTorrent_trackers - Array of arrays of WebTorrent tracking server URLs (strings). These WebTorrent trackers will be used to connect to other OakStreaming instances. In which order these tracking server a contacted is described in {@link http://www.bittorrent.org/beps/bep_0012.html}.
        * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated Stream_Information object at the end of the execution of streamVideo.
        */
       function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent){ 
@@ -235,12 +235,19 @@ function OakStreaming(OakName){
          //////console.log("videoFile: " + videoFile);
          //////console.log("options: " + options);
          //////console.log("callback: " + callback);         
-          
-         var stream_information_object = options;
-         
-         if(options && options.web_server_URL && !options.path_to_file_on_XHR_server){
+        
+
+         // options.web_server_URL &&
+         if(options &&  !options.path_to_file_on_XHR_server){
             options.path_to_file_on_XHR_server = "/" + video_file.name;
          }
+        
+         if(options){
+            var stream_information_object = options;
+         } else {
+            stream_information_object = {};
+         }
+        
        
          if(video_file){
             var seedingOptions = {
@@ -248,6 +255,8 @@ function OakStreaming(OakName){
             };
             if(options.webTorrent_trackers){
                seedingOptions.announceList = options.webTorrent_trackers;
+            } else {
+               seedingOptions.announceList = [[]];
             }
 
             var self = this; 
@@ -511,7 +520,7 @@ function OakStreaming(OakName){
             ////console.log("entered if(deliveryByWebtorrent)");
             webTorrentClient = new WebTorrent();
                     
-            var webTorrentOptions = {};
+            var webTorrentOptions = {announce: []};
             
             /* Weiß nicht mehr warum das hier steht
             if(stream_information_object.pathToFileToSeed){

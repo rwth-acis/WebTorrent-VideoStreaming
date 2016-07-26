@@ -10,7 +10,7 @@ var theSharedArray = null;
 var streamSource = false;
 
 console.log("This is task 4");
-var turn 1; // New variable in task 4
+var step 1; // New variable in task 4
 
 Y({
   db: {
@@ -33,27 +33,27 @@ Y({
       console.log(event);
       
       
+      
+      
       // Task 4.2
+      
+      // addToSharedArray(object, I)   adds object at index I of the shared array.
+      // theSharedArray.get(I)   returns the object at index I of the shared array.
        
       if(streamSource){
-         if(turn === 2){
-            oakStreaming.createSignalingDataResponse(theSharedArray.get(2), function(signalingData){
-               addToSharedArray(signalingData, 3);
-            });
+         if(step === 2){
+            // ###Write code here### 
          }
       } else {
-         if(turn === 1){
-            oakStreaming.loadVideo(theSharedArray.get(1), function(){console.log("loadVideo callback: All video data has been received");});
-            
-            oakStreaming.createSignalingData(function(signalingData){
-               addToSharedArray(signalingData, 2);
-            });
+         if(step === 1){
+            // ###Write code here### 
          }
-         if (turn === 3){
-            oakStreaming.processSignalingResponse(theSharedArray.get(3));
+         if (step === 3){
+            // ###Write code here### 
          }
       }
-      turn++;
+      step++;
+      
       
       
       
@@ -63,14 +63,24 @@ Y({
 window.handleFiles = function (files) {
    streamSource = true;
    
+   
+   
+   
+   // Task 4.1
+   
    // sha-256 hash value of video file fd461d08157e91b3811b6581d8abcfa55fc7e27b808f957878140a7bc117f5ea
    // Web server URL: gaudi.informatik.rwth-aachen.de
    // Web server port: 
-   // files[0] is the video file that the user selected
-   // Task 4.1
-   oakStreaming.streamVideo(files[0], {hash_value: "fd461d08157e91b3811b6581d8abcfa55fc7e27b808f957878140a7bc117f5ea", Sequential_Requests_time_range: 10}, function(streamInformationObject){      
+   // files[0] is the video file that the user selected.
+   // addToSharedArray(object, I)  adds object at index I of the shared array.
+   
+   
+   oakStreaming.streamVideo(files[0], {/* ###Write code here### Set the appropriate values for the option object   */}, function(streamInformationObject){      
       addToSharedArray(streamInformationObject, 1);
    });
+   
+   
+   
 }
 
 
