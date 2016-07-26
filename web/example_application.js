@@ -12,20 +12,19 @@ var WebTorrent = require('webtorrent');
 var SimplePeer = require('simple-peer');
 
 /**
- * @module FVSL
+ * @module OakStreaming
  */
-module.exports = FVSL;
+module.exports = OakStreaming;
 
 /**
-* Creates a new FVSL instance which has the methods streamVideo, loadVideo, createSignalingData, createSignalingDataResponse, processSignalingResponse and several simple get methods  
+* Creates a new OakStreaming instance which has the methods streamVideo, loadVideo, createSignalingData, createSignalingDataResponse, processSignalingResponse and some simple get methods.  
 * @constructor
 */
-function FVSL(OakName) {
+function OakStreaming(OakName) {
    var self = this;
    (function () {
-      var peerId = Math.floor(Math.random() * Math.pow(10, 300) + 1);
-      console.log("Version: MK   In OakStreaming constructor. this.name: " + OakName);
-      var OakName = OakName || "NoName FVSL instance";
+      var OakName = OakName || Math.floor(Math.random() * Math.pow(10, 300) + 1);
+      console.log("Version: Archer   In OakStreaming constructor. this.name: " + OakName);
 
       // Only methods should be part of the API, i.e. only methods should be publically accessible.
       // Every method should have access to these variables. Therefore they are definied at this high scope.
@@ -37,27 +36,24 @@ function FVSL(OakName) {
       var notificationsBecauseNewWires = 0;
       var SIZE_OF_VIDEO_FILE = 0;
 
-      // For the technical evaluation
-      var timeReceiptStreamInformationObject = -42;
-      var timeLoadVideoMethodWasCalled = -42;
-      var timePlaybackWasStalled = 0;
-      var startUpTime = 0;
-      var timeTillTorrentOnDone = -42;
-
-      var timeOffsetRange = 60; // in seconds
-
-      var startPlayingOffset = Math.floor(Math.random() * 1000 * timeOffsetRange); // in miliseconds
-
       self.streamVideo = streamVideo;
       self.loadVideo = loadVideo;
       self.forTesting_connectedToNewWebTorrentPeer = null;
 
-      self.loadVideo_technical_evaluation = loadVideo_technical_evaluation; // For Technical Evaluation
-
+      /** This methods returns the number of bytes downloaded from the XHR server.
+      * @pulic
+      * @method
+      * @returns {Number}
+      */
       self.get_number_of_bytes_downloaded_from_server = function () {
          return bytesReceivedFromServer;
       };
 
+      /** This methods returnss the number of bytes downloaded from the peer-to-peer network. The return value includes bytes received from the seeder. 
+      * @pulic
+      * @method
+      * @returns {Number}
+      */
       self.get_number_of_bystes_downloaded_P2P = function () {
          if (theTorrent) {
             return theTorrent.downloaded;
@@ -66,6 +62,11 @@ function FVSL(OakName) {
          }
       };
 
+      /** This methods returns the number of bytes uploaded to the peer-to-peer network. 
+      * @pulic
+      * @method
+      * @returns {Number}
+      */
       self.get_number_of_bytes_uploaded_P2P = function () {
          if (theTorrent) {
             return theTorrent.uploaded;
@@ -74,6 +75,11 @@ function FVSL(OakName) {
          }
       };
 
+      /** This methods returns the number of bytes uploaded to the peer-to-peer network. 
+      * @pulic
+      * @method
+      * @returns {Number}
+      */
       self.get_percentage_downloaded_of_torrent = function () {
          if (theTorrent) {
             return theTorrent.progress;
@@ -82,11 +88,25 @@ function FVSL(OakName) {
          }
       };
 
+      /** This methods returns the size in bytes of the video file that is or has been streamed/received.
+      * @pulic
+      * @method
+      * @returns {Number}
+      */
       self.get_file_size = function () {
          return SIZE_OF_VIDEO_FILE;
       };
 
-      // This method creates (WebRTC-)signaling data that can be put into createSignalingDataResponse method of another FVSL instance to manually connected FVSL instances 
+      /**
+      * @callback OakStreaming~createSignalingData1_callback
+      * @param {SignalingData} signalingDataObject - Other OakStreaming instances can pass this object as an argument to their createSignalingDataResponse method in order to create another SignalingData object which is necessary for successfully finishing building up the peer-to-peer connection.
+      */
+
+      /** This method creates signaling data that can be put into the createSignalingDataResponse method of another OakStreaming instance to manually build up a peer-to-peer connection between both OakStreaming instances.
+      * @pulic
+      * @method
+      * @param {OakStreaming~createSignalingData_callback} callback - This callback function gets called as soon as the signaling data has been created.
+      */
       self.createSignalingData = function (callback) {
          var alreadyCalledCallback = false;
          var oakNumber = simplePeerCreationCounter;
@@ -103,8 +123,20 @@ function FVSL(OakName) {
          });
       };
 
-      // This method creates (WebRTC-)signaling data as a response to singaling data from createSignalingDataResponse method of another FVSL instance.
-      // This mehtod returns new (WebRTC-)signaling data which has to put into processSignalingResponse method of the FVSL instance which created the original singaling data.
+      // This method creates (WebRTC-)signaling data as a response to singaling data of a createSignalingData method of another OakStreaming instance.
+      // This mehtod returns new (WebRTC-)signaling data which has to be put into processSignalingResponse method of the OakStreaming instance which created the original singaling data.     
+      /**
+      * @callback OakStreaming~createSignalingData2_callback
+      * @param {SignalingData} signalingData - An object that the OakStreaming instance that created the initial signalingData object can pass as an argument to its processSignalingResponse method in order to build up the peer-to-peer connection.
+      */
+
+      /** This method expects a signaling data object that was created by the createSignalingData method of another OakStreaming instance and generates the respective response signaling data object. In order to complete the signaling data exchange, this response signaling data object then has to be put into the processSignalingResponse method of the OakStreaming instance which has initialized the signaling.
+      * @pulic
+      * @method
+      * @param {SignalingData} signalingData - A signaling data object that was created by the createSignalingData method of another OakStreaming instance.
+      * @param {OakStreaming~createSignalingData2_callback} callback - This callback function gets called as soon as the response signaling data object has been created.
+      * @returns {Number}
+      */
       self.createSignalingDataResponse = function (signalingData, callback) {
          var oakNumber = signalingData.oakNumber;
          ////console.log("In createSignalingDataResponse. In the beginning oakNumber: " + oakNumber);
@@ -129,7 +161,17 @@ function FVSL(OakName) {
          });
       };
 
-      // This method finally establishes a Web-RTC connection between the two FVSL instances. From now on both FVSL instances exchange video fragments.
+      // This method finally establishes a Web-RTC connection between the two OakStreaming instances. From now on both OakStreaming instances exchange video fragments.
+      /**
+      * @callback OakStreaming~createSignalingData3_callback
+      */
+
+      /** This method expects a signaling data object that a createSignalingResponse method of another OakStreaming has generated based on a signaling data object that the createSignalingData method of this OakStreaming method created. After the signaling data object has been processed this OakStreaming instance automatically build up a peer-to-peer connection to the other OakStreaming instance. After the peer-to-peer connection has been established, both OakStreaming instances automatically exchange video fragments.
+      * @pulic
+      * @method
+      * @param {SignalingData} signalingData - A signaling data object that was created by the createSignalingResponse method of another OakStreaming instance. A necessary requirement is that the createSigngalingResponse method created the signaling data object based on a singaling data object that the createSignalingData method of this OakStreaming instance generated.
+      * @param {OakStreaming~createSignalingData3_callback} callback - This callback function gets called as soon as the peer-to-peer connection between the two OakStreaming instances has been established.
+      */
       self.processSignalingResponse = function (signalingData, callback) {
          ////console.log("In processSignalingResponse,  signalingData paramter: " + JSON.stringify(signalingData));
          var oakNumber = signalingData.oakNumber;
@@ -148,31 +190,31 @@ function FVSL(OakName) {
       };
 
       /**
-      * @typedef Stream_Information_Object
+      * @typedef Stream_Information
       * @type {object}
       * @property {number} video_file_size - The size in byte of the video file that was passed as an argument.
       */
 
       /**
        * @callback OakStreaming~streamVideoFinished
-       * @param {Stream_Information_Object} stream_information_object - An object that other clients/peers can pass as an argument to their loadVideo method to download the video from other clients/peers and/or a Web Server.
+       * @param {Stream_Information} stream_information_object - An object that other OakStreaming instances can pass as an argument to their loadVideo method to download the video from this and other OakStreaming instances and/or a Web Server.
        */
 
       /**
-       * Streams a video file to all other clients/peers.
-       * @param {object} video_file - The video file that should be streamed to the other clients/peers. This paramter can either be a {@link https://developer.mozilla.org/en-US/docs/Web/API/File |W3C File object}, a {@link https://developer.mozilla.org/en-US/docs/Web/API/FileList |W3C FileList}, a {@link https://nodejs.org/api/buffer.html |Node Buffer object} or a {@link https://nodejs.org/api/stream.html#stream_class_stream_readable |Readable stream object}.
-       * @param {object} [options] - Options for the creation of the Stream_Information_Object, that after its creation gets passed as an argument to the callback function.
-       * @param {string} options.path_to_file_on_XHR_server - The path that will be used for the XML HTTP Request (XHR). A valid path would be, for example, "/videos/aVideoFile.mp4". It is not necessary to set both the pathToFileOnXHRServer and the hashValue paramter for successfull XHR requests. If this property and the hashValue property is undefined, no video data will be requested from the server.
-       * @param {string} options.hash_value - Hash value of the video file that should by requested from the SVSL WebServer. It is not necessary to set both the pathToFileOnXHRServer and the hashValue paramter for successfull XHR requests. If this property and the hashValue property is undefined, no video data will be requested from the server. 
-       * @param {string} options.XHR_server_URL - URL of a XHR server that can serve the video file. If this property is not set, XHR will be send to the Web server that served the Web page.
-       * @param {number} options.XHR_port - Port that will be used when communicating with the XHR server that was specified in the XHRServerURL property. This property should only be set when the XHRServerURL property is set too. The default value is 80.
-       * @param {number} options.download_from_p2p_time_range - How many seconds of video playback must be buffered in advance such that no more data streams are requested from the WebTorrent network. The default value is 20 (seconds).
-       * @param {number} options.create_readStream_request_size - The size of the byte range requests to the WebTorrent network. The default value is 5000000 (bytes).
-       * @param {number} options.download_from_server_time_range - How many seconds of video playback must be buffered in advance such that no more data is requested from the XHR server. The default value is 5 (seconds).
-       * @param {number} options.peer_upload_limit_multiplier - The FVSL client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addition >=  bytes_downloaded_from_other_peers) and stop the throtting as soon as this inequality is no longer true. The default value for peer_upload_limit_multiplier is 2.
-       * @param {number} options.peer_upload_limit_addition - The FVSL client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addition >=  bytes_downloaded_from_other_peers) and stop the throtting as soon as this inequality is no longer true. the default value for peer_upload_limit_addition is 500000 (byte).
-       * @param {string[][]} options.webTorrent_trackers - Array of arrays of WebTorrent tracking server URLs (strings). These WebTorrent trackers will be used to connect to other FVSL instances.
-       * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated Stream_Information_Object at the end of the execution of streamVideo.
+       * This method creates a Stream_Information object that other OakStreaming instances can pass as an argument to their loadVideo method to download the video from this and other OakStreaming instances and/or a Web Server.
+       * @param {object} video_file - The video file that should be streamed to other OakStreaming instances. This paramter can either be a {@link https://developer.mozilla.org/en-US/docs/Web/API/File |W3C File object}, a {@link https://developer.mozilla.org/en-US/docs/Web/API/FileList |W3C FileList}, a {@link https://nodejs.org/api/buffer.html |Node Buffer object} or a {@link https://nodejs.org/api/stream.html#stream_class_stream_readable |Readable stream object}.
+       * @param {object} [options] - Options for the creation of the Stream_Information object. After its creation, the Stream_Information object gets passed by the streamVideo method as an argument to the callback function.
+       * @param {string} [options.path_to_file_on_Web_server] - This path will be used for the XML HTTP Requests (XHRs). For example, a valid path could be "/videos/aVideoFile.mp4". For successfull XHRs, it is not necessary to set both the path_to_file_on_Web_server and the hash_value paramter. If both properties are definied, the hash_value property will be used for XHRs. If this property and the hash_value property is undefined, no video data will be requested from the Web server.
+       * @param {string} [options.hash_value] - The SHA-256 hash value of the video file that should by (partially) requested from the Web server. It is not necessary to set both the path_to_file_on_Web_server and the hash_value paramter for successfull XML HTTP Requests (XHRs). If both properties are definied, the hash_value property will be used for XHRs. If this property and the path_to_file_on_Web_server property is undefined, no video data will be requested from the Web server.
+       * @param {string} [options.web_server_URL] - URL of a Web server that can serve the video file. If this property is not set, XHRs will be send to the Web server that served the Web page.
+       * @param {number} [options.web_server_port = 80] - Port that will be used when communicating with the Web server that was specified in the web_server_URL property. This property should only be set when the web_server_URL property is set too.
+       * @param {number} [options.Sequential_Requests_time_range = 20] - How many seconds of video playback must be buffered in advance such that no data streams are requested from the WebTorrent network.
+       * @param {number} [options.create_readStream_request_size = 5000000] - The size of the sequential byte range requests to the WebTorrent network. Keeping the default value is sufficient for most use cases.
+       * @param {number} [options.download_from_server_time_range = 5] - How many seconds of video playback must be buffered in advance such that no data is requested from the Web server.
+       * @param {number} [options.peer_upload_limit_multiplier = 2] - The OakStreaming client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throtting as soon as the before mentioned inequality is no longer true.
+       * @param {number} [options.peer_upload_limit_addend = 3000000] - The OakStreaming client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throtting as soon as the before mentioned inequality is no longer true.
+       * @param {string[][]} options.webTorrent_trackers - Array of arrays of WebTorrent tracking server URLs (strings). These WebTorrent trackers will be used to connect to other OakStreaming instances. In which order these tracking server a contacted is described in {@link http://www.bittorrent.org/beps/bep_0012.html}.
+       * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated Stream_Information object at the end of the execution of streamVideo.
        */
       function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent) {
          var webTorrentClient = new WebTorrent();
@@ -234,7 +276,7 @@ function FVSL(OakName) {
                // var bufferTorrent = parseTorrent(stream_information_object.parsedTorrent); K42
 
                ////console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
-               // This function calls the callback function when this FVSL instance already connected to another peer
+               // This function calls the callback function when this OakStreaming instance already connected to another peer
                // or as soon as it connects to another peer.
                self.forTesting_connectedToNewWebTorrentPeer = function (callback) {
                   ////console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets executed");
@@ -254,7 +296,7 @@ function FVSL(OakName) {
                   }
                };
 
-               // This is necessary such that the forTesting_connectedToNewWebTorrentPeer function knows how many peers already connected to this FVSL instance.
+               // This is necessary such that the forTesting_connectedToNewWebTorrentPeer function knows how many peers already connected to this OakStreaming instance.
                torrent.on('wire', function (wire) {
                   notificationsBecauseNewWires++;
                });
@@ -309,14 +351,14 @@ function FVSL(OakName) {
       }
 
       /**
-       * @callback OakStreaming~loadedVideoFinished
+       * @callback OakStreaming~downloadingVideoFinished
        */
 
       /**
-       * Streams a video file to all other clients/peers.
-       * @param {Stream_Information_Object} stream_information_object - This object contains all data that is needed to initiate loading the video from other peers and/or a Web server. Stream_Information_Object's can be created by the {@link streamVideo|streamVideo} method.
-       * @param {OakStreaming~loadedVideoFinished} callback - This callback gets called when the video has been loaded entirely into the buffer of the video player.
-       * @param {boolean} end_streaming_when_video_loaded - If this argument is true, all uploading to other peers is permanently cancelled and all processing of the loadVideo method permanently stopped as soon as the video has been loaded completely into the buffer of the video player.
+       * Tries to receive the video stream described in the stream_information object. Offers received video data to all OakStreaming instances with whom it is connected.
+       * @param {Stream_Information} stream_information_object - This object contains all data that is needed to initiate downloading the video from other OakStreaming instances and/or a Web server. Stream_Information objects can be created by the {@link streamVideo|streamVideo} method.
+       * @param {OakStreaming~downloadingVideoFinished} callback - This callback gets called when the video has been buffered entirely.
+       * @param {boolean} end_streaming_when_video_downloaded - If this argument is true, all uploading to other OakStreaming instances is permanently cancelled and all processing of the loadVideo method permanently stopped as soon as the video has been downloaded completely.
        */
       function loadVideo(stream_information_object, callback, end_streaming_when_video_loaded) {
          ////console.log("loadVideo is called");
@@ -331,15 +373,11 @@ function FVSL(OakName) {
          var timeTillTorrentOnDone = -42;
          var startPlayingOffset = Math.floor(Math.random() * 10) + 1;  
          */
-         var videoPlaybackStarted = false;
-         var videoStartUpOver = false;
 
-         var myVideo = document.getElementsByTagName('video')[0]; // Bei technischen Evaluation war es:  document.getElementById("myVideo");
+         var myVideo = document.getElementsByTagName('video')[0];
          myVideo.addEventListener('error', function (err) {
             console.error(myVideo.error);
          });
-         var play = false;
-         var canplay = false;
          /*
          myVideo.onplay = function(){
             onsole.log("event onplay is thrown");
@@ -351,16 +389,6 @@ function FVSL(OakName) {
             }
          };
          */
-         myVideo.oncanplay = function () {
-            console.log("event oncanplay is thrown");
-            canplay = true;
-            // if(play){
-            startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
-            timePlaybackWasStalled += startUpTime;
-            videoStartUpOver = true;
-            // }       
-         };
-         var lastTimeWhenVideoHolded = -42;
          //var userPausedVideo = false;
          /*
          myVideo.pause = function(){
@@ -382,32 +410,6 @@ function FVSL(OakName) {
          };
          */
 
-         var playbackStopped = false;
-         var oldPlaybackTime = -1;
-         var oldPlaybackTime2 = 0;
-
-         function checkIfVideoIsHolded() {
-            if (!playbackStopped && videoStartUpOver && myVideo.currentTime === oldPlaybackTime) {
-               //console.log("Video is stopped at " + (Date.now() - timeLoadVideoMethodWasCalled) + " miliseconds after loadVideo has been called.");
-               lastTimeWhenVideoHolded = Date.now();
-               playbackStopped = true;
-            }
-            oldPlaybackTime = myVideo.currentTime;
-            setTimeout(checkIfVideoIsHolded, 1500);
-         }
-         checkIfVideoIsHolded();
-
-         function checkIfVideoIsPlaying() {
-            if (playbackStopped && videoStartUpOver && myVideo.currentTime > oldPlaybackTime2) {
-               //console.log("Video is playing again after " + (Date.now() - lastTimeWhenVideoHolded) + " miliseconds.");
-               timePlaybackWasStalled += Date.now() - lastTimeWhenVideoHolded;
-               playbackStopped = false;
-            }
-            oldPlaybackTime2 = myVideo.currentTime;
-            setTimeout(checkIfVideoIsPlaying, 1500);
-         }
-         checkIfVideoIsPlaying();
-
          /*
          myVideo.onplaying = function(){
             if(playbackStopped){// && !userPausedVideo){
@@ -418,66 +420,12 @@ function FVSL(OakName) {
             //userPausedVideo = false;
          };
          */
-         var testResultsPrintedOut = false;
-
-         function printOutTestResults() {
-            testResultsPrintedOut = true;
-            console.log(" ");
-            console.log(" ");
-            console.log("!!!!!!! Test report !!!!!!!");
-            console.log(" ");
-            console.log("This is the used paramter setting:");
-            console.log("timeOffsetRange: " + timeOffsetRange);
-            console.log("webTorrentFile.name: " + webTorrentFile.name);
-            console.log("SIZE_OF_VIDEO_FILE: " + SIZE_OF_VIDEO_FILE);
-            console.log("startPlayingOffset: " + startPlayingOffset);
-            console.log("deliveryByServer: " + deliveryByServer);
-            console.log("deliveryByWebTorrent: " + deliveryByWebtorrent);
-            console.log("DOWNLOAD_FROM_P2P_TIME_RANGE: " + DOWNLOAD_FROM_P2P_TIME_RANGE);
-            console.log("DOWNLOAD_FROM_SERVER_TIME_RANGE: " + DOWNLOAD_FROM_SERVER_TIME_RANGE);
-            console.log("UPLOAD_LIMIT: " + UPLOAD_LIMIT);
-            console.log("ADDITION_TO_UPLOAD_LIMIT: " + ADDITION_TO_UPLOAD_LIMIT);
-            console.log(" ");
-            console.log("This are the test results (time unit is miliseconds):");
-            console.log("timePlaybackWasStalled: " + timePlaybackWasStalled);
-            console.log("start-up Time: " + startUpTime);
-            console.log("bytesReceivedFromServer: " + bytesReceivedFromServer);
-            console.log("theTorrent.download: " + theTorrent.downloaded);
-            console.log("torrent.received: " + theTorrent.received);
-            console.log("theTorrent.uploaded: " + theTorrent.uploaded);
-            console.log("theTorrent.progress: " + theTorrent.progress);
-            if (timeTillTorrentOnDone > 0) {
-               console.log("timeTillTorrentOnDone: " + timeTillTorrentOnDone);
-            } else {
-               console.log("timeTillTorrentOnDone: " + "Has not happend yet!");
-            }
-            console.log(" ");
-            console.log(" ");
-            console.log(" ");
-         }
-
-         function checkIfVideoEnded() {
-            if (!testResultsPrintedOut) {
-               if (myVideo.currentTime >= 174) {
-                  printOutTestResults();
-               } else {
-                  setTimeout(checkIfVideoEnded, 500);
-               }
-            }
-         }
-         checkIfVideoEnded();
-
-         myVideo.onended = function () {
-            if (!testResultsPrintedOut) {
-               printOutTestResults();
-            }
-         };
 
          // All these declared varibales until 'var self = this' are intended to be constants
          var deliveryByServer = stream_information_object.path_to_file_on_XHR_server || stream_information_object.hash_value ? true : false;
          var deliveryByWebtorrent = stream_information_object.torrentFile ? true : false;
-         var XHRServerURL = stream_information_object.XHR_server_URL || false;
-         var XHR_PORT = stream_information_object.XHR_port || 80;
+         var XHRServerURL = stream_information_object.web_server_URL || false;
+         var XHR_PORT = stream_information_object.web_server_port || 80;
          var pathToFileOnXHRServer = stream_information_object.path_to_file_on_XHR_server;
          var hashValue = stream_information_object.hash_value;
          //var webTorrentTrackers = stream_information_object.webTorrent_trackers;
@@ -487,12 +435,12 @@ function FVSL(OakName) {
          SIZE_OF_VIDEO_FILE = stream_information_object.size_of_video_file;
          ////console.log("stream_information_object.size_of_video_file: "  + stream_information_object.size_of_video_file);
 
-         var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.download_from_p2p_time_range || 20; // eigentlich 20
+         var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.Sequential_Requests_time_range || 20; // eigentlich 20
          var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 6000000; // 12000000
          var MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST = stream_information_object.minimal_timespan_before_new_webtorrent_request || 3; // in seconds
          var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 3; // vorher 3  (Das mit den 6MB beim start-up) eigentlich 5
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
-         var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 3000000; // war vorer 500000
+         var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addend || 3000000; // war vorer 500000
 
          var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 2000000; // in byte    2000000
          var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = stream_information_object.thresholdForReturningAnswerStream || 1000000; // in byte  1000000
@@ -558,7 +506,7 @@ function FVSL(OakName) {
                   timeTillTorrentOnDone = Date.now() - timeLoadVideoMethodWasCalled; // For technical evaluation
                });
 
-               // Peers which used the offered methods to manually connect to this FVSL instance
+               // Peers which used the offered methods to manually connect to this OakStreaming instance
                // before a torrent file was loaded are added now to the set of peers that are used for video data exchange.
                for (var j = 0; j < peersToAdd.length; j++) {
                   theTorrent.addPeer(peersToAdd[j][0]);
@@ -569,7 +517,7 @@ function FVSL(OakName) {
 
                // This function has the same purpose 
                ////console.log("In loadVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
-               // This function calls the callback function when this FVSL instance already connected to another peer
+               // This function calls the callback function when this OakStreaming instance already connected to another peer
                // or as soon as it connects to another peer.
                self.forTesting_connectedToNewWebTorrentPeer = function (callback) {
                   ////console.log("In loadVideo     " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer   gets called");
@@ -1376,7 +1324,7 @@ function FVSL(OakName) {
          }
       }
 
-      // This function adds a simple-peer connection to the WebTorrent swarm of the FVSL instance.
+      // This function adds a simple-peer connection to the WebTorrent swarm of the OakStreaming instance.
       // A simple-peer is a wrapper for a Web-RTC connection.
       function addSimplePeerInstance(simplePeerInstance, options, callback) {
          // The method add a simplePeer to the WebTorrent swarm instance
@@ -1411,24 +1359,46 @@ function FVSL(OakName) {
 var Y = require("yjs");
 require("y-array")(Y);
 require("y-memory")(Y);
-//require("y-websockets-client")(Y);
-//require("y-webrtc")(Y);
 require("y-map")(Y);
 var OakStreaming = require('./OakStreaming');
 var myStreaming = new OakStreaming();
 
 var theSharedMap = null;
 var theSharedArray = null;
-var streamSource = false;
-
-/*
-document.querySelector('form').addEventListener('submit', function (ev) {
-  ev.preventDefault();
-   myStreaming.loadVideo(JSON.parse(document.querySelector('#incoming').value), function(){console.log("All video data has been received");});
-});
-*/
+//var streamSource = false;  
 
 console.log("THis is the WebRTC version of example_application 1");
+
+function addSourceToVideo(element, src, type) {
+   var source = document.createElement('source');
+   source.src = src;
+   source.type = type;
+   element.appendChild(source);
+}
+
+var myVideo = document.getElementsByTagName('video')[0];
+myVideo.addEventListener('error', function (err) {
+   console.error(myVideo.error);
+});
+
+var socket = io('http://gaudi.informatik.rwth-aachen.de:9912');
+socket.on('connect', function () {});
+socket.on('event', function (data) {});
+socket.on('disconnect', function () {});
+
+socket.on('example1.mp4', function (msg) {
+   addToSharedArray('1 http://gaudi.informatik.rwth-aachen.de:9912/web/videos/example1.mp4');
+});
+
+/* 
+      socket.emit('chat message', $('#m').val());
+        $('#m').val('');
+        return false;
+      });
+      socket.on('chat message', function(msg){
+        $('#messages').append($('<li>').text(msg));
+      });
+ */
 
 Y({
    db: {
@@ -1436,55 +1406,40 @@ Y({
    },
    connector: {
       url: "http://gaudi.informatik.rwth-aachen.de:9914", // "https://yjs.dbis.rwth-aachen.de:5078",  http://localhost:8897
-      //name: 'websockets-client',
       name: 'webrtc',
       room: 'WebTorrent-Streaming-yeah'
    },
    share: {
-      //myMap : 'Map',
       myArray: 'Array'
    }
 }).then(function (y) {
    console.log("Yjs then gets executed");
-   //theSharedMap = y.share.myMap;
    theSharedArray = y.share.myArray;
-   /*
-   y.share.myMap.observe(function(event){
-       console.log("The following event-type was thrown: "+ event.type)
-       console.log("The event was executed on: "+ event.name)
-       console.log("The event object has more information:")
-       console.log(event);
-       if(!streamSource){
-          console.log("Video gets loaded");
-          myStreaming.loadVideo(theSharedMap.getPrimitive("streamInformationObject"), function(){console.log("All video data has been received");});
-          console.log("After myStreaming.loadVideo(..) in myMap.observe(..)");    
-       }
-   });
-   */
 
    theSharedArray.observe(function (event) {
       console.log("The following event-type was thrown: " + event.type);
       console.log("The event was executed on: " + event.name);
       console.log("The event object has more information:");
       console.log(event);
-      if (!streamSource) {
-         myStreaming.loadVideo_technical_evaluation(theSharedArray.get(0), function () {
-            console.log("loadVideo callback: All video data has been received");
-         });
+      if (theSharedArray.get(0).substr(0, 0) === "1") {
+         var videoURL = theSharedArray.get(0).substr(2);
+         console.log("I received the URL: " + videoURL);
+         addSource(myVideo, videoURL, "video/mp4");
+         myVideo.play();
       }
    });
 });
 
-window.handleFiles = function (files) {
-   //webTorrent_trackers: [["ws://gaudi.informatik.rwth-aachen.de:9913"]]   "wss://tracker.webtorrent.io"  {XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name, webTorrent_trackers: [["wss://tracker.webtorrent.io"]]} , "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  XHR_server_URL : "localhost"     hash_value : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e", 
-   streamSource = true; /// XHR_server_URL : "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, path_to_file_on_XHR_server: "/" + files[0].name         WICHTIG: Config XHR Server: XHR_server_URL : "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, path_to_file_on_XHR_server: "/" + files[0].name
-   myStreaming.streamVideo(files[0], { XHR_server_URL: "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name }, function (streamInformationObject) {
-      //console.log("streamInformationObject:\n" + JSON.stringify(streamInformationObject));
-      console.log("In example.js video file got seeded.");
-
-      addToSharedArray(streamInformationObject);
+/*
+window.upload = function (filename){     //webTorrent_trackers: [["ws://gaudi.informatik.rwth-aachen.de:9913"]]   "wss://tracker.webtorrent.io"  {XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name, webTorrent_trackers: [["wss://tracker.webtorrent.io"]]} , "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  XHR_server_URL : "localhost"     hash_value : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e", 
+   /// XHR_server_URL : "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, path_to_file_on_XHR_server: "/" + files[0].name         WICHTIG: Config XHR Server: XHR_server_URL : "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, path_to_file_on_XHR_server: "/" + files[0].name
+     // gaudi.informatik.rwth-aachen.de:9912  POST
+      streamSource = false;
+      //files[0]
+      addToSharedArray("http://gaudi.informatik.rwth-aachen.de:9912/upload/");  
    });
-};
+}
+*/
 
 function addToSharedArray(streamInformationObject) {
    if (theSharedArray !== null) {
@@ -1495,16 +1450,6 @@ function addToSharedArray(streamInformationObject) {
       }, 250);
    }
 }
-
-// This function updates the statistics that is shown above the video
-// updateChart in loadVideo shows more infos but is not indent for enduser use. This is intended as enduser example.
-/*
-function updateChart(){
-   document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + myStreaming.get_file_size() + "\n torrent.downloaded: " + myStreaming.get_number_of_bystes_downloaded_P2P() + "\n torrent.uploaded: " + myStreaming.get_number_of_bytes_uploaded_P2P() + "\n torrent.progress: " + myStreaming.get_percentage_downloaded_of_torrent() + "\n Bytes received from server: " + myStreaming.get_number_of_bytes_downloaded_from_server();
-   setTimeout(updateChart, 500);
-}
-updateChart();
-*/
 
 },{"./OakStreaming":1,"y-array":141,"y-map":142,"y-memory":143,"yjs":151}],3:[function(require,module,exports){
 var ADDR_RE = /^\[?([^\]]+)\]?:(\d+)$/ // ipv4/ipv6/hostname + port

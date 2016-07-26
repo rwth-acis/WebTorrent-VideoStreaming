@@ -17,6 +17,7 @@
     "chokidar": "^1.5.2",
     "create-torrent": "^3.24.5",
     "express": "^4.10.2",
+    "formidable": "^1.0.17",
     "http": "0.0.0",
     "inherits": "^2.0.1",
     "mediasource": "^2.0.0",

@@ -209,22 +209,22 @@ function OakStreaming(OakName){
       /**
        * @callback OakStreaming~streamVideoFinished
        * @param {Stream_Information} stream_information_object - An object that other OakStreaming instances can pass as an argument to their loadVideo method to download the video from this and other OakStreaming instances and/or a Web Server.
-       */ 
+       */
 
       /**
        * This method creates a Stream_Information object that other OakStreaming instances can pass as an argument to their loadVideo method to download the video from this and other OakStreaming instances and/or a Web Server.
        * @param {object} video_file - The video file that should be streamed to other OakStreaming instances. This paramter can either be a {@link https://developer.mozilla.org/en-US/docs/Web/API/File |W3C File object}, a {@link https://developer.mozilla.org/en-US/docs/Web/API/FileList |W3C FileList}, a {@link https://nodejs.org/api/buffer.html |Node Buffer object} or a {@link https://nodejs.org/api/stream.html#stream_class_stream_readable |Readable stream object}.
        * @param {object} [options] - Options for the creation of the Stream_Information object. After its creation, the Stream_Information object gets passed by the streamVideo method as an argument to the callback function.
-       * @param {string} options.path_to_file_on_Web_server - This path will be used for the XML HTTP Requests (XHRs). For example, a valid path could be "/videos/aVideoFile.mp4". For successfull XHRs, it is not necessary to set both the path_to_file_on_Web_server and the hash_value paramter. If both properties are definied, the hash_value property will be used for XHRs. If this property and the hash_value property is undefined, no video data will be requested from the Web server.
-       * @param {string} options.hash_value - The SHA-256 hash value of the video file that should by (partially) requested from the Web server. It is not necessary to set both the path_to_file_on_Web_server and the hash_value paramter for successfull XML HTTP Requests (XHRs). If both properties are definied, the hash_value property will be used for XHRs. If this property and the path_to_file_on_Web_server property is undefined, no video data will be requested from the Web server.
-       * @param {string} options.XHR_server_URL - URL of a XHR server that can serve the video file. If this property is not set, XHR will be send to the Web server that served the Web page.
-       * @param {number} options.XHR_port - Port that will be used when communicating with the XHR server that was specified in the XHRServerURL property. This property should only be set when the XHRServerURL property is set too. The default value is 80.
-       * @param {number} options.Sequential_Requests_time_range - How many seconds of video playback must be buffered in advance such that no more data streams are requested from the WebTorrent network. The default value is 20 (seconds).
-       * @param {number} options.create_readStream_request_size - The size of the byte range requests to the WebTorrent network. The default value is 5000000 (bytes).
-       * @param {number} options.download_from_server_time_range - How many seconds of video playback must be buffered in advance such that no more data is requested from the XHR server. The default value is 5 (seconds).
-       * @param {number} options.peer_upload_limit_multiplier - The OakStreaming client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addition >=  bytes_downloaded_from_other_peers) and stop the throtting as soon as this inequality is no longer true. The default value for peer_upload_limit_multiplier is 2.
-       * @param {number} options.peer_upload_limit_addition - The OakStreaming client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addition >=  bytes_downloaded_from_other_peers) and stop the throtting as soon as this inequality is no longer true. the default value for peer_upload_limit_addition is 500000 (byte).
-       * @param {string[][]} options.webTorrent_trackers - Array of arrays of WebTorrent tracking server URLs (strings). These WebTorrent trackers will be used to connect to other OakStreaming instances.
+       * @param {string} [options.path_to_file_on_Web_server] - This path will be used for the XML HTTP Requests (XHRs). For example, a valid path could be "/videos/aVideoFile.mp4". For successfull XHRs, it is not necessary to set both the path_to_file_on_Web_server and the hash_value paramter. If both properties are definied, the hash_value property will be used for XHRs. If this property and the hash_value property is undefined, no video data will be requested from the Web server.
+       * @param {string} [options.hash_value] - The SHA-256 hash value of the video file that should by (partially) requested from the Web server. It is not necessary to set both the path_to_file_on_Web_server and the hash_value paramter for successfull XML HTTP Requests (XHRs). If both properties are definied, the hash_value property will be used for XHRs. If this property and the path_to_file_on_Web_server property is undefined, no video data will be requested from the Web server.
+       * @param {string} [options.web_server_URL] - URL of a Web server that can serve the video file. If this property is not set, XHRs will be send to the Web server that served the Web page.
+       * @param {number} [options.web_server_port = 80] - Port that will be used when communicating with the Web server that was specified in the web_server_URL property. This property should only be set when the web_server_URL property is set too.
+       * @param {number} [options.Sequential_Requests_time_range = 20] - How many seconds of video playback must be buffered in advance such that no data streams are requested from the WebTorrent network.
+       * @param {number} [options.create_readStream_request_size = 5000000] - The size of the sequential byte range requests to the WebTorrent network. Keeping the default value is sufficient for most use cases.
+       * @param {number} [options.download_from_server_time_range = 5] - How many seconds of video playback must be buffered in advance such that no data is requested from the Web server.
+       * @param {number} [options.peer_upload_limit_multiplier = 2] - The OakStreaming client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throtting as soon as the before mentioned inequality is no longer true.
+       * @param {number} [options.peer_upload_limit_addend = 3000000] - The OakStreaming client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throtting as soon as the before mentioned inequality is no longer true.
+       * @param {string[][]} options.webTorrent_trackers - Array of arrays of WebTorrent tracking server URLs (strings). These WebTorrent trackers will be used to connect to other OakStreaming instances. In which order these tracking server a contacted is described in {@link http://www.bittorrent.org/beps/bep_0012.html}.
        * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated Stream_Information object at the end of the execution of streamVideo.
        */
       function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent){ 
@@ -364,14 +364,14 @@ function OakStreaming(OakName){
 
 
       /**
-       * @callback OakStreaming~loadedVideoFinished
+       * @callback OakStreaming~downloadingVideoFinished
        */ 
        
       /**
-       * Streams a video file to all other clients/peers.
-       * @param {Stream_Information_Object} stream_information_object - This object contains all data that is needed to initiate loading the video from other peers and/or a Web server. Stream_Information_Object's can be created by the {@link streamVideo|streamVideo} method.
-       * @param {OakStreaming~loadedVideoFinished} callback - This callback gets called when the video has been loaded entirely into the buffer of the video player.
-       * @param {boolean} end_streaming_when_video_loaded - If this argument is true, all uploading to other peers is permanently cancelled and all processing of the loadVideo method permanently stopped as soon as the video has been loaded completely into the buffer of the video player.
+       * Tries to receive the video stream described in the stream_information object. Offers received video data to all OakStreaming instances with whom it is connected.
+       * @param {Stream_Information} stream_information_object - This object contains all data that is needed to initiate downloading the video from other OakStreaming instances and/or a Web server. Stream_Information objects can be created by the {@link streamVideo|streamVideo} method.
+       * @param {OakStreaming~downloadingVideoFinished} callback - This callback gets called when the video has been buffered entirely.
+       * @param {boolean} end_streaming_when_video_downloaded - If this argument is true, all uploading to other OakStreaming instances is permanently cancelled and all processing of the loadVideo method permanently stopped as soon as the video has been downloaded completely.
        */
       function loadVideo(stream_information_object, callback, end_streaming_when_video_loaded){       
          ////console.log("loadVideo is called");
@@ -386,16 +386,12 @@ function OakStreaming(OakName){
          var startUpTime = 0;
          var timeTillTorrentOnDone = -42;
          var startPlayingOffset = Math.floor(Math.random() * 10) + 1;  
-         */
-         var videoPlaybackStarted = false;
-         var videoStartUpOver  = false;        
+         */        
                   
-         var myVideo = document.getElementsByTagName('video')[0]; // Bei technischen Evaluation war es:  document.getElementById("myVideo");
+         var myVideo = document.getElementsByTagName('video')[0];
          myVideo.addEventListener('error', function (err){
             console.error(myVideo.error);
          });
-         var play = false;
-         var canplay = false;
          /*
          myVideo.onplay = function(){
             onsole.log("event onplay is thrown");
@@ -407,16 +403,6 @@ function OakStreaming(OakName){
             }
          };
          */
-         myVideo.oncanplay = function(){
-            console.log("event oncanplay is thrown");
-            canplay = true;
-           // if(play){
-               startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
-               timePlaybackWasStalled += startUpTime;
-               videoStartUpOver = true;
-           // }       
-         };
-         var lastTimeWhenVideoHolded = -42;
          //var userPausedVideo = false;
          /*
          myVideo.pause = function(){
@@ -438,33 +424,6 @@ function OakStreaming(OakName){
          };
          */
          
-         var playbackStopped = false;
-         var oldPlaybackTime = -1;
-         var oldPlaybackTime2 = 0;
-         
-         function checkIfVideoIsHolded(){
-            if(!playbackStopped && videoStartUpOver && myVideo.currentTime === oldPlaybackTime){
-               //console.log("Video is stopped at " + (Date.now() - timeLoadVideoMethodWasCalled) + " miliseconds after loadVideo has been called.");
-               lastTimeWhenVideoHolded = Date.now();
-               playbackStopped = true;
-            }
-            oldPlaybackTime = myVideo.currentTime;
-            setTimeout(checkIfVideoIsHolded, 1500);
-         }
-         checkIfVideoIsHolded();
-         
-         
-         function checkIfVideoIsPlaying(){
-            if(playbackStopped && videoStartUpOver && myVideo.currentTime > oldPlaybackTime2){
-               //console.log("Video is playing again after " + (Date.now() - lastTimeWhenVideoHolded) + " miliseconds.");
-               timePlaybackWasStalled += Date.now() - lastTimeWhenVideoHolded;
-               playbackStopped = false;
-            }
-            oldPlaybackTime2 = myVideo.currentTime;
-            setTimeout(checkIfVideoIsPlaying, 1500);            
-         }
-         checkIfVideoIsPlaying();
-         
          
          /*
          myVideo.onplaying = function(){
@@ -476,65 +435,13 @@ function OakStreaming(OakName){
             //userPausedVideo = false;
          };
          */
-         var testResultsPrintedOut = false;       
-         
-         function printOutTestResults(){
-            testResultsPrintedOut = true;
-            console.log(" ");
-            console.log(" ");
-            console.log("!!!!!!! Test report !!!!!!!");
-            console.log(" ");
-            console.log("This is the used paramter setting:");
-            console.log("timeOffsetRange: " + timeOffsetRange);
-            console.log("webTorrentFile.name: " + webTorrentFile.name);
-            console.log("SIZE_OF_VIDEO_FILE: " + SIZE_OF_VIDEO_FILE);
-            console.log("startPlayingOffset: " + startPlayingOffset);
-            console.log("deliveryByServer: " + deliveryByServer);
-            console.log("deliveryByWebTorrent: " + deliveryByWebtorrent);           
-            console.log("DOWNLOAD_FROM_P2P_TIME_RANGE: " + DOWNLOAD_FROM_P2P_TIME_RANGE);
-            console.log("DOWNLOAD_FROM_SERVER_TIME_RANGE: " + DOWNLOAD_FROM_SERVER_TIME_RANGE);
-            console.log("UPLOAD_LIMIT: " + UPLOAD_LIMIT);
-            console.log("ADDITION_TO_UPLOAD_LIMIT: " + ADDITION_TO_UPLOAD_LIMIT);
-            console.log(" ");
-            console.log("This are the test results (time unit is miliseconds):");
-            console.log("timePlaybackWasStalled: " + timePlaybackWasStalled);
-            console.log("start-up Time: " + startUpTime);
-            console.log("bytesReceivedFromServer: " + bytesReceivedFromServer);
-            console.log("theTorrent.download: " + theTorrent.downloaded);
-            console.log("torrent.received: " + theTorrent.received);
-            console.log("theTorrent.uploaded: " + theTorrent.uploaded);
-            console.log("theTorrent.progress: " + theTorrent.progress);
-            if(timeTillTorrentOnDone > 0){
-               console.log("timeTillTorrentOnDone: " + timeTillTorrentOnDone);
-            } else {
-                console.log("timeTillTorrentOnDone: " + "Has not happend yet!");
-            }
-            console.log(" ");
-            console.log(" ");
-            console.log(" ");            
-         } 
-         
-
-         function checkIfVideoEnded(){
-            if(!testResultsPrintedOut){
-               if(myVideo.currentTime >= 174){
-                  printOutTestResults();
-               } else {
-                  setTimeout(checkIfVideoEnded, 500);               
-               }
-            } 
-         }
-         checkIfVideoEnded();
-         
-         
-         myVideo.onended = function(){if(!testResultsPrintedOut){printOutTestResults();}};
          
          
          // All these declared varibales until 'var self = this' are intended to be constants
          var deliveryByServer = (stream_information_object.path_to_file_on_XHR_server || stream_information_object.hash_value) ? true : false;
          var deliveryByWebtorrent = stream_information_object.torrentFile ? true : false;
-         var XHRServerURL = stream_information_object.XHR_server_URL || false;
-         var XHR_PORT = stream_information_object.XHR_port || 80;
+         var XHRServerURL = stream_information_object.web_server_URL || false;
+         var XHR_PORT = stream_information_object.web_server_port || 80;
          var pathToFileOnXHRServer = stream_information_object.path_to_file_on_XHR_server;
          var hashValue = stream_information_object.hash_value;
          //var webTorrentTrackers = stream_information_object.webTorrent_trackers;
@@ -549,7 +456,7 @@ function OakStreaming(OakName){
          var MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST = stream_information_object.minimal_timespan_before_new_webtorrent_request || 3; // in seconds
          var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 3; // vorher 3  (Das mit den 6MB beim start-up) eigentlich 5
          var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
-         var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addition || 3000000; // war vorer 500000
+         var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addend || 3000000; // war vorer 500000
          
          
          var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 2000000; // in byte    2000000

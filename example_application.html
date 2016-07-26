@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-   <title>v2 My WebTorrent API Example</title>
+   <title>Task 1</title>   
 </head>
 <body>
+<form id = "uploadbanner" enctype="multipart/form-data" method = "post" action = "http://gaudi.informatik.rwth-aachen.de:9912/upload">
+   <input id = "fileupload" type = "file" />
+   <input type = "submit" value = "Upload to server" id = "submit"/>
+</form>
    <p id="WebTorrent-received"></p>
-   <input type="file" id="input" onchange="handleFiles(this.files)">
-   <p id="fun :-)"></p>
-   <video controls autoplay id="myVideo"></video>
-   <form>
-      <textarea id="incoming"></textarea>
-      <button type="submit">submit</button>
-   </form>
+   <video controls id="myVideo"></video>
+   <script src="/socket.io/socket.io.js"></script>
    <script src='example_application.js'></script>
    <script src='y-webrtc.es6'></script>
 </body>
