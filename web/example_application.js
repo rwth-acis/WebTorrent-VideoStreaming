@@ -227,6 +227,10 @@ function OakStreaming(OakName) {
 
          var stream_information_object = options;
 
+         if (options && options.web_server_URL && !options.path_to_file_on_XHR_server) {
+            options.path_to_file_on_XHR_server = "/" + video_file.name;
+         }
+
          if (video_file) {
             var seedingOptions = {
                name: video_file.name + " - (Created by an OakStreaming client)"
@@ -323,13 +327,16 @@ function OakStreaming(OakName) {
             }
             */
          }
-         function updateChart() {
-            if (theTorrent && webTorrentFile) {
+
+         /* Nicht löschen!!!
+         function updateChart(){
+            if(theTorrent && webTorrentFile){
                document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.uploaded: " + theTorrent.uploaded;
             }
             setTimeout(updateChart, 1000);
-         }
+         }      
          updateChart();
+         */
       }
 
       function waitStartPlayingOffset(stream_information_object, callback, end_streaming_when_video_loaded) {
@@ -503,7 +510,6 @@ function OakStreaming(OakName) {
 
                torrent.on('done', function () {
                   VideoCompletelyLoadedByWebtorrent = true;
-                  timeTillTorrentOnDone = Date.now() - timeLoadVideoMethodWasCalled; // For technical evaluation
                });
 
                // Peers which used the offered methods to manually connect to this OakStreaming instance
@@ -913,15 +919,17 @@ function OakStreaming(OakName) {
          }
 
          // The final version of the library should not include this function. This function updates the statistics that are shown above the video. This version shows values which are not intended for end user use.
-         function updateChart() {
-            if (endStreaming) {
+         /*   NICHT LÖSCHEN!!!!!!!!!!!!!!!!!
+         function updateChart(){
+            if(endStreaming){
                return;
             }
-            if (theTorrent && webTorrentFile) {
+            if(theTorrent && webTorrentFile){
                document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.downloaded: " + theTorrent.downloaded + "\n torrent.received: " + theTorrent.downloaded + "\n torrent.uploaded: " + theTorrent.uploaded + "\n torrent.progress: " + theTorrent.progress + "\n Bytes received from server: " + bytesReceivedFromServer + "\n Bytes taken from server delivery: " + bytesTakenFromServer + "\n Bytes taken from WebTorrent delivery: " + bytesTakenFromWebTorrent;
             }
             setTimeout(updateChart, UPDATE_CHART_INTERVAL);
-         }
+         }         
+         */
 
          // This function checks for a given videostreamRequestHandler if we have called enough video data to call the callback function.
          // If it is the case, the callback function gets called togehter with the buffered data.
@@ -1312,7 +1320,7 @@ function OakStreaming(OakName) {
          }
          frequentlyCheckIfNewCreateReadStreamNecessary();
          chokeIfNecessary();
-         updateChart();
+         // updateChart();   NIcht löschen. Aber gehört nicht in production!!
          // frequentlyCeckIfAnswerStreamReady(); Am 17.07 entschlossen das rauszunehmen. Ich hatte mir das ja schon mehrmals überlegt
          checkIfBufferFullEnough();
 
@@ -1361,51 +1369,19 @@ require("y-array")(Y);
 require("y-memory")(Y);
 require("y-map")(Y);
 var OakStreaming = require('./OakStreaming');
-var myStreaming = new OakStreaming();
+var oakStreaming = new OakStreaming();
 
 var theSharedArray = null;
+var streamSource = false;
 
-console.log("THis is the WebRTC version of example_application 1");
-
-function addSourceToVideo(element, src, type) {
-   var source = document.createElement('source');
-   source.src = src;
-   source.type = type;
-   element.appendChild(source);
-}
-
-var myVideo = document.getElementsByTagName('video')[0];
-myVideo.addEventListener('error', function (err) {
-   console.error(myVideo.error);
-});
-
-var socket = io(); // 'http://gaudi.informatik.rwth-aachen.de:9912'
-socket.on('connect', function () {
-   console.log("Connected to socket.io server");
-});
-//socket.on('event', function(data){});
-socket.on('disconnect', function () {});
-
-socket.on('example1.mp4', function (msg) {
-   addToSharedArray('1 http://gaudi.informatik.rwth-aachen.de:9912/web/videos/example1.mp4');
-});
-
-/* 
-      socket.emit('chat message', $('#m').val());
-        $('#m').val('');
-        return false;
-      });
-      socket.on('chat message', function(msg){
-        $('#messages').append($('<li>').text(msg));
-      });
- */
+console.log("This is task 2");
 
 Y({
    db: {
       name: 'memory'
    },
    connector: {
-      url: "http://gaudi.informatik.rwth-aachen.de:9914", // "https://yjs.dbis.rwth-aachen.de:5078",  http://localhost:8897
+      url: "http://gaudi.informatik.rwth-aachen.de:9914",
       name: 'webrtc',
       room: 'WebTorrent-Streaming-yeah'
    },
@@ -1413,43 +1389,42 @@ Y({
       myArray: 'Array'
    }
 }).then(function (y) {
-   console.log("Yjs then gets executed");
    theSharedArray = y.share.myArray;
 
    theSharedArray.observe(function (event) {
       console.log("The following event-type was thrown: " + event.type);
-      console.log("The event was executed on: " + event.name);
       console.log("The event object has more information:");
       console.log(event);
-      if (theSharedArray.get(0).substr(0, 0) === "1") {
-         var videoURL = theSharedArray.get(0).substr(2);
-         console.log("I received the URL: " + videoURL);
-         addSource(myVideo, videoURL, "video/mp4");
-         myVideo.play();
+      if (!streamSource) {
+         oakStreaming.loadVideo(theSharedArray.get(0), function () {
+            console.log("loadVideo callback: All video data has been received");
+         });
       }
    });
 });
 
-/*
-window.upload = function (filename){     //webTorrent_trackers: [["ws://gaudi.informatik.rwth-aachen.de:9913"]]   "wss://tracker.webtorrent.io"  {XHR_server_URL : "localhost", XHR_port: 8080, path_to_file_on_XHR_server: "/videos/" + files[0].name, webTorrent_trackers: [["wss://tracker.webtorrent.io"]]} , "ws://localhost:8081"    "http://gaudi.informatik.rwth-aachen.de/WebTorrentVideo/:9917"  XHR_server_URL : "localhost"     hash_value : "/" + "ebe51389538b7e58cb5c9d2a9148a57d45f3238c61248513979a70ec8a6a084e", 
-   /// XHR_server_URL : "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, path_to_file_on_XHR_server: "/" + files[0].name         WICHTIG: Config XHR Server: XHR_server_URL : "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, path_to_file_on_XHR_server: "/" + files[0].name
-     // gaudi.informatik.rwth-aachen.de:9912  POST
-      streamSource = false;
-      //files[0]
-      addToSharedArray("http://gaudi.informatik.rwth-aachen.de:9912/upload/");  
+window.handleFiles = function (files) {
+   streamSource = true;
+   oakStreaming.streamVideo(files[0], { webTorrent_trackers: [["wss://tracker.webtorrent.io"]], peer_upload_limit_multiplier: 1.5 }, function (streamInformationObject) {
+      addToSharedArray(streamInformationObject);
    });
-}
-*/
+};
 
-function addToSharedArray(URL) {
+function addToSharedArray(streamInformationObject) {
    if (theSharedArray !== null) {
-      theSharedArray.insert(0, [URL]);
+      theSharedArray.insert(0, [streamInformationObject]);
    } else {
       setTimeout(function () {
-         addToSharedArray(URL);
+         addToSharedArray(streamInformationObject);
       }, 250);
    }
 }
+
+function updateChart() {
+   document.getElementById("statistics").innerHTML = "webTorrentFile.length: " + oakStreaming.get_file_size() + "\n torrent.downloaded: " + oakStreaming.get_number_of_bystes_downloaded_P2P() + "\n torrent.uploaded: " + oakStreaming.get_number_of_bytes_uploaded_P2P() + "\n torrent.progress: " + oakStreaming.get_percentage_downloaded_of_torrent() + "\n Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
+   setTimeout(updateChart, 500);
+}
+updateChart();
 
 },{"./OakStreaming":1,"y-array":141,"y-map":142,"y-memory":143,"yjs":151}],3:[function(require,module,exports){
 var ADDR_RE = /^\[?([^\]]+)\]?:(\d+)$/ // ipv4/ipv6/hostname + port

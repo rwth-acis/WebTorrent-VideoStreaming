@@ -237,7 +237,11 @@ function OakStreaming(OakName){
          //////console.log("callback: " + callback);         
           
          var stream_information_object = options;
-             
+         
+         if(options && options.web_server_URL && !options.path_to_file_on_XHR_server){
+            options.path_to_file_on_XHR_server = "/" + video_file.name;
+         }
+       
          if(video_file){
             var seedingOptions = {
                name: video_file.name + " - (Created by an OakStreaming client)"
@@ -337,6 +341,8 @@ function OakStreaming(OakName){
             }
             */
          }
+         
+         /* Nicht löschen!!!
          function updateChart(){
             if(theTorrent && webTorrentFile){
                document.getElementById("WebTorrent-received").innerHTML = "webTorrentFile.length: " + webTorrentFile.length + "\n torrent.uploaded: " + theTorrent.uploaded;
@@ -344,6 +350,7 @@ function OakStreaming(OakName){
             setTimeout(updateChart, 1000);
          }      
          updateChart();
+         */
       }
 
       function waitStartPlayingOffset(stream_information_object, callback, end_streaming_when_video_loaded){
@@ -525,7 +532,6 @@ function OakStreaming(OakName){
                      
                torrent.on('done', function () {
                   VideoCompletelyLoadedByWebtorrent = true;
-                  timeTillTorrentOnDone = Date.now() - timeLoadVideoMethodWasCalled; // For technical evaluation
                });
                
                // Peers which used the offered methods to manually connect to this OakStreaming instance
@@ -938,7 +944,8 @@ function OakStreaming(OakName){
          }   
          
          // The final version of the library should not include this function. This function updates the statistics that are shown above the video. This version shows values which are not intended for end user use.
-         function updateChart(){
+         /*   NICHT LÖSCHEN!!!!!!!!!!!!!!!!!
+        function updateChart(){
             if(endStreaming){
                return;
             }
@@ -947,7 +954,7 @@ function OakStreaming(OakName){
             }
             setTimeout(updateChart, UPDATE_CHART_INTERVAL);
          }         
-         
+         */
          
          // This function checks for a given videostreamRequestHandler if we have called enough video data to call the callback function.
          // If it is the case, the callback function gets called togehter with the buffered data.
@@ -1346,7 +1353,7 @@ function OakStreaming(OakName){
          }
          frequentlyCheckIfNewCreateReadStreamNecessary();
          chokeIfNecessary();
-         updateChart();
+         // updateChart();   NIcht löschen. Aber gehört nicht in production!!
          // frequentlyCeckIfAnswerStreamReady(); Am 17.07 entschlossen das rauszunehmen. Ich hatte mir das ja schon mehrmals überlegt
          checkIfBufferFullEnough();
 
