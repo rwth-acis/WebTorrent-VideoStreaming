@@ -9,7 +9,8 @@ var chokidar = require('chokidar');
 var formidable = require('formidable');
 
 
-
+io.on('connection', function(socket){console.log("A OakStreaming instance connected to this server via socket.io")});
+io.on('disconnect', function(socket){console.log("A OakStreaming instance disconnected")});
 
 var directoryPath = __dirname + "/web/videos";
 var filesToProcess = 0;
@@ -153,9 +154,10 @@ console.log('Current directory: ' + process.cwd());
  
 app.post('/upload', function(req, res){
 
+   console.log("app.post('upload', ..) is called");
   // create an incoming form object
   var form = new formidable.IncomingForm();
-
+   var fileName = "";
   // specify that we want to allow the user to upload multiple files in a single request
   form.multiples = true;
 
@@ -164,9 +166,10 @@ app.post('/upload', function(req, res){
 
   // every time a file has been uploaded successfully,
   // rename it to it's orignal name
-  form.on('file', function(field, file){
-    fs.rename(file.path, path.join(form.uploadDir, file.name));
-  });
+   form.on('file', function(field, file){
+      fileName = file.name;
+      fs.rename(file.path, path.join(form.uploadDir, file.name));
+   });
 
   // log any errors that occur
   form.on('error', function(err) {
@@ -176,8 +179,9 @@ app.post('/upload', function(req, res){
   // once all the files have been uploaded, send a response to the client
  
   form.on('end', function() {
-    io.emit(file.name, ".");
-    //res.end('success');
+    console.log("form.on('end'..) is called");
+    io.emit(fileName, ".");
+    res.end('success');
   });
 
   // parse the incoming request containing the form data
@@ -216,9 +220,6 @@ app.get("/y-webrtc.js", function(req, res){
 app.get("/example_application.js.map", function(req, res){
   res.sendFile(__dirname + "/web/" + "example_application.js.map");
 });
-
-
-io.on('connection', function(socket){});
 
 
 http.listen(9912, function(){

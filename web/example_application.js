@@ -1363,9 +1363,7 @@ require("y-map")(Y);
 var OakStreaming = require('./OakStreaming');
 var myStreaming = new OakStreaming();
 
-var theSharedMap = null;
 var theSharedArray = null;
-//var streamSource = false;  
 
 console.log("THis is the WebRTC version of example_application 1");
 
@@ -1381,9 +1379,11 @@ myVideo.addEventListener('error', function (err) {
    console.error(myVideo.error);
 });
 
-var socket = io('http://gaudi.informatik.rwth-aachen.de:9912');
-socket.on('connect', function () {});
-socket.on('event', function (data) {});
+var socket = io(); // 'http://gaudi.informatik.rwth-aachen.de:9912'
+socket.on('connect', function () {
+   console.log("Connected to socket.io server");
+});
+//socket.on('event', function(data){});
 socket.on('disconnect', function () {});
 
 socket.on('example1.mp4', function (msg) {
@@ -1441,12 +1441,12 @@ window.upload = function (filename){     //webTorrent_trackers: [["ws://gaudi.in
 }
 */
 
-function addToSharedArray(streamInformationObject) {
+function addToSharedArray(URL) {
    if (theSharedArray !== null) {
-      theSharedArray.insert(0, [streamInformationObject]);
+      theSharedArray.insert(0, [URL]);
    } else {
       setTimeout(function () {
-         addToSharedArray(streamInformationObject);
+         addToSharedArray(URL);
       }, 250);
    }
 }

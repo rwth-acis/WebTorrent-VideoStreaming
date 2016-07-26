@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-   <title>Task 1</title>   
+   <title>Task 1</title>  
+   <script src="https://cdn.socket.io/socket.io-1.4.6.js"></script>
 </head>
 <body>
 <form id = "uploadbanner" enctype="multipart/form-data" method = "post" action = "http://gaudi.informatik.rwth-aachen.de:9912/upload">
@@ -10,7 +11,7 @@
 </form>
    <p id="WebTorrent-received"></p>
    <video controls id="myVideo"></video>
-   <script src="/socket.io/socket.io.js"></script>
+   <!-- <script type="text/javascript" src="http://gaudi.informatik.rwth-aachen.de:9912/socket.io/socket.io.js"></script> -->
    <script src='example_application.js'></script>
    <script src='y-webrtc.es6'></script>
 </body>
