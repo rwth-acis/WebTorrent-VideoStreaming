@@ -24,7 +24,7 @@ function OakStreaming(OakName){
    var self = this;
    (function(){  
       var OakName = OakName || Math.floor(Math.random() * Math.pow(10,300) + 1);
-      console.log("Version: Archer   In OakStreaming constructor. this.name: " + OakName);
+      //console.log("Version: Archer   In OakStreaming constructor. this.name: " + OakName);
       
       // Only methods should be part of the API, i.e. only methods should be publically accessible.
       // Every method should have access to these variables. Therefore they are definied at this high scope.

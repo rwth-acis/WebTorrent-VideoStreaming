@@ -7,11 +7,10 @@ var oakStreaming = new OakStreaming();
 
 
 var theSharedArray = null;
-var streamSource = false;  
+var streamSource = false;
 
-
-console.log("This is task 3");
-
+console.log("This is task 4");
+var turn 1; // New variable in task 4
 
 Y({
   db: {
@@ -32,26 +31,50 @@ Y({
       console.log("The following event-type was thrown: "+ event.type);
       console.log("The event object has more information:");
       console.log(event);
-      if(!streamSource){
-         // returns the received Stream_Information object:    theSharedArray.get(0)
-         // Task 3.2
-         oakStreaming.loadVideo(theSharedArray.get(0), function(){console.log("loadVideo callback: All video data has been received");});  
+      
+      
+      // Task 4.2
+       
+      if(streamSource){
+         if(turn === 2){
+            oakStreaming.createSignalingDataResponse(theSharedArray.get(2), function(signalingData){
+               addToSharedArray(signalingData, 3);
+            });
+         }
+      } else {
+         if(turn === 1){
+            oakStreaming.loadVideo(theSharedArray.get(1), function(){console.log("loadVideo callback: All video data has been received");});
+            
+            oakStreaming.createSignalingData(function(signalingData){
+               addToSharedArray(signalingData, 2);
+            });
+         }
+         if (turn === 3){
+            oakStreaming.processSignalingResponse(theSharedArray.get(3));
+         }
       }
+      turn++;
+      
+      
+      
    });
 });
 
 window.handleFiles = function (files) {
    streamSource = true;
-   // files[0] contains the file from the user
-   // addToSharedArray(content)   transfers content to all other peers
-   // Task 3.1
-   oakStreaming.streamVideo(files[0], {webTorrent_trackers: [["wss://tracker.webtorrent.io"]], peer_upload_limit_multiplier: 1, XHR_server_URL : "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, download_from_server_time_range: 4}, function(streamInformationObject){      
-      addToSharedArray(streamInformationObject);
+   
+   // sha-256 hash value of video file fd461d08157e91b3811b6581d8abcfa55fc7e27b808f957878140a7bc117f5ea
+   // Web server URL: gaudi.informatik.rwth-aachen.de
+   // Web server port: 
+   // files[0] is the video file that the user selected
+   // Task 4.1
+   oakStreaming.streamVideo(files[0], {hash_value: "fd461d08157e91b3811b6581d8abcfa55fc7e27b808f957878140a7bc117f5ea", Sequential_Requests_time_range: 10}, function(streamInformationObject){      
+      addToSharedArray(streamInformationObject, 1);
    });
 }
 
 
-// Task 3.3
+
 function updateChart(){
    document.getElementById("statistics").innerHTML = "webTorrentFile.length: " + oakStreaming.get_file_size() + "\n torrent.downloaded: " + oakStreaming.get_number_of_bystes_downloaded_P2P() + "\n torrent.uploaded: " + oakStreaming.get_number_of_bytes_uploaded_P2P() + "\n torrent.progress: " + oakStreaming.get_percentage_downloaded_of_torrent() + "\n Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
    setTimeout(updateChart, 500);
@@ -59,13 +82,10 @@ function updateChart(){
 updateChart(); 
 
 
-
-
-
-function addToSharedArray(streamInformationObject){
+function addToSharedArray(streamInformationObject, index){
    if(theSharedArray !== null){
-      theSharedArray.insert(0, [streamInformationObject]);
+      theSharedArray.insert(index, [streamInformationObject]);
    } else {
-      setTimeout(function(){addToSharedArray(streamInformationObject);},250);
+      setTimeout(function(){addToSharedArray(streamInformationObject, index);},250);
    }   
 }
