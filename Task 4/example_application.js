@@ -7,7 +7,7 @@ var oakStreaming = new OakStreaming();
 
 
 var theSharedArray = null;
-var streamSource = false;
+var iAmSeeder = false;
 
 console.log("This is task 4");
 var step 1; // New variable in task 4
@@ -27,20 +27,18 @@ Y({
 }).then(function (y){
    theSharedArray = y.share.myArray;
   
+  
+  
+   // Task 4.2
+   //-------------------------------------------------------------------------
    theSharedArray.observe(function(event){
-      console.log("The following event-type was thrown: "+ event.type);
-      console.log("The event object has more information:");
-      console.log(event);
-      
-      
-      
-      
-      // Task 4.2
-      
+      console.log("The shared array got updated");
+ 
+      // the step variable is initialized with 1
       // addToSharedArray(object, I)   adds object at index I of the shared array.
       // theSharedArray.get(I)   returns the object at index I of the shared array.
        
-      if(streamSource){
+      if(iAmSeeder){
          if(step === 2){
             // ###Write code here### 
          }
@@ -52,37 +50,34 @@ Y({
             // ###Write code here### 
          }
       }
-      step++;
-      
-      
-      
-      
+      step++; 
    });
+   //-------------------------------------------------------------------------
+   
+   
 });
 
+
+
+
+
+
+// Task 4.1
+//-------------------------------------------------------------------------
 window.handleFiles = function (files) {
-   streamSource = true;
+   iAmSeeder = true;
    
    
-   
-   
-   // Task 4.1
-   
-   // sha-256 hash value of video file fd461d08157e91b3811b6581d8abcfa55fc7e27b808f957878140a7bc117f5ea
-   // Web server URL: gaudi.informatik.rwth-aachen.de
-   // Web server port: 
+   // sha-256 hash value of video file:  fd461d08157e91b3811b6581d8abcfa55fc7e27b808f957878140a7bc117f5ea
    // files[0] is the video file that the user selected.
    // addToSharedArray(object, I)  adds object at index I of the shared array.
-   
    
    oakStreaming.streamVideo(files[0], {/* ###Write code here### Set the appropriate values for the option object   */}, function(streamInformationObject){      
       addToSharedArray(streamInformationObject, 1);
    });
-   
-   
-   
+     
 }
-
+//-------------------------------------------------------------------------  
 
 
 function updateChart(){
