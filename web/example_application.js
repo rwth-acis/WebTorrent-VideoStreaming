@@ -20,7 +20,8 @@ function addSourceURLToVideoElement(videoElement, src, type) {
    var source = document.createElement('source');
    source.src = src;
    source.type = type;
-   element.appendChild(source);
+   videoElement.appendChild(source);
+   console.log("I have added the URL to the HTML 5 video element");
 }
 
 // When the participant has uploaded a video, the server sends the video URL to all running instances of the Web application.
@@ -48,13 +49,10 @@ Y({
 }).then(function (y) {
    theSharedArray = y.share.myArray;
 
+   // This function is called when the shared array gets changed.
    theSharedArray.observe(function (event) {
-      console.log("The following event-type was thrown: " + event.type);
-      console.log("The event object has more information:");
-      console.log(event);
-
       var videoURL = theSharedArray.get(0);
-      console.log("I received the following URL via Yjs: " + videoURL);
+      console.log("I have received the following URL via Yjs: " + videoURL);
       addSourceURLToVideoElement(myVideo, videoURL, "video/mp4");
       myVideo.play();
    });
