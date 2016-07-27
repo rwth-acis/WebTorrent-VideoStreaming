@@ -28,32 +28,51 @@ Y({
 }).then(function (y){
    theSharedArray = y.share.myArray;
   
+  
+   // Task 3.2
+   //------------------------------------------------------------  
    theSharedArray.observe(function(event){
-      console.log("The following event-type was thrown: "+ event.type);
-      console.log("The event object has more information:");
-      console.log(event);
+      console.log("The shared array has changed");
       if(!streamSource){
-         // theSharedArray.get(0) returns the received Stream_Information object.   
-         // Task 3.2
+      
+         // theSharedArray.get(0) returns the Stream_Information object what has been received via Yjs.
+         
+         // ### Write code here ###
+         
       }
    });
+   //-------------------------------------------------------------
+   
+   
 });
 
+
+// Task 3.1
+//------------------------------------------------------------
 window.handleFiles = function (files) {
    streamSource = true;
-   // files[0] contains the file from the user
-   // addToSharedArray(content)  sends content to all other peers
-   // Task 3.1
+     
+   // files[0] contains the file the user selected
+   // addToSharedArray(content)  sends content to all other peers via Yjs
+   
+   // ### Write code here ###
+
 }
+//-------------------------------------------------------------
+
 
 
 // Task 3.3
+//------------------------------------------------------------
 function updateChart(){
-   document.getElementById("statistics").innerHTML = "Size of video file in byte: " + oakStreaming.get_file_size() + " Number ob bytes downloaded from peer-to-peer network: ";  // add something here
+   
+   // Look at the end of this line
+   document.getElementById("statistics").innerHTML = "Size of video file in byte: " + oakStreaming.get_file_size() + " Number ob bytes downloaded from peer-to-peer network: "  // ### Add code here ###
+   
    setTimeout(updateChart, 500);
 }
-updateChart(); 
-
+updateChart();
+//------------------------------------------------------------ 
 
 
 
