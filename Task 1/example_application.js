@@ -27,17 +27,24 @@ function addSourceURLToVideoElement(videoElement, src, type){
 }
 
 
-// When the participant has uploaded a video, the server sends the video URL to all running instances of the Web application.
+
+//  Task 1.4
+//--------------------------------------------------------------------------------------------------
+
+// When the participant has uploaded a video, the server sends back the video URL.
 socket.on('newVideo1', function(URL){
    console.log("I received a video URL from the server");
    
    // Share the URL via Yjs
-   addToSharedArray(URL);
+   // addToSharedArray(string)  puts a string in the shared array
+   /* ### Write code here ### */
+   
 });
- 
+//---------------------------------------------------------------------------------------------------- 
 
-var theSharedArray = null;
- 
+
+
+var theSharedArray = null; 
       
 Y({
   db: {
@@ -55,15 +62,27 @@ Y({
   theSharedArray = y.share.myArray;
 
   
+  
+  
+  
+   // Task 1.5
+   //-----------------------------------------------------------------------------
+   
    // This function is called when the shared array gets changed.
    theSharedArray.observe(function(event){      
          var videoURL = theSharedArray.get(0);
          console.log("I have received the following URL via Yjs: " + videoURL);
-         addSourceURLToVideoElement(myVideo, videoURL, "video/mp4");
+          
+         // The variable myVideo contains the HTML video element. "video/mp4" specifies the type of the video.
+         addSourceURLToVideoElement(/*### Add HTML 5 video Element ####*/, /*### Add URL to video file on server ###*/, "video/mp4");
          myVideo.play();
 
       
    });
+   //-----------------------------------------------------------------------------
+   
+   
+   
    
    
 });
