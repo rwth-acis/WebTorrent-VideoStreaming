@@ -9,7 +9,6 @@ var SimplePeer = require('simple-peer');
 
 
 
-
 /**
  * @module OakStreaming
  */
@@ -50,17 +49,19 @@ function OakStreaming(OakName){
       
       /** This method returns the number of bytes downloaded from the Web server.
       * @pulic
-      * @method
+      * @method get_number_of_bytes_downloaded_from_server
+      * @memberof OakStreaming
       * @returns {Number}
       */      
-      self.get_number_of_bytes_downloaded_from_server = function(){
+      function get_number_of_bytes_downloaded_from_server (){
          return bytesReceivedFromServer;
       };
-
+      self.get_number_of_bytes_downloaded_from_server = get_number_of_bytes_downloaded_from_server;
       
       /** This method returns the number of bytes downloaded from the peer-to-peer network. The return value includes bytes that were sent by the seeder. 
       * @pulic
-      * @method
+      * @method get_number_of_bystes_downloaded_P2P
+      * @memberof OakStreaming
       * @returns {Number}
       */      
       self.get_number_of_bystes_downloaded_P2P = function(){
@@ -74,7 +75,8 @@ function OakStreaming(OakName){
 
       /** This method returns the number of bytes uploaded to the peer-to-peer network. 
       * @pulic
-      * @method
+      * @method get_number_of_bytes_uploaded_P2P
+      * @memberof OakStreaming
       * @returns {Number}
       */       
       self.get_number_of_bytes_uploaded_P2P = function(){
@@ -88,7 +90,8 @@ function OakStreaming(OakName){
       
       /** This method returns the number of bytes downloaded from the peer-to-peer network. 
       * @pulic
-      * @method
+      * @method get_percentage_downloaded_of_torrent
+      * @memberof OakStreaming
       * @returns {Number}
       */      
       self.get_percentage_downloaded_of_torrent = function(){
@@ -102,7 +105,8 @@ function OakStreaming(OakName){
       
       /** This method returns the size in bytes of the video file that is or has been streamed/received.
       * @pulic
-      * @method
+      * @method get_file_size
+      * @memberof OakStreaming
       * @returns {Number}
       */   
       self.get_file_size = function(){
