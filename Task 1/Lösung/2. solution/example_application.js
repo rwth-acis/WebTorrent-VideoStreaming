@@ -74,6 +74,7 @@ Y({
 
 
 function addToSharedArray(URL){
+   console.log("addToSharedArray with the following URL is called: " + URL);
    if(theSharedArray !== null){
       theSharedArray.insert(0, [URL]);
    } else {

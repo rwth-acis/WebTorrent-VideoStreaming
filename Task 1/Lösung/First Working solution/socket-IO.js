@@ -181,7 +181,7 @@ app.post('/upload1', function(req, res){
   form.on('end', function() {
     console.log("form.on('end'..) is called");
     console.log("fileName: " + fileName);
-    io.emit("newVideo1", "http://gaudi.informatik.rwth-aachen.de:9912/uploads/example1.mp4");
+    io.emit("newVideo", "http://gaudi.informatik.rwth-aachen.de:9912/uploads/example1.mp4");
     res.end('success');
   });
 
@@ -219,7 +219,7 @@ app.post('/upload2', function(req, res){
   form.on('end', function() {
     console.log("form.on('end'..) is called");
     console.log("fileName: " + fileName);
-    io.emit("newVideo2", "http://gaudi.informatik.rwth-aachen.de:9912/uploads/example2.mp4");
+    io.emit("newVideo", "http://gaudi.informatik.rwth-aachen.de:9912/uploads/example2.mp4");
     res.end('success');
   });
 
