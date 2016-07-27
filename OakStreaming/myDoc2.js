@@ -31,7 +31,7 @@ function OakStreaming(OakName){
       * @public
       * @returns {Number}
       */      
-      function get_number_of_bystes_downloaded_P2P(){}
+      function get_number_of_bytes_downloaded_P2P(){}
       self.get_number_of_bystes_downloaded_P2P = get_number_of_bystes_downloaded_P2P;
       
       
@@ -43,9 +43,9 @@ function OakStreaming(OakName){
       self.get_number_of_bytes_uploaded_P2P = get_number_of_bytes_uploaded_P2P;
 
       
-      /** This method returns the number of bytes downloaded from the peer-to-peer network. 
+      /** This method returns the percentage of the video file that the OakStreaming instance has already downloaded from the peer-to-peer network. 
       * @public
-      * @returns {Number}
+      * @returns {Number} A value between 0 and 1
       */      
       function get_percentage_downloaded_of_torrent(){};
       self.get_percentage_downloaded_of_torrent = get_percentage_downloaded_of_torrent;
@@ -59,13 +59,14 @@ function OakStreaming(OakName){
 
 
       /**
+      * @public
       * @callback OakStreaming~createSignalingData1_callback
       * @param {SignalingData} signalingDataObject - Other OakStreaming instances can pass this object as an argument to their createSignalingDataResponse method in order to create another SignalingData object which is necessary for successfully finishing building up the peer-to-peer connection.
       */ 
       
       /** This method creates signaling data that can be put into the createSignalingDataResponse method of another OakStreaming instance in order to manually building up a peer-to-peer connection between both OakStreaming instances.
       * @public
-      * @param {OakStreaming~createSignalingData_callback} callback - This callback function gets called as soon as the signaling data has been created.
+      * @param {OakStreaming~createSignalingData1_callback} callback - This callback function gets called as soon as the signaling data has been created.
       */      
       function createSignalingData(callback){};
       self.createSignalingData = createSignalingData;
@@ -76,10 +77,10 @@ function OakStreaming(OakName){
       * @param {SignalingData} signalingData - An object that the OakStreaming instance that created the initial signalingData object can pass as an argument to its processSignalingResponse method in order to build up the peer-to-peer connection.
       */ 
       
-      /** This method expects a signaling data object that was created by the createSignalingData method of another OakStreaming instance and generates the respective response signaling data object. In order to complete the signaling data exchange, this response signaling data object then has to be put into the processSignalingResponse method of the OakStreaming instance which has initialized the signaling.
+      /** This method expects a SignalingData object that was created by the createSignalingData method of another OakStreaming instance and generates the respective response SignalingData object. In order to complete the signaling data exchange, this response signalingData object then has to be put into the processSignalingResponse method of the OakStreaming instance which has initialized the signaling.
       * @public
       * @param {SignalingData} signalingData - A signaling data object that was created by the createSignalingData method of another OakStreaming instance.
-      * @param {OakStreaming~createSignalingData2_callback} callback - This callback function gets called as soon as the response signaling data object has been created.
+      * @param {OakStreaming~createSignalingData2_callback} callback - This callback function gets called as soon as the response signalingData object has been created.
       */   
       function createSignalingDataResponse(signalingData, callback){ };
       self.createSignalingDataResponse = createSignalingDataResponse;
