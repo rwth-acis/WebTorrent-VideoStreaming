@@ -1,8 +1,3 @@
-var Y = require("yjs");
-require("y-array")(Y);
-require("y-memory")(Y);
-require("y-map")(Y);
-var OakStreaming = require('./OakStreaming');
 var oakStreaming = new OakStreaming();
 
 
@@ -10,7 +5,7 @@ var theSharedArray = null;
 var streamSource = false;
 
 console.log("This is task 4");
-var turn 1; // New variable in task 4
+var turn  = 1; // New variable in task 4
 
 Y({
   db: {
@@ -65,10 +60,10 @@ window.handleFiles = function (files) {
    
    // sha-256 hash value of video file fd461d08157e91b3811b6581d8abcfa55fc7e27b808f957878140a7bc117f5ea
    // Web server URL: gaudi.informatik.rwth-aachen.de
-   // Web server port: 
+   // Web server port: 9912
    // files[0] is the video file that the user selected
    // Task 4.1
-   oakStreaming.streamVideo(files[0], {hash_value: "fd461d08157e91b3811b6581d8abcfa55fc7e27b808f957878140a7bc117f5ea", Sequential_Requests_time_range: 10}, function(streamInformationObject){      
+   oakStreaming.streamVideo(files[0], {Sequential_Requests_time_range: 10}, function(streamInformationObject){      
       addToSharedArray(streamInformationObject, 1);
    });
 }

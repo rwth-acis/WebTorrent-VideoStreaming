@@ -1,8 +1,3 @@
-var Y = require("yjs");
-require("y-array")(Y);
-require("y-memory")(Y);
-require("y-map")(Y);
-var OakStreaming = require('./OakStreaming');
 var oakStreaming = new OakStreaming();
 
 

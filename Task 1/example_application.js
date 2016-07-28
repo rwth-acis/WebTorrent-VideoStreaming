@@ -1,8 +1,3 @@
-var Y = require("yjs");
-require("y-array")(Y);
-require("y-memory")(Y);
-require("y-map")(Y);
-
 var socket = io(); // This is needed such that the server can send messages to this client.
 
 
@@ -37,6 +32,7 @@ socket.on('newVideo1', function(URL){
    
    // Share the URL via Yjs
    // addToSharedArray(string)  puts a string in the shared array
+   
    /* ### Write code here ### */
    
 });
@@ -74,7 +70,7 @@ Y({
          console.log("I have received the following URL via Yjs: " + videoURL);
           
          // The variable myVideo contains the HTML video element. "video/mp4" specifies the type of the video.
-         addSourceURLToVideoElement(/*### Add HTML 5 video Element ####*/, /*### Add URL to video file on server ###*/, "video/mp4");
+         addSourceURLToVideoElement(/*### Add HTML 5 video Element ####*/, /*### Add URL to the video file on the server ###*/, "video/mp4");
          myVideo.play();
 
       

@@ -1,12 +1,7 @@
-var Y = require("yjs");
-require("y-array")(Y);
-require("y-memory")(Y);
-require("y-map")(Y);
-var OakStreaming = require('./OakStreaming');
-
-
 // Task 2.1
 //--------------------------------
+
+// The OakStreaming constructor is available as a global variable
 
 /* ### Write code here ### */
 

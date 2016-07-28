@@ -1,8 +1,3 @@
-var Y = require("yjs");
-require("y-array")(Y);
-require("y-memory")(Y);
-require("y-map")(Y);
-var OakStreaming = require('./OakStreaming');
 var oakStreaming = new OakStreaming();
 
 
@@ -40,7 +35,7 @@ Y({
 
 window.handleFiles = function (files) {
    streamSource = true;
-   oakStreaming.streamVideo(files[0], {webTorrent_trackers: [["wss://tracker.webtorrent.io"]], peer_upload_limit_multiplier: 1.5}, function(streamInformationObject){      
+   oakStreaming.streamVideo(files[0], {web_server_URL: false, webTorrent_trackers: [["wss://tracker.webtorrent.io"]], peer_upload_limit_multiplier: 1.5}, function(streamInformationObject){      
       addToSharedArray(streamInformationObject);
    });
 }
@@ -53,10 +48,3 @@ function addToSharedArray(streamInformationObject){
       setTimeout(function(){addToSharedArray(streamInformationObject);},250);
    }   
 }
-
-
-function updateChart(){
-   document.getElementById("statistics").innerHTML = "webTorrentFile.length: " + oakStreaming.get_file_size() + "\n torrent.downloaded: " + oakStreaming.get_number_of_bystes_downloaded_P2P() + "\n torrent.uploaded: " + oakStreaming.get_number_of_bytes_uploaded_P2P() + "\n torrent.progress: " + oakStreaming.get_percentage_downloaded_of_torrent() + "\n Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
-   setTimeout(updateChart, 500);
-}
-updateChart(); 

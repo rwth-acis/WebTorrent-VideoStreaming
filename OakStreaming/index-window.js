@@ -63,7 +63,7 @@ function OakStreaming(OakName){
       * @method
       * @returns {Number}
       */      
-      self.get_number_of_bystes_downloaded_P2P = function(){
+      self.get_number_of_bytes_downloaded_P2P = function(){
          if(theTorrent){
             return theTorrent.downloaded;
          } else {
@@ -125,7 +125,7 @@ function OakStreaming(OakName){
          var alreadyCalledCallback = false;
          var oakNumber = simplePeerCreationCounter;
          ////console.log("In createSignalingData for oakNumber: " + oakNumber);
-         connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({initiator: true, tickle: false});
+         connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({initiator: true, trickle: false});
          simplePeerCreationCounter++;
          
          connectionsWaitingForSignalingData[oakNumber].on('signal', function (signalingData){
@@ -156,7 +156,7 @@ function OakStreaming(OakName){
          ////console.log("In createSignalingDataResponse. In the beginning oakNumber: " + oakNumber);
          signalingData.oakNumber = undefined;
          
-         var myPeer = new SimplePeer({initiator: false, tickle: false});
+         var myPeer = new SimplePeer({initiator: false, trickle: false});
          var index = simplePeerCreationCounter;
          connectionsWaitingForSignalingData[index] = myPeer;
          simplePeerCreationCounter++;
@@ -185,7 +185,7 @@ function OakStreaming(OakName){
       * @pulic
       * @method
       * @param {SignalingData} signalingData - A signaling data object that was created by the createSignalingResponse method of another OakStreaming instance. A necessary requirement is that the createSigngalingResponse method created the signaling data object based on a singaling data object that the createSignalingData method of this OakStreaming instance generated.
-      * @param {OakStreaming~createSignalingData3_callback} callback - This callback function gets called as soon as the peer-to-peer connection between the two OakStreaming instances has been established.
+      * @param {OakStreaming~createSignalingData3_callback} [callback] - This callback function gets called as soon as the peer-to-peer connection between the two OakStreaming instances has been established.
       */ 
       self.processSignalingResponse = function (signalingData, callback){
          ////console.log("In processSignalingResponse,  signalingData paramter: " + JSON.stringify(signalingData));
@@ -198,7 +198,9 @@ function OakStreaming(OakName){
             ////console.log('Established a simple-peer connection');
             self.addSimplePeerInstance(connectionsWaitingForSignalingData[oakNumber]);
             connectionsWaitingForSignalingData[oakNumber] = undefined;
-            callback();
+            if(callback){
+               callback();
+            }
          });
          ////console.log("In processSignalingResponse,  object that is passed to .signal(): " + JSON.stringify(signalingData));
          connectionsWaitingForSignalingData[oakNumber].signal(signalingData);
@@ -262,8 +264,9 @@ function OakStreaming(OakName){
             };
             if(options.webTorrent_trackers){
                seedingOptions.announceList = options.webTorrent_trackers;
-            } else {
-               seedingOptions.announceList = [[]];
+            } 
+            else {
+               seedingOptions.announceList  = [];
             }
 
             var self = this; 
@@ -531,7 +534,7 @@ function OakStreaming(OakName){
             ////console.log("entered if(deliveryByWebtorrent)");
             webTorrentClient = new WebTorrent();
                     
-            var webTorrentOptions = {announce: []};
+            var webTorrentOptions = {}; // {announce: []};
             
             /* Weiß nicht mehr warum das hier steht
             if(stream_information_object.pathToFileToSeed){

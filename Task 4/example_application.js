@@ -1,8 +1,3 @@
-var Y = require("yjs");
-require("y-array")(Y);
-require("y-memory")(Y);
-require("y-map")(Y);
-var OakStreaming = require('./OakStreaming');
 var oakStreaming = new OakStreaming();
 
 
@@ -81,7 +76,7 @@ window.handleFiles = function (files) {
 
 
 function updateChart(){
-   document.getElementById("statistics").innerHTML = "webTorrentFile.length: " + oakStreaming.get_file_size() + "\n torrent.downloaded: " + oakStreaming.get_number_of_bystes_downloaded_P2P() + "\n torrent.uploaded: " + oakStreaming.get_number_of_bytes_uploaded_P2P() + "\n torrent.progress: " + oakStreaming.get_percentage_downloaded_of_torrent() + "\n Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
+   document.getElementById("statistics").innerHTML = "Size of video file in byte: " + oakStreaming.get_file_size() + " Number ob bytes downloaded from peer-to-peer network: " + oakStreaming.get_number_of_bystes_downloaded_P2P() + "\n P2P uploaded: " + oakStreaming.get_number_of_bytes_uploaded_P2P() + "\n Progress P2P download: " + oakStreaming.get_percentage_downloaded_of_torrent() + "\n Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
    setTimeout(updateChart, 500);
 }
 updateChart(); 

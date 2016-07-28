@@ -7741,7 +7741,7 @@ function OakStreaming(OakName){
       * @method
       * @returns {Number}
       */      
-      self.get_number_of_bystes_downloaded_P2P = function(){
+      self.get_number_of_bytes_downloaded_P2P = function(){
          if(theTorrent){
             return theTorrent.downloaded;
          } else {
@@ -7940,9 +7940,10 @@ function OakStreaming(OakName){
             };
             if(options.webTorrent_trackers){
                seedingOptions.announceList = options.webTorrent_trackers;
-            } else {
+            } 
+            /*else {
                seedingOptions.announceList = [[]];
-            }
+            }*/
 
             var self = this; 
             webTorrentClient.seed(video_file, seedingOptions, function(torrent){
