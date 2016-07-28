@@ -37,7 +37,7 @@ function OakStreaming(OakName){
       var simplePeerCreationCounter = 0;
       var connectionsWaitingForSignalingData = [];
       var theTorrent = null;
-      var torrentReady = false;
+      var infoHashReady = false;
       var peersToAdd = [];
       var bytesReceivedFromServer = 0;
       var notificationsBecauseNewWires = 0;
@@ -240,8 +240,6 @@ function OakStreaming(OakName){
        */
       function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent){ 
          var webTorrentClient = new WebTorrent();
-         var theTorrent;
-         var webTorrentFile;
          //////console.log("streamVideo is executed");
          //////console.log("videoFile: " + videoFile);
          //////console.log("options: " + options);
@@ -274,18 +272,20 @@ function OakStreaming(OakName){
             var self = this; 
             webTorrentClient.seed(video_file, seedingOptions, function(torrent){
                theTorrent = torrent;
-               theTorrent.on('infoHash', function(){
-                  torrentReady = true;
+               
+               
+               infoHashReady = true;
                   
-                  // Peers which used the offered methods to manually connect to this OakStreaming instance
-                  // before a torrent file was loaded are added now to the set of peers that are used for video data exchange.
-                  for(var j=0; j< peersToAdd.length; j++){    // Vorher hatte ich das onInfohash gemacht
-                     theTorrent.addPeer(peersToAdd[j][0]);
-                     if(peersToAdd[j][1]){
-                        (peersToAdd[j][1])();
-                     }
-                  } 
-               });
+               // Peers which used the offered methods to manually connect to this OakStreaming instance
+               // before a torrent file was loaded are added now to the set of peers that are used for video data exchange.
+               for(var j=0; j< peersToAdd.length; j++){    // Vorher hatte ich das onInfohash gemacht
+                  theTorrent.addPeer(peersToAdd[j][0]);
+                  console.log("I manually added a peer to the swarm");
+                  if(peersToAdd[j][1]){
+                     (peersToAdd[j][1])();
+                  }
+               } 
+               
                webTorrentFile = torrent.files[0];
                ////console.log("torrent file is seeded");
                
@@ -566,11 +566,12 @@ function OakStreaming(OakName){
                ////console.log("webTorrentClient.add   torrent meta data ready");         
                theTorrent = torrent;
                theTorrent.on('infoHash', function(){
-                  torrentReady = true;
+                  infoHashReady = true;
                   
                   // Peers which used the offered methods to manually connect to this OakStreaming instance
                   // before a torrent file was loaded are added now to the set of peers that are used for video data exchange.
-                  for(var j=0; j< peersToAdd.length; j++){    // Vorher hatte ich das onInfohash gemacht
+                  for(var j=0; j< peersToAdd.length; j++){  // Vorher hatte ich das onInfohash gemacht
+                     console.log("I manually added a peer to the swarm");                     
                      theTorrent.addPeer(peersToAdd[j][0]);
                      if(peersToAdd[j][1]){
                         (peersToAdd[j][1])();
@@ -1412,14 +1413,14 @@ function OakStreaming(OakName){
       function addSimplePeerInstance(simplePeerInstance, options, callback){
          // The method add a simplePeer to the WebTorrent swarm instance
          if(theTorrent){
-            if(torrentReady){  // Vorher war das wenn info hash ready
+            if(infoHashReady){  // Vorher war das wenn info hash ready
                theTorrent.addPeer(simplePeerInstance);
                console.log("addSimplePeerInstance successfully added a peer connection");
                if(callback){
                   callback();
                }
             } else {
-               theTorrent.on('infoHash', function() {theTorrent.addPeer(simplePeerInstance); console.log("addSimplePeerInstance successfully added a peer connection"); if(callback){callback();}});
+               theTorrent.on('infoHash', function() {infoHashReady = true; theTorrent.addPeer(simplePeerInstance); console.log("addSimplePeerInstance successfully added a peer connection"); if(callback){callback();}});
             }
          } else {
             console.log("In addSimplePeerInstance theTorrent is not yet ready");
