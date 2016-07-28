@@ -270,10 +270,11 @@ function OakStreaming(OakName){
             }
 
             var self = this; 
-            webTorrentClient.seed(video_file, seedingOptions, function(torrent){
+            
+            
+            webTorrentClient.on('torrent', function (torrent) {
                theTorrent = torrent;
-               
-               
+               webTorrentFile = torrent.files[0];
                infoHashReady = true;
                   
                // Peers which used the offered methods to manually connect to this OakStreaming instance
@@ -285,8 +286,16 @@ function OakStreaming(OakName){
                      (peersToAdd[j][1])();
                   }
                } 
+            });
+            
+            
+            webTorrentClient.seed(video_file, seedingOptions, function(torrent){
                
-               webTorrentFile = torrent.files[0];
+               console.log("onSeed is called");
+               
+
+               
+               
                ////console.log("torrent file is seeded");
                
                /* K42 Maybe I will need this later
