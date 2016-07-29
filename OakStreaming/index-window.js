@@ -1391,6 +1391,7 @@ function OakStreaming(OakName){
                headers: {
                   range: 'bytes=' + reqStart + '-' + (reqEnd-1),
                   connection : 'keep-alive',
+                  
                   //protocol: 'http:'
                   //???? method: 'CONNECT',
                }

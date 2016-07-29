@@ -122,7 +122,7 @@ function OakStreaming(OakName){
       /** This method expects a signaling data object that a createSignalingResponse method of another OakStreaming has generated based on a signaling data object that the createSignalingData method of this OakStreaming method created. After the signaling data object has been processed, this OakStreaming instance automatically builds up a peer-to-peer connection to the other OakStreaming instance. After the peer-to-peer connection has been established, both OakStreaming instances automatically exchange video fragments.
       * @public
       * @param {SignalingData} signalingData - A signaling data object that was created by the createSignalingResponse method of another OakStreaming instance. A necessary requirement is that the createSigngalingResponse method created the signaling data object based on a signalingdata object that the createSignalingData method of this OakStreaming instance generated.
-      * @param {OakStreaming~createSignalingData3_callback} callback - This callback function gets called with no arguments as soon as the peer-to-peer connection between the two OakStreaming instances has been established.
+      * @param {OakStreaming~createSignalingData3_callback} [callback] - This callback function gets called with no arguments as soon as the peer-to-peer connection between the two OakStreaming instances has been established.
       */ 
       function processSignalingResponse(signalingData, callback){ }
       self.createSignalingDataResponse = createSignalingDataResponse;
@@ -151,10 +151,10 @@ function OakStreaming(OakName){
        * @param {string} [options.hash_value] - The SHA-256 hash value of the video file that should by (partially) requested from the Web server. If this hash_value property is defined, it instead of the path_to_file_on_Web_server property will be used for XHRs.
        * @param {number} [options.download_from_server_time_range = 5] - How many seconds of video playback must be buffered in advance such that no data is requested from the Web server.
        * @param {string[][]} options.webTorrent_trackers - Array of arrays of WebTorrent tracking server URLs (strings). These WebTorrent trackers will be used to connect to other OakStreaming instances. In which order these tracking server a contacted is described in {@link http://www.bittorrent.org/beps/bep_0012.html}.
-       * @param {number} [options.Sequential_Requests_time_range = 20] - How many seconds of video playback must be buffered in advance such that no sequential data streams are requested from the WebTorrent network and instead video fragments are requested according to the rarest-peace-first strategy.
+       * @param {number} [options.sequential_requests_time_range = 20] - How many seconds of video playback must be buffered in advance such that no sequential data streams are requested from the WebTorrent network and instead video fragments are requested according to the rarest-peace-first strategy.
        * @param {number} [options.create_readStream_request_size = 5000000] - The size of the sequential byte range requests to the WebTorrent network. Keeping the default value is sufficient for most use cases.
-       * @param {number} [options.peer_upload_limit_multiplier = 2] - The OakStreaming client will severelythrottle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throttling as soon as the before mentioned inequality is no longer true.
-       * @param {number} [options.peer_upload_limit_addend = 3000000] - The OakStreaming client will severelythrottle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throttling as soon as the before mentioned inequality is no longer true.
+       * @param {number} [options.peer_upload_limit_multiplier = 2] - The OakStreaming client will severely throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throttling as soon as the before mentioned inequality is no longer true.
+       * @param {number} [options.peer_upload_limit_addend = 3000000] - The OakStreaming client will severely throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throttling as soon as the before mentioned inequality is no longer true.
        * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated Stream_Information object at the end of the execution of streamVideo.
        */
       function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent){}
@@ -195,7 +195,7 @@ function OakStreaming(OakName){
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Thu Jul 28 2016 09:56:52 GMT+0200 (W. Europe Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Jul 29 2016 12:14:43 GMT+0200 (W. Europe Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>

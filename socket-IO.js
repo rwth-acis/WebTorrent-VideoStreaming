@@ -17,6 +17,25 @@ var filesToProcess = 0;
 var directoryWatcher = null;
 
 
+//io.set('origins', 'http://localhost:8080/workspace');
+
+
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
+app.get('/', function(req, res, next) {
+  // Handle the get for this route
+});
+
+app.post('/', function(req, res, next) {
+ // Handle the post for this route
+});
+
+
+
 // This function call calculates the hash values of all files in /web/videos and saves them in /web/hashValues.sha2
 fs.readdir(directoryPath, function( err, files ){
    if( err ) {
@@ -247,6 +266,10 @@ app.get('/uploads/example2.mp4', function(req, res){
 });
 
 app.get('/uploads/test1.mp4', function(req, res){
+
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");   
+   
   res.sendFile(__dirname + '/uploads/test1.mp4');
 });
 
