@@ -1,0 +1,34 @@
+{
+  "name": "y-array",
+  "version": "9.0.3",
+  "homepage": "http://y-js.org",
+  "authors": [
+    "Kevin Jahns <kevin.jahns@rwth-aachen.de>"
+  ],
+  "description": "Array type for Yjs",
+  "main": "./y-array.js",
+  "keywords": [
+    "Yjs",
+    "OT",
+    "Collaboration",
+    "Synchronization",
+    "ShareJS",
+    "Coweb",
+    "Concurrency"
+  ],
+  "license": "MIT",
+  "ignore": [],
+  "dependencies": {
+    "yjs": "^11.0.0"
+  },
+  "_release": "9.0.3",
+  "_resolution": {
+    "type": "version",
+    "tag": "v9.0.3",
+    "commit": "4ab72b46842bc25c979a5114366c297211821c5c"
+  },
+  "_source": "https://github.com/y-js/y-array.git",
+  "_target": "^9.0.3",
+  "_originalSource": "y-array",
+  "_direct": true
+}

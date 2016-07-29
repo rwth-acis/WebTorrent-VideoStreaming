@@ -1,44 +1,14 @@
-var Y = require("yjs");
-require("y-array")(Y);
-require("y-memory")(Y);
-require("y-map")(Y);
-
-var socket = io(); // This is needed such that the server can send messages to this client.
+var OakStreaming = require("./OakStreaming");
+var oakStreaming = new OakStreaming();
 
 
 
-console.log("This is task 1");
+var theSharedMap = null;
+var iAmSeeder = false;
 
+console.log("This is task 4");
+var step = 1; // New variable in task 4
 
-// Save HTML5 video element in myVideo
-var myVideo = document.getElementsByTagName('video')[0];
-myVideo.addEventListener('error', function (err){
-   console.error(myVideo.error);
-});
-
-
-
-function addSourceURLToVideoElement(videoElement, src, type){
-   var source = document.createElement('source');
-   source.src = src;
-   source.type = type;
-   videoElement.appendChild(source);
-   console.log("I have added the URL to the HTML 5 video element");
-}
-
-
-// When the participant has uploaded a video, the server sends the video URL to all running instances of the Web application.
-socket.on('newVideo1', function(URL){
-   console.log("I received a video URL from the server");
-   
-   // Share the URL via Yjs
-   addToSharedArray(URL);
-});
- 
-
-var theSharedArray = null;
- 
-      
 Y({
   db: {
     name: 'memory'
@@ -46,34 +16,96 @@ Y({
   connector: {
     url : "http://gaudi.informatik.rwth-aachen.de:9914",
     name: 'webrtc',
-    room: 'User1'
+    room: 'fdssfgsZVD23d'
   },
   share: {
-     myArray : 'Array'
+     myMap : 'Map'
   }
 }).then(function (y){
-  theSharedArray = y.share.myArray;
-
+   theSharedMap = y.share.myMap;
   
-   // This function is called when the shared array gets changed.
-   theSharedArray.observe(function(event){      
-         var videoURL = theSharedArray.get(0);
-         console.log("I have received the following URL via Yjs: " + videoURL);
-         addSourceURLToVideoElement(myVideo, videoURL, "video/mp4");
-         myVideo.play();
+  
+  
+   // Task 4.2
+   //-------------------------------------------------------------------------
+   theSharedMap.observe(function(event){
+      console.log("The shared array got updated");
+ 
+      // the step variable is initialized with 1
+      // addToSharedMap(object, I)   adds object at index I of the shared array.
+      // theSharedMap.get(I)   returns the object at index I of the shared array.
 
+      if(iAmSeeder){
+         if(step === 2){
+            oakStreaming.createSignalingDataResponse(theSharedMap.get("2"), function(signalingData){
+               console.log("result createSignalingDataResponse: " + JSON.stringify(signalingData));
+               step++;
+               addToSharedMap(signalingData, "3");
+            });
+         } else {
+            step++;
+         }
+      } else {
+         if(step === 3){
+            step++;
+            console.log("step === 3");
+            oakStreaming.processSignalingResponse(theSharedMap.get("3"), function(){console.log("processSignalingResponse has finished")});
+         }
+         if(step === 2) {
+            step++;
+         }
+         if(step === 1){
+            console.log('theSharedMap.get("1"): ' + JSON.stringify(theSharedMap.get("1")));
+            oakStreaming.loadVideo(theSharedMap.get("1"));
+            
+            console.log("After oakStreaming.loadVideo");
+            oakStreaming.createSignalingData(function(signalingData){
+               console.log("result createSignalingData: " + JSON.stringify(signalingData));
+               step++;
+               addToSharedMap(signalingData, "2");
+            });
+         }
+      }
       
    });
-   
-   
+   //-------------------------------------------------------------------------   
 });
 
 
 
-function addToSharedArray(URL){
-   if(theSharedArray !== null){
-      theSharedArray.insert(0, [URL]);
+
+
+
+// Task 4.1
+//-------------------------------------------------------------------------
+window.handleFiles = function (files) {
+   iAmSeeder = true;
+   
+   
+   // sha-256 hash value of video file:  fd461d08157e91b3811b6581d8abcfa55fc7e27b808f957878140a7bc117f5ea
+   // files[0] is the video file that the user selected.
+   // addToSharedMap(object, I)  adds object at index I of the shared array.
+   
+   oakStreaming.streamVideo(files[0], {web_server_URL: false, Sequential_Requests_time_range: 10}, function(streamInformationObject){
+      console.log("streamInformationObject" + JSON.stringify(streamInformationObject));
+      addToSharedMap(streamInformationObject, "1");
+   });
+     
+}
+//-------------------------------------------------------------------------  
+
+
+function updateChart(){
+   document.getElementById("statistics").innerHTML = "Size of video file in byte: " + oakStreaming.get_file_size() + " Number ob bytes downloaded from peer-to-peer network: " + oakStreaming.get_number_of_bytes_downloaded_P2P() + "\n P2P uploaded: " + oakStreaming.get_number_of_bytes_uploaded_P2P() + "\n Progress P2P download: " + oakStreaming.get_percentage_downloaded_of_torrent() + "\n Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
+   setTimeout(updateChart, 500);
+}
+updateChart(); 
+
+
+function addToSharedMap(streamInformationObject, index){
+   if(theSharedMap !== null){
+      theSharedMap.set(index, streamInformationObject);
    } else {
-      setTimeout(function(){addToSharedArray(URL);}, 250);
+      setTimeout(function(){addToSharedMap(streamInformationObject, index);},100);
    }   
 }
