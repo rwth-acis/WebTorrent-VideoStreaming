@@ -119,7 +119,7 @@ function OakStreaming(OakName) {
          var alreadyCalledCallback = false;
          var oakNumber = simplePeerCreationCounter;
          ////console.log("In createSignalingData for oakNumber: " + oakNumber);
-         connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({ initiator: true, trickle: false });
+         connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({ initiator: true, trickle: false, config: { iceServers: [] } });
          simplePeerCreationCounter++;
 
          connectionsWaitingForSignalingData[oakNumber].on('signal', function (signalingData) {
@@ -149,7 +149,7 @@ function OakStreaming(OakName) {
          ////console.log("In createSignalingDataResponse. In the beginning oakNumber: " + oakNumber);
          signalingData.oakNumber = undefined;
 
-         var myPeer = new SimplePeer({ initiator: false, trickle: false });
+         var myPeer = new SimplePeer({ initiator: false, trickle: false, config: { iceServers: [] } });
          var index = simplePeerCreationCounter;
          connectionsWaitingForSignalingData[index] = myPeer;
          simplePeerCreationCounter++;
@@ -1488,7 +1488,7 @@ Y({
       name: 'memory'
    },
    connector: {
-      url: "http://gaudi.informatik.rwth-aachen.de:9914",
+      url: "http://localhost:8889", // http://gaudi.informatik.rwth-aachen.de:9914
       name: 'webrtc',
       room: 'fdssfgsZVD23d'
    },

@@ -14,7 +14,7 @@ Y({
     name: 'memory'
   },
   connector: {
-    url : "http://gaudi.informatik.rwth-aachen.de:9914",
+    url : "http://localhost:8889", // http://gaudi.informatik.rwth-aachen.de:9914
     name: 'webrtc',
     room: 'fdssfgsZVD23d'
   },
