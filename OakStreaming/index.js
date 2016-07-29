@@ -127,7 +127,7 @@ function OakStreaming(OakName){
          var alreadyCalledCallback = false;
          var oakNumber = simplePeerCreationCounter;
          ////console.log("In createSignalingData for oakNumber: " + oakNumber);
-         connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({initiator: true, trickle: false,  config: { iceServers: [] }});
+         connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({initiator: true, trickle: false,  config: { iceServers: [{ url: 'stun:23.21.150.121' } ] }});
          simplePeerCreationCounter++;
          
          connectionsWaitingForSignalingData[oakNumber].on('signal', function (signalingData){
@@ -158,7 +158,7 @@ function OakStreaming(OakName){
          ////console.log("In createSignalingDataResponse. In the beginning oakNumber: " + oakNumber);
          signalingData.oakNumber = undefined;
          
-         var myPeer = new SimplePeer({initiator: false, trickle: false, config: { iceServers: [] }});
+         var myPeer = new SimplePeer({initiator: false, trickle: false, config: { iceServers: [{ url: 'stun:23.21.150.121' }] }});
          var index = simplePeerCreationCounter;
          connectionsWaitingForSignalingData[index] = myPeer;
          simplePeerCreationCounter++;
