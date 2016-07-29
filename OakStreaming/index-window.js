@@ -6,6 +6,7 @@ var Videostream = require('videostream');
 var ut_pex = require('ut_pex');
 var WebTorrent = require('webtorrent');
 var SimplePeer = require('simple-peer');
+var SimplePeer = require('simple-peer');
 
 
 
@@ -1414,6 +1415,7 @@ function OakStreaming(OakName){
                }
                //////////////console.log("I return currentlyExpectedCallback with http response stream");
                ////////////////console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thiscallbackNumber);
+               res.setHeader('Access-Control-Allow-Headers', req.header.origin);
                res.on('end', XHREnd);
                res.on('data', XHRDataHandler);
                res.on('error', function(err){//console.log("The http.get response object has yield the following error"); console.error(err);});

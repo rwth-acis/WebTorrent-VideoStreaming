@@ -267,8 +267,11 @@ app.get('/uploads/example2.mp4', function(req, res){
 
 app.get('/uploads/test1.mp4', function(req, res){
 
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");   
+   res.header("Access-Control-Allow-Origin", "*");
+   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+   //res.setHeader('Access-Control-Allow-Headers', '*');  
+   res.setHeader('Access-Control-Request-Method', '*');
+   res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET');
    
   res.sendFile(__dirname + '/uploads/test1.mp4');
 });
