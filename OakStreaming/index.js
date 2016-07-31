@@ -252,12 +252,48 @@ function OakStreaming(OakName){
             options.path_to_file_on_XHR_server = "/" + video_file.name;
          }
         
+         var stream_information_object = {};
          if(options){
-            var stream_information_object = options;
-         } else {
-            stream_information_object = {};
-         }
+            stream_information_object = options;
+         } 
         
+         var XHR_hostname =  "";
+         var XHR_port = -1;
+         var portNumberAsString = "";   
+         
+         if(indexOf("]") === -1){
+            if(stream_information_object.web_server_URL.indexOf("http://") === 0 ){
+               XHR_hostname = stream_information_object.web_server_URL.substring(7);
+            } else {
+               XHR_hostname = stream_information_object.web_server_URL;
+            }
+               
+            if(XHR_hostname.lastIndexOf(":") === -1){
+               XHR_port = 80;
+            } else {
+               portNumberAsString = XHR_hostname.substring(XHR_hostname.lastIndexOf(":")+1);
+               XHR_port = parseInt(portNumberAsString, 10);
+               XHR_hostname = XHR_hostname.substring(0, XHR_hostname.lastIndexOf(":"));
+            }
+         } else {          
+            // The URL contains a IPv6 address
+            
+            if(stream_information_object.web_server_URL.indexOf("http://") === 0 ){
+               XHR_hostname = stream_information_object.web_server_URL.substring(7);
+            } else {
+               XHR_hostname = stream_information_object.web_server_URL;
+            }
+            
+            var indexOfClosingBracket = lastIndexOf("]");
+            
+            if(charAt(indexOfClosingBracket) === ":"){
+               portNumberAsString = XHR_hostname.substring(indexOfClosingBracket+2)
+               XHR_port = parseInt(portNumberAsString, 10);
+            } else {
+               XHR_port = 80;
+            }           
+         }
+       
        
          if(video_file){
             var seedingOptions = {
@@ -521,15 +557,9 @@ function OakStreaming(OakName){
          var deliveryByServer = (stream_information_object.web_server_URL !== false && (stream_information_object.path_to_file_on_XHR_server || stream_information_object.hash_value)) ? true : false;
          var deliveryByWebtorrent = stream_information_object.torrentFile ? true : false;
          
-         
-         var XHR_hostname = false;
-         var XHR_port = 42;        
-
-         var index = stream_information_object.web_server_URL.lastIndexOf(":");
-         XHR_hostname = stream_information_object.web_server_URL.substring(0, index);
-         XHR_port = parseInt(stream_information_object.web_server_URL.substring(index+1) , 10);
-         
-         
+         var XHR_hostname = stream_information_object.XHR_hostname;
+         var XHR_port = stream_information_object.XHR_port;
+           
          var pathToFileOnXHRServer = stream_information_object.path_to_file_on_XHR_server;
          var hashValue = stream_information_object.hash_value;
          //var webTorrentTrackers = stream_information_object.webTorrent_trackers;
