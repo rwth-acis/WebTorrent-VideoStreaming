@@ -86,7 +86,7 @@ window.handleFiles = function (files) {
    // files[0] is the video file that the user selected.
    // addToSharedMap(object, I)  adds object at index I of the shared array.
    
-   oakStreaming.streamVideo(files[0], {web_server_URL: false, Sequential_Requests_time_range: 10}, function(streamInformationObject){
+   oakStreaming.streamVideo(files[0], {web_server_URL: "gaudi.informatik.rwth-aachen.de", web_server_port: 9912}, function(streamInformationObject){
       console.log("streamInformationObject" + JSON.stringify(streamInformationObject));
       addToSharedMap(streamInformationObject, "1");
    });

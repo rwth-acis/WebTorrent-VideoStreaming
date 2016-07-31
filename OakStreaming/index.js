@@ -1433,7 +1433,7 @@ function OakStreaming(OakName){
                path: thisRequest.self.pathToFileOnXHRServer,
                headers: {
                   range: 'bytes=' + reqStart + '-' + (reqEnd-1),
-                  connection : 'keep-alive',
+                  connection : 'keep-alive'
                   
                   //protocol: 'http:'
                   //???? method: 'CONNECT',

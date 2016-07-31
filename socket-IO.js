@@ -12,6 +12,7 @@ var formidable = require('formidable');
 io.on('connection', function(socket){console.log("A OakStreaming instance connected to this server via socket.io")});
 io.on('disconnect', function(socket){console.log("A OakStreaming instance disconnected")});
 
+
 var directoryPath = __dirname + "/web/videos";
 var filesToProcess = 0;
 var directoryWatcher = null;
@@ -21,11 +22,19 @@ var directoryWatcher = null;
 
 
 app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
+   /*
+   res.header("Access-Control-Allow-Origin", "*");
+   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+   */
+   res.header("Access-Control-Allow-Origin", "*");
+   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");  
+   res.setHeader('Access-Control-Request-Method', '*');
+   res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET');
+   
+   next();
 });
 
+/*
 app.get('/', function(req, res, next) {
   // Handle the get for this route
 });
@@ -33,8 +42,7 @@ app.get('/', function(req, res, next) {
 app.post('/', function(req, res, next) {
  // Handle the post for this route
 });
-
-
+*/
 
 // This function call calculates the hash values of all files in /web/videos and saves them in /web/hashValues.sha2
 fs.readdir(directoryPath, function( err, files ){
@@ -265,14 +273,7 @@ app.get('/uploads/example2.mp4', function(req, res){
   res.sendFile(__dirname + '/uploads/example2.mp4');
 });
 
-app.get('/uploads/test1.mp4', function(req, res){
-
-   res.header("Access-Control-Allow-Origin", "*");
-   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-   //res.setHeader('Access-Control-Allow-Headers', '*');  
-   res.setHeader('Access-Control-Request-Method', '*');
-   res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET');
-   
+app.get('/uploads/test1.mp4', function(req, res){   
   res.sendFile(__dirname + '/uploads/test1.mp4');
 });
 
@@ -304,7 +305,28 @@ app.get("/example_application.js.map", function(req, res){
   res.sendFile(__dirname + "/web/" + "example_application.js.map");
 });
 
-
+app.use(function(req, res){
+   /*
+   res.header("Access-Control-Allow-Origin", "*");
+   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+   //res.setHeader('Access-Control-Allow-Headers', '*');  
+   res.setHeader('Access-Control-Request-Method', '*');
+   res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET');
+   */
+   
+   console.log("req.baseURL: " + req.baseURL);
+   res.sendFile(__dirname + "/web/" + req.baseURL, {}, function (err) {
+      if (err) {
+         console.log(err);
+         res.status(err.status).end();
+      }
+      else {
+         console.log('Sent:', fileName);
+      }
+   });
+});
+  
+  
 http.listen(9912, function(){
 	console.log('Listening on port 9912');
 });
