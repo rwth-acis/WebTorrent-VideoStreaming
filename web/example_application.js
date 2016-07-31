@@ -247,13 +247,11 @@ function OakStreaming(OakName) {
 
          var XHR_hostname = "";
          var XHR_port = -1;
-
          var portNumberAsString = "";
 
-         var indexLastColon = stream_information_object.web_server_URL.lastIndexOf(":");
-         var portAsString = "";
+         if (stream_information_object.web_server_URL.indexOf("]") === -1) {
+            // => No IPv6 adress in URL
 
-         if (indexOf("]") === -1) {
             if (stream_information_object.web_server_URL.indexOf("http://") === 0) {
                XHR_hostname = stream_information_object.web_server_URL.substring(7);
             } else {
@@ -263,34 +261,30 @@ function OakStreaming(OakName) {
             if (XHR_hostname.lastIndexOf(":") === -1) {
                XHR_port = 80;
             } else {
-               portAsString = XHR_hostname.substring(XHR_hostname.lastIndexOf(":") + 1);
-               XHR_port = parseInt(portAsString, 10);
+               portNumberAsString = XHR_hostname.substring(XHR_hostname.lastIndexOf(":") + 1);
+               XHR_port = parseInt(portNumberAsString, 10);
                XHR_hostname = XHR_hostname.substring(0, XHR_hostname.lastIndexOf(":"));
             }
-
-            if (indexOf("]") !== -1) {
-               // The URL contains a IPv6 address
-
-               var indexOfClosingBracket = lastIndexOf("]");
-
-               portNumberAsString = stream_information_object.web_server_URL.substring(indexOfClosingBracket + 2);
-               if (portNumberAsString !== "") {
-                  XHR_port = parseInt(portNumberAsString, 10);
-               } else {
-                  XHR_port = 80;
-               }
-            } else {
-               portNumberAsString = stream_information_object.web_server_URL.substring(indexLastColon);
-               if (portNumberAsString !== "") {
-                  XHR_port = parseInt(portNumberAsString, 10);
-               } else {
-                  XHR_port = 80;
-               }
-            }
          } else {
-            XHR_hostname = stream_information_object.web_server_URL.substring(7, index);
-            XHR_port = parseInt(stream_information_object.web_server_URL.substring(index + 1), 10);
+            // The URL contains a IPv6 address
+
+            if (stream_information_object.web_server_URL.indexOf("http://") === 0) {
+               XHR_hostname = stream_information_object.web_server_URL.substring(7);
+            } else {
+               XHR_hostname = stream_information_object.web_server_URL;
+            }
+
+            var indexOfClosingBracket = XHR_hostname.lastIndexOf("]");
+
+            if (charAt(indexOfClosingBracket + 1) === ":") {
+               portNumberAsString = XHR_hostname.substring(indexOfClosingBracket + 2);
+               XHR_port = parseInt(portNumberAsString, 10);
+            } else {
+               XHR_port = 80;
+            }
          }
+         stream_information_object.XHR_hostname = XHR_hostname;
+         stream_information_object.XHR_port = XHR_port;
 
          if (video_file) {
             var seedingOptions = {

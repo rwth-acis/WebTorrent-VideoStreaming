@@ -257,11 +257,14 @@ function OakStreaming(OakName){
             stream_information_object = options;
          } 
         
+        
          var XHR_hostname =  "";
          var XHR_port = -1;
          var portNumberAsString = "";   
          
-         if(indexOf("]") === -1){
+         if(stream_information_object.web_server_URL.indexOf("]") === -1){
+            // => No IPv6 adress in URL
+            
             if(stream_information_object.web_server_URL.indexOf("http://") === 0 ){
                XHR_hostname = stream_information_object.web_server_URL.substring(7);
             } else {
@@ -284,16 +287,18 @@ function OakStreaming(OakName){
                XHR_hostname = stream_information_object.web_server_URL;
             }
             
-            var indexOfClosingBracket = lastIndexOf("]");
+            var indexOfClosingBracket = XHR_hostname.lastIndexOf("]");
             
-            if(charAt(indexOfClosingBracket) === ":"){
+            if(charAt(indexOfClosingBracket+1) === ":"){
                portNumberAsString = XHR_hostname.substring(indexOfClosingBracket+2)
                XHR_port = parseInt(portNumberAsString, 10);
             } else {
                XHR_port = 80;
             }           
          }
-       
+         stream_information_object.XHR_hostname = XHR_hostname;
+         stream_information_object.XHR_port = XHR_port;
+         
        
          if(video_file){
             var seedingOptions = {
