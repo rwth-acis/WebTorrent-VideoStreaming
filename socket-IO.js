@@ -26,13 +26,29 @@ app.use(function(req, res, next) {
    res.header("Access-Control-Allow-Origin", "*");
    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
    */
+   
    res.header("Access-Control-Allow-Origin", "*");
-   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");  
-   res.setHeader('Access-Control-Request-Method', '*');
-   res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET');
+   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Range"); 
+
+   
+/*
+   res.setHeader("Access-Control-Allow-Origin", "*");
+   res.setHeader("Access-Control-Allow-Credentials", "true");
+   res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+   res.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Reques
+   //res.setHeader('Access-Control-Request-Method', '*');ted-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers"); 
+*/ 
+  
+   // res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET');
    
    next();
 });
+
+/*
+app.options(function(){
+   
+}
+*/
 
 /*
 app.get('/', function(req, res, next) {
@@ -305,6 +321,9 @@ app.get("/example_application.js.map", function(req, res){
   res.sendFile(__dirname + "/web/" + "example_application.js.map");
 });
 
+
+
+/*
 app.use(function(req, res){
    /*
    res.header("Access-Control-Allow-Origin", "*");
@@ -312,7 +331,7 @@ app.use(function(req, res){
    //res.setHeader('Access-Control-Allow-Headers', '*');  
    res.setHeader('Access-Control-Request-Method', '*');
    res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET');
-   */
+  /////////////////////////////////////////
    
    console.log("req.baseURL: " + req.baseURL);
    res.sendFile(__dirname + "/web/" + req.baseURL, {}, function (err) {
@@ -325,7 +344,7 @@ app.use(function(req, res){
       }
    });
 });
-  
+ */  
   
 http.listen(9912, function(){
 	console.log('Listening on port 9912');
