@@ -520,8 +520,16 @@ function OakStreaming(OakName){
          // All these declared varibales until 'var self = this' are intended to be constants
          var deliveryByServer = (stream_information_object.web_server_URL !== false && (stream_information_object.path_to_file_on_XHR_server || stream_information_object.hash_value)) ? true : false;
          var deliveryByWebtorrent = stream_information_object.torrentFile ? true : false;
-         var XHRServerURL = stream_information_object.web_server_URL || false;
-         var XHR_PORT = stream_information_object.web_server_port || 80;
+         
+         
+         var XHR_hostname = false;
+         var XHR_port = 42;        
+
+         var index = stream_information_object.web_server_URL.lastIndexOf(":");
+         XHR_hostname = stream_information_object.web_server_URL.substring(0, index);
+         XHR_port = parseInt(stream_information_object.web_server_URL.substring(index+1) , 10);
+         
+         
          var pathToFileOnXHRServer = stream_information_object.path_to_file_on_XHR_server;
          var hashValue = stream_information_object.hash_value;
          //var webTorrentTrackers = stream_information_object.webTorrent_trackers;
@@ -1439,9 +1447,9 @@ function OakStreaming(OakName){
                   //???? method: 'CONNECT',
                }
             };
-            if(XHRServerURL){
-               XHROptionObject.hostname = XHRServerURL;
-               XHROptionObject.port = XHR_PORT;
+            if(XHR_hostname){
+               XHROptionObject.hostname = XHR_hostname;
+               XHROptionObject.port = XHR_port;
             }
             
             thisRequest.req = http.get(XHROptionObject, function (res){
