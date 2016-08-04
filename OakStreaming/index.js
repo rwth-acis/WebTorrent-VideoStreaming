@@ -333,7 +333,11 @@ function OakStreaming(OakName){
                name: video_file.name + " - (Created by an OakStreaming client)"
             };
             if(options.webTorrent_trackers){
-               seedingOptions.announceList = options.webTorrent_trackers;
+               var myAnounceList = [];
+               for(var k=0; k<options.webTorrent_trackers.length; k++){
+                  myAnounceList.push([options.webTorrent_trackers.length[k]]);
+               }
+               seedingOptions.announceList = myAnounceList;
             } 
             else {
                if(options.webTorrent_trackers === undefined){

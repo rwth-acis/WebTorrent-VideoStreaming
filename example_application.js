@@ -87,7 +87,7 @@ window.handleFiles = function (files) {
    // addToSharedMap(object, I)  adds object at index I of the shared array.
    
    // , {webTorrent_tracker: false, web_server_URL: "http://gaudi.informatik.rwth-aachen.de:9912"}
-   oakStreaming.streamVideo(files[0], {webTorrent_trackers: false, web_server_URL: false}, function(streamInformationObject){
+   oakStreaming.streamVideo(files[0], {webTorrent_trackers: ["wss://tracker.openwebtorrent.com", "wss://tracker.webtorrent.io"], web_server_URL: false}, function(streamInformationObject){
       console.log("streamInformationObject" + JSON.stringify(streamInformationObject));
       addToSharedMap(streamInformationObject, "1");
    });
