@@ -240,7 +240,7 @@ function OakStreaming(OakName){
        * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated Stream_Information object at the end of the execution of streamVideo.
        */
          //(04.08.16) So ist es eigentlich: function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent){
-         function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent){          
+         function streamVideo(){          
          //////console.log("streamVideo is executed");
          //////console.log("videoFile: " + videoFile);
          //////console.log("options: " + options);
@@ -267,7 +267,6 @@ function OakStreaming(OakName){
             options = arguments[0];
             callback = arguments[1];
          }
-         
          
          
          if(!options.path_to_file_on_XHR_server){
@@ -394,8 +393,6 @@ function OakStreaming(OakName){
             webTorrentClient.seed(video_file, seedingOptions, function(torrent){
                
                console.log("onSeed is called");
-               
-
                
                
                ////console.log("torrent file is seeded");

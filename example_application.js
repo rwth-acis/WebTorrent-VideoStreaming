@@ -1,7 +1,7 @@
 var OakStreaming = require("./OakStreaming");
 var oakStreaming = new OakStreaming();
 
-
+console.log("Version Bear");
 
 var theSharedMap = null;
 var iAmSeeder = false;
@@ -86,7 +86,8 @@ window.handleFiles = function (files) {
    // files[0] is the video file that the user selected.
    // addToSharedMap(object, I)  adds object at index I of the shared array.
    
-   oakStreaming.streamVideo(files[0], {web_server_URL: "http://gaudi.informatik.rwth-aachen.de:9912"}, function(streamInformationObject){
+   // , {webTorrent_tracker: false, web_server_URL: "http://gaudi.informatik.rwth-aachen.de:9912"}
+   oakStreaming.streamVideo(files[0], {webTorrent_trackers: false, web_server_URL: false}, function(streamInformationObject){
       console.log("streamInformationObject" + JSON.stringify(streamInformationObject));
       addToSharedMap(streamInformationObject, "1");
    });
