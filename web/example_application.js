@@ -238,16 +238,13 @@ function OakStreaming(OakName) {
          // options.web_server_URL &&
          var video_file;
          var options = {};
-         var callback = function callback() {
-            console.log({ you: "pownt" });
-         };
+         var callback = function callback() {};
          var returnTorrent = arguments[3];
          var destroyTorrent = arguments[4];
 
          if (arguments[0].name || arguments[0].items || arguments[0].length || arguments[0].read) {
             video_file = arguments[0];
             if (typeof arguments[1] !== 'function') {
-               console.log("Hier müsste ich sein");
                options = arguments[1];
                callback = arguments[2];
             } else {
@@ -257,7 +254,6 @@ function OakStreaming(OakName) {
             options = arguments[0];
             callback = arguments[1];
          }
-         //callback("BAM!"); // Nur zum testen
 
          if (!options.path_to_file_on_XHR_server) {
             options.path_to_file_on_XHR_server = "/" + video_file.name;
@@ -505,7 +501,8 @@ function OakStreaming(OakName) {
        * @param {OakStreaming~downloadingVideoFinished} callback - This callback gets called when the video has been buffered entirely.
        * @param {boolean} end_streaming_when_video_downloaded - If this argument is true, all uploading to other OakStreaming instances is permanently cancelled and all processing of the loadVideo method permanently stopped as soon as the video has been downloaded completely.
        */
-      function loadVideo(stream_information_object, callback, end_streaming_when_video_loaded) {
+      //(04.08.16) Eigentlich: loadVideo(stream_information_object, callback, end_streaming_when_video_loaded)
+      function loadVideo() {
          ////console.log("loadVideo is called");
          ////console.log("option paramter:\n" + JSON.stringify(stream_information_object));
 
@@ -518,6 +515,17 @@ function OakStreaming(OakName) {
          var timeTillTorrentOnDone = -42;
          var startPlayingOffset = Math.floor(Math.random() * 10) + 1;  
          */
+         var stream_information_object = arguments[0];
+         var callback = function callback() {};
+         var end_streaming_when_video_loaded = false;
+
+         if (typeof arguments[1] === 'function') {
+            callback = arguments[1];
+            end_streaming_when_video_loaded = arguments[2];
+         } else {
+            callback = undefined;
+            end_streaming_when_video_loaded = arguments[1];
+         }
 
          var myVideo = document.getElementsByTagName('video')[0];
          myVideo.addEventListener('error', function (err) {
@@ -1556,7 +1564,7 @@ function OakStreaming(OakName) {
 var OakStreaming = require("./OakStreaming");
 var oakStreaming = new OakStreaming();
 
-console.log("Version Dryad");
+console.log("Version Bear");
 
 var theSharedMap = null;
 var iAmSeeder = false;
@@ -1599,13 +1607,13 @@ Y({
             step++;
          }
       } else {
-         /* Nur temporär
-         if(step === 3){
+         if (step === 3) {
             step++;
             console.log("step === 3");
-            oakStreaming.processSignalingResponse(theSharedMap.get("3"), function(){console.log("processSignalingResponse has finished")});
+            oakStreaming.processSignalingResponse(theSharedMap.get("3"), function () {
+               console.log("processSignalingResponse has finished");
+            });
          }
-         */
          if (step === 2) {
             step++;
          }

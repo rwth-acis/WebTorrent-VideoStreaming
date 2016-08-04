@@ -525,7 +525,8 @@ function OakStreaming(OakName){
        * @param {OakStreaming~downloadingVideoFinished} callback - This callback gets called when the video has been buffered entirely.
        * @param {boolean} end_streaming_when_video_downloaded - If this argument is true, all uploading to other OakStreaming instances is permanently cancelled and all processing of the loadVideo method permanently stopped as soon as the video has been downloaded completely.
        */
-      function loadVideo(stream_information_object, callback, end_streaming_when_video_loaded){       
+       //(04.08.16) Eigentlich: loadVideo(stream_information_object, callback, end_streaming_when_video_loaded)
+      function loadVideo(){       
          ////console.log("loadVideo is called");
          ////console.log("option paramter:\n" + JSON.stringify(stream_information_object));
          
@@ -538,7 +539,19 @@ function OakStreaming(OakName){
          var startUpTime = 0;
          var timeTillTorrentOnDone = -42;
          var startPlayingOffset = Math.floor(Math.random() * 10) + 1;  
-         */        
+         */
+         var stream_information_object = arguments[0];
+         var callback = function(){};
+         var end_streaming_when_video_loaded = false;
+         
+         if(typeof arguments[1] === 'function'){
+            callback = arguments[1];
+            end_streaming_when_video_loaded = arguments[2];
+         } else {
+            callback = undefined;
+            end_streaming_when_video_loaded = arguments[1];
+         }
+                  
                   
          var myVideo = document.getElementsByTagName('video')[0];
          myVideo.addEventListener('error', function (err){
