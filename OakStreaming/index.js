@@ -239,8 +239,8 @@ function OakStreaming(OakName){
        * @param {number} [options.peer_upload_limit_addend = 3000000] - The OakStreaming client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throtting as soon as the before mentioned inequality is no longer true.
        * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated Stream_Information object at the end of the execution of streamVideo.
        */
-      function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent){ 
-         var webTorrentClient = new WebTorrent();
+         //(04.08.16) So ist es eigentlich: function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent){
+         function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent){          
          //////console.log("streamVideo is executed");
          //////console.log("videoFile: " + videoFile);
          //////console.log("options: " + options);
@@ -248,15 +248,35 @@ function OakStreaming(OakName){
         
 
          // options.web_server_URL &&
-         if(options &&  !options.path_to_file_on_XHR_server){
+         var video_file;
+         var options = {};
+         var callback = function(){};
+         var returnTorrent = arguments[3];
+         var destroyTorrent = arguments[4];
+         
+         
+         if(arguments[0].name || arguments[0].items || arguments[0].length || arguments[0].read){
+            video_file = arguments[0];
+            if(typeof arguments[1] !== 'function'){
+               options = arguments[1];
+               callback = arguments[2];
+            } else {
+               callback = arguments[1];
+            }
+         } else {
+            options = arguments[0];
+            callback = arguments[1];
+         }
+         
+         
+         
+         if(!options.path_to_file_on_XHR_server){
             options.path_to_file_on_XHR_server = "/" + video_file.name;
          }
         
-         var stream_information_object = {};
-         if(options){
-            stream_information_object = options;
-         } 
-        
+
+         var stream_information_object = options;
+    
         
          if(stream_information_object.web_server_URL === false){
             stream_information_object.XHR_hostname = false;
@@ -306,6 +326,9 @@ function OakStreaming(OakName){
          }
        
        
+       
+         var webTorrentClient = new WebTorrent();
+       
          if(video_file){
             var seedingOptions = {
                name: video_file.name + " - (Created by an OakStreaming client)"
@@ -314,7 +337,12 @@ function OakStreaming(OakName){
                seedingOptions.announceList = options.webTorrent_trackers;
             } 
             else {
-               seedingOptions.announceList  = [];
+               if(options.webTorrent_trackers === undefined){
+                  // Tracker will be contacted in this order
+                  seedingOptions.announceList = [["wss://tracker.webtorrent.io"],["wss://tracker.openwebtorrent.com"],["wss://tracker.fastcast.nz"],["wss://tracker.btorrent.xyz"]];
+               } else {
+                  seedingOptions.announceList  = [];
+               }
             }
 
             var self = this; 
