@@ -315,7 +315,11 @@ function OakStreaming(OakName) {
                name: video_file.name + " - (Created by an OakStreaming client)"
             };
             if (options.webTorrent_trackers) {
-               seedingOptions.announceList = options.webTorrent_trackers;
+               var myAnounceList = [];
+               for (var k = 0; k < options.webTorrent_trackers.length; k++) {
+                  myAnounceList.push([options.webTorrent_trackers[k]]);
+               }
+               seedingOptions.announceList = myAnounceList;
             } else {
                if (options.webTorrent_trackers === undefined) {
                   // Tracker will be contacted in this order
@@ -1607,13 +1611,13 @@ Y({
             step++;
          }
       } else {
-         if (step === 3) {
+         /*
+         if(step === 3){
             step++;
             console.log("step === 3");
-            oakStreaming.processSignalingResponse(theSharedMap.get("3"), function () {
-               console.log("processSignalingResponse has finished");
-            });
+            oakStreaming.processSignalingResponse(theSharedMap.get("3"), function(){console.log("processSignalingResponse has finished")});
          }
+         */
          if (step === 2) {
             step++;
          }
@@ -1643,7 +1647,7 @@ window.handleFiles = function (files) {
    // addToSharedMap(object, I)  adds object at index I of the shared array.
 
    // , {webTorrent_tracker: false, web_server_URL: "http://gaudi.informatik.rwth-aachen.de:9912"}
-   oakStreaming.streamVideo(files[0], { webTorrent_trackers: false, web_server_URL: false }, function (streamInformationObject) {
+   oakStreaming.streamVideo(files[0], { webTorrent_trackers: ["wss://tracker.openwebtorrent.com", "wss://tracker.webtorrent.io"], web_server_URL: false }, function (streamInformationObject) {
       console.log("streamInformationObject" + JSON.stringify(streamInformationObject));
       addToSharedMap(streamInformationObject, "1");
    });

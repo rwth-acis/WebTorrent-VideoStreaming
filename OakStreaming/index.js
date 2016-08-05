@@ -218,7 +218,7 @@ function OakStreaming(OakName){
        
       /**
        * @callback OakStreaming~streamVideoFinished
-       * @param {Stream_Information} stream_information_object - An object that other OakStreaming instances can pass as an argument to their loadVideo method to download the video from this and other OakStreaming instances and/or a Web server.
+       * @param {Stream_Information} stream_information - An object that other OakStreaming instances can pass as an argument to their loadVideo method to download the video from this and other OakStreaming instances and/or a Web server.
        */
 
       /**
@@ -240,14 +240,8 @@ function OakStreaming(OakName){
        * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated Stream_Information object at the end of the execution of streamVideo.
        */
          //(04.08.16) So ist es eigentlich: function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent){
-         function streamVideo(){          
-         //////console.log("streamVideo is executed");
-         //////console.log("videoFile: " + videoFile);
-         //////console.log("options: " + options);
-         //////console.log("callback: " + callback);         
-        
+         function streamVideo(){                  
 
-         // options.web_server_URL &&
          var video_file;
          var options = {};
          var callback = function(){};
@@ -267,32 +261,29 @@ function OakStreaming(OakName){
             options = arguments[0];
             callback = arguments[1];
          }
+  
+         var stream_information = options;  
          
-         
-         if(!options.path_to_file_on_XHR_server){
-            options.path_to_file_on_XHR_server = "/" + video_file.name;
-         }
+         if(!stream_information.path_to_file_on_XHR_server){
+            stream_information.path_to_file_on_XHR_server = "/" + video_file.name;
+         }    
         
-
-         var stream_information_object = options;
-    
-        
-         if(stream_information_object.web_server_URL === false){
-            stream_information_object.XHR_hostname = false;
-         } else if(stream_information_object.web_server_URL === undefined){
-            stream_information_object.XHR_hostname = undefined;
-         } else if(stream_information_object.web_server_URL){
+         if(stream_information.web_server_URL === false){
+            stream_information.XHR_hostname = false;
+         } else if(stream_information.web_server_URL === undefined){
+            stream_information.XHR_hostname = undefined;
+         } else if(stream_information.web_server_URL){
             var XHR_hostname =  "";
             var XHR_port = -1;
             var portNumberAsString = "";   
             
-            if(stream_information_object.web_server_URL.indexOf("]") === -1){
+            if(stream_information.web_server_URL.indexOf("]") === -1){
                // => No IPv6 adress in URL
                
-               if(stream_information_object.web_server_URL.indexOf("http://") === 0 ){
-                  XHR_hostname = stream_information_object.web_server_URL.substring(7);
+               if(stream_information.web_server_URL.indexOf("http://") === 0 ){
+                  XHR_hostname = stream_information.web_server_URL.substring(7);
                } else {
-                  XHR_hostname = stream_information_object.web_server_URL;
+                  XHR_hostname = stream_information.web_server_URL;
                }
                   
                if(XHR_hostname.lastIndexOf(":") === -1){
@@ -305,10 +296,10 @@ function OakStreaming(OakName){
             } else {          
                // The URL contains a IPv6 address
                
-               if(stream_information_object.web_server_URL.indexOf("http://") === 0 ){
-                  XHR_hostname = stream_information_object.web_server_URL.substring(7);
+               if(stream_information.web_server_URL.indexOf("http://") === 0 ){
+                  XHR_hostname = stream_information.web_server_URL.substring(7);
                } else {
-                  XHR_hostname = stream_information_object.web_server_URL;
+                  XHR_hostname = stream_information.web_server_URL;
                }
                
                var indexOfClosingBracket = XHR_hostname.lastIndexOf("]");
@@ -320,8 +311,8 @@ function OakStreaming(OakName){
                   XHR_port = 80;
                }           
             }
-            stream_information_object.XHR_hostname = XHR_hostname;
-            stream_information_object.XHR_port = XHR_port;
+            stream_information.XHR_hostname = XHR_hostname;
+            stream_information.XHR_port = XHR_port;
          }
        
        
@@ -335,7 +326,7 @@ function OakStreaming(OakName){
             if(options.webTorrent_trackers){
                var myAnounceList = [];
                for(var k=0; k<options.webTorrent_trackers.length; k++){
-                  myAnounceList.push([options.webTorrent_trackers.length[k]]);
+                  myAnounceList.push([options.webTorrent_trackers[k]]);
                }
                seedingOptions.announceList = myAnounceList;
             } 
@@ -394,7 +385,7 @@ function OakStreaming(OakName){
             });
             
             
-            webTorrentClient.seed(video_file, seedingOptions, function(torrent){
+            webTorrentClient.seed(video_file, seedingOptions, function onSeed(torrent){
                
                console.log("onSeed is called");
                
@@ -409,9 +400,9 @@ function OakStreaming(OakName){
                xhr.responseType = 'blob';
                xhr.onload = function(e) {
                  if (this.status == 200) {
-                   stream_information_object.torrentAsBlob = this.response;
+                   stream_information.torrentAsBlob = this.response;
                    if(XHROrMethodEndHappend){
-                      callback(stream_information_object);
+                      callback(stream_information);
                    } else {
                       XHROrMethodEndHappend = true;
                    }
@@ -419,23 +410,24 @@ function OakStreaming(OakName){
                };
                xhr.send();
                */
+               stream_information.torrentFile = torrent.torrentFile.toString('base64');
+               stream_information.magnetURI = torrent.magnetURI;
+               stream_information.infoHash = torrent.infoHash;
+               
+               
                SIZE_OF_VIDEO_FILE = 0;
-               stream_information_object.size_of_video_file = 0;
+               stream_information.size_of_video_file = 0;
                for(var i=0, length=torrent.files.length; i<length; i++){
                   SIZE_OF_VIDEO_FILE += torrent.files[i].length;
-                  stream_information_object.size_of_video_file += torrent.files[i].length;
+                  stream_information.size_of_video_file += torrent.files[i].length;
                }
                
-               stream_information_object.magnetURI = torrent.magnetURI;
-               ////console.log("torrent.magnetURI: " + torrent.magnetURI);
-               stream_information_object.infoHash = torrent.infoHash;
-               
-              
-               stream_information_object.torrentFile = torrent.torrentFile.toString('base64');
-               ////console.log("Creaded stream_information_object:\n" + JSON.stringify(stream_information_object));
 
                
-               // var bufferTorrent = parseTorrent(stream_information_object.parsedTorrent); K42
+               ////console.log("Creaded stream_information:\n" + JSON.stringify(stream_information));
+
+               
+               // var bufferTorrent = parseTorrent(stream_information.parsedTorrent); K42
               
                
                ////console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
@@ -463,24 +455,24 @@ function OakStreaming(OakName){
                torrent.on('wire', function (wire){
                   notificationsBecauseNewWires++;  
                });
-               // For some Jasmine tests it is appropriate that the torrent gets destroyed immediately after the stream_information_object has been created. The destruction of the torrent stops the seeding.
+               // For some Jasmine tests it is appropriate that the torrent gets destroyed immediately after the stream_information has been created. The destruction of the torrent stops the seeding.
                if(returnTorrent === "It's a test"){
                   if(destroyTorrent){
                      notificationsBecauseNewWires = 0;
                      torrent.destroy();
                      webTorrentClient = undefined;
                   }
-                  callback(stream_information_object, torrent);
+                  callback(stream_information, torrent);
                } else {
-                  callback(stream_information_object);
-                  return stream_information_object;
+                  callback(stream_information);
+                  return stream_information;
                }    
             });
          } else {
-            callback(stream_information_object);
+            callback(stream_information);
             /* K42
             if(XHROrMethodEndHappend){
-               callback(stream_information_object);
+               callback(stream_information);
             } else {
                 XHROrMethodEndHappend = true;
             }
@@ -498,20 +490,20 @@ function OakStreaming(OakName){
          */
       }
 
-      function waitStartPlayingOffset(stream_information_object, callback, end_streaming_when_video_loaded){
+      function waitStartPlayingOffset(stream_information, callback, end_streaming_when_video_loaded){
          if(Date.now() - timeReceiptStreamInformationObject >= startPlayingOffset){
             //console.log("Video gets loaded");
             timeLoadVideoMethodWasCalled = Date.now();
-            self.loadVideo(stream_information_object, callback, end_streaming_when_video_loaded);  
+            self.loadVideo(stream_information, callback, end_streaming_when_video_loaded);  
          } else {
-            setTimeout(function(){waitStartPlayingOffset(stream_information_object, callback, end_streaming_when_video_loaded);},10);
+            setTimeout(function(){waitStartPlayingOffset(stream_information, callback, end_streaming_when_video_loaded);},10);
          }
       }
       
       //A Wrapper for the Technical Evaluation
-      function loadVideo_technical_evaluation(stream_information_object, callback, end_streaming_when_video_loaded){
+      function loadVideo_technical_evaluation(stream_information, callback, end_streaming_when_video_loaded){
          timeReceiptStreamInformationObject = Date.now();      
-         waitStartPlayingOffset(stream_information_object, callback, end_streaming_when_video_loaded);      
+         waitStartPlayingOffset(stream_information, callback, end_streaming_when_video_loaded);      
       }
 
 
@@ -525,14 +517,14 @@ function OakStreaming(OakName){
        * The received video data will be streamed into the first HTML video element of the DOM.
        * @pulic
        * @method
-       * @param {Stream_Information} stream_information_object - This object contains all data that is needed to initiate downloading the video from other OakStreaming instances and/or a Web server. Stream_Information objects can be created by the {@link streamVideo|streamVideo} method.
+       * @param {Stream_Information} stream_information - This object contains all data that is needed to initiate downloading the video from other OakStreaming instances and/or a Web server. Stream_Information objects can be created by the {@link streamVideo|streamVideo} method.
        * @param {OakStreaming~downloadingVideoFinished} callback - This callback gets called when the video has been buffered entirely.
        * @param {boolean} end_streaming_when_video_downloaded - If this argument is true, all uploading to other OakStreaming instances is permanently cancelled and all processing of the loadVideo method permanently stopped as soon as the video has been downloaded completely.
        */
-       //(04.08.16) Eigentlich: loadVideo(stream_information_object, callback, end_streaming_when_video_loaded)
+       //(04.08.16) Eigentlich: loadVideo(stream_information, callback, end_streaming_when_video_loaded)
       function loadVideo(){       
          ////console.log("loadVideo is called");
-         ////console.log("option paramter:\n" + JSON.stringify(stream_information_object));
+         ////console.log("option paramter:\n" + JSON.stringify(stream_information));
          
          
          // This block is solely for the Technical Evaluation   
@@ -544,7 +536,7 @@ function OakStreaming(OakName){
          var timeTillTorrentOnDone = -42;
          var startPlayingOffset = Math.floor(Math.random() * 10) + 1;  
          */
-         var stream_information_object = arguments[0];
+         var stream_information = arguments[0];
          var callback = function(){};
          var end_streaming_when_video_loaded = false;
          
@@ -607,38 +599,38 @@ function OakStreaming(OakName){
          
          
          // All these declared varibales until 'var self = this' are intended to be constants
-         var deliveryByServer = (stream_information_object.XHR_hostname !== false && (stream_information_object.path_to_file_on_XHR_server || stream_information_object.hash_value)) ? true : false;
-         var deliveryByWebtorrent = stream_information_object.torrentFile ? true : false;
+         var deliveryByServer = (stream_information.XHR_hostname !== false && (stream_information.path_to_file_on_XHR_server || stream_information.hash_value)) ? true : false;
+         var deliveryByWebtorrent = stream_information.torrentFile ? true : false;
          
-         var XHR_hostname = stream_information_object.XHR_hostname;
-         var XHR_port = stream_information_object.XHR_port;
+         var XHR_hostname = stream_information.XHR_hostname;
+         var XHR_port = stream_information.XHR_port;
            
-         var pathToFileOnXHRServer = stream_information_object.path_to_file_on_XHR_server;
-         var hashValue = stream_information_object.hash_value;
-         //var webTorrentTrackers = stream_information_object.webTorrent_trackers;
-         var MAGNET_URI = stream_information_object.magnetURI;
+         var pathToFileOnXHRServer = stream_information.path_to_file_on_XHR_server;
+         var hashValue = stream_information.hash_value;
+         //var webTorrentTrackers = stream_information.webTorrent_trackers;
+         var MAGNET_URI = stream_information.magnetURI;
          ////console.log("MAGNET_URI: "  + MAGNET_URI);
-         var THE_RECEIVED_TORRENT_FILE = Buffer.from(stream_information_object.torrentFile, 'base64');
-         SIZE_OF_VIDEO_FILE = stream_information_object.size_of_video_file;
-         ////console.log("stream_information_object.size_of_video_file: "  + stream_information_object.size_of_video_file);
+         var THE_RECEIVED_TORRENT_FILE = Buffer.from(stream_information.torrentFile, 'base64');
+         SIZE_OF_VIDEO_FILE = stream_information.size_of_video_file;
+         ////console.log("stream_information.size_of_video_file: "  + stream_information.size_of_video_file);
 
-         var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information_object.Sequential_Requests_time_range || 20; // eigentlich 20
-         var CREATE_READSTREAM_REQUEST_SIZE = stream_information_object.create_readStream_request_size || 6000000; // 12000000
-         var MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST = stream_information_object.minimal_timespan_before_new_webtorrent_request || 3; // in seconds
-         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information_object.download_from_server_time_range || 3; // vorher 3  (Das mit den 6MB beim start-up) eigentlich 5
-         var UPLOAD_LIMIT = stream_information_object.peer_upload_limit_multiplier || 2;
-         var ADDITION_TO_UPLOAD_LIMIT = stream_information_object.peer_upload_limit_addend || 3000000; // war vorer 500000
+         var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information.Sequential_Requests_time_range || 20; // eigentlich 20
+         var CREATE_READSTREAM_REQUEST_SIZE = stream_information.create_readStream_request_size || 6000000; // 12000000
+         var MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST = stream_information.minimal_timespan_before_new_webtorrent_request || 3; // in seconds
+         var DOWNLOAD_FROM_SERVER_TIME_RANGE = stream_information.download_from_server_time_range || 3; // vorher 3  (Das mit den 6MB beim start-up) eigentlich 5
+         var UPLOAD_LIMIT = stream_information.peer_upload_limit_multiplier || 2;
+         var ADDITION_TO_UPLOAD_LIMIT = stream_information.peer_upload_limit_addend || 3000000; // war vorer 500000
          
          
-         var XHR_REQUEST_SIZE = stream_information_object.xhrRequestSize || 2000000; // in byte    2000000
-         var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = stream_information_object.thresholdForReturningAnswerStream || 1000000; // in byte  1000000
-         var WATERMARK_HEIGHT_OF_ANSWERSTREAM = stream_information_object.watermarkHeightOfAnswerStream || 1999999; // in byte 1999999
+         var XHR_REQUEST_SIZE = stream_information.xhrRequestSize || 2000000; // in byte    2000000
+         var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = stream_information.thresholdForReturningAnswerStream || 1000000; // in byte  1000000
+         var WATERMARK_HEIGHT_OF_ANSWERSTREAM = stream_information.watermarkHeightOfAnswerStream || 1999999; // in byte 1999999
          
-         var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = stream_information_object.checkIfBufferFullEnoughInterval || 500; // in miliseconds
-         var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = stream_information_object.checkIfAnswerstreamReadyInterval || 200; // in miliseconds
-         var UPDATE_CHART_INTERVAL = stream_information_object.updateChartInterval || 1000; // in miliseconds
-         var CHOKE_IF_NECESSARY_INTERVAL = stream_information_object.chokeIfNecessaryInterval || 300; // in miliseconds    Eigentlich erst 500 dann 200 dann 100
-         var CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL = stream_information_object.checkIfNewCreateReadstreamInterval || 2000 ; // 2000
+         var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = stream_information.checkIfBufferFullEnoughInterval || 500; // in miliseconds
+         var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = stream_information.checkIfAnswerstreamReadyInterval || 200; // in miliseconds
+         var UPDATE_CHART_INTERVAL = stream_information.updateChartInterval || 1000; // in miliseconds
+         var CHOKE_IF_NECESSARY_INTERVAL = stream_information.chokeIfNecessaryInterval || 300; // in miliseconds    Eigentlich erst 500 dann 200 dann 100
+         var CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL = stream_information.checkIfNewCreateReadstreamInterval || 2000 ; // 2000
          
          
          // From here on most newly declared variables are not indeted to function as constants
@@ -677,8 +669,8 @@ function OakStreaming(OakName){
             var webTorrentOptions = {}; // {announce: []};
             
             /* Weiß nicht mehr warum das hier steht
-            if(stream_information_object.pathToFileToSeed){
-               webTorrentOptions.path = stream_information_object.pathToFileToSeed;
+            if(stream_information.pathToFileToSeed){
+               webTorrentOptions.path = stream_information.pathToFileToSeed;
             }
             */
             

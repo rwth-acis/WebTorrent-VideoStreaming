@@ -46,11 +46,13 @@ Y({
             step++;
          }
       } else {
+         /*
          if(step === 3){
             step++;
             console.log("step === 3");
             oakStreaming.processSignalingResponse(theSharedMap.get("3"), function(){console.log("processSignalingResponse has finished")});
          }
+         */
          if(step === 2) {
             step++;
          }
