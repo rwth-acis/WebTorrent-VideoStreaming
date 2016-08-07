@@ -11,22 +11,11 @@ var SimplePeer = require('simple-peer');
 
 
 
-/**
- * @module OakStreaming
- */
+
 module.exports = OakStreaming;
 
 
- /**
- * This constructor creates a OakStreaming instance. OakStreaming instances can seed and/or receive and/or relay video streams.
- * In order to stream a video from one OakStreaming instance to another, a peer-to-peer connection between both OakStreaming instances has to be established.
- * To build up a peer-to-peer connection between two OakStreaming instances, signaling data has to be exchanged between both instances.
- * This exchange of signaling data can happen automatically via a signaling server or manually by using the createSignalingData, createSignalingDataResponse
- * and procressSignalingData methods of the OakStreaming instances. OakStreaming instances can seed a video stream by using the streamVideo method.
- * OakStreaming instances can receive, play back and relay a video stream by using the loadVideo method.
- * OakStreaming instances can also (partly) receive a video stream from a Web server via XML HTTP Requests (XHRs). 
- * @constructor
- */ 
+
 function OakStreaming(OakName){
    var self = this;
    (function(){  
@@ -50,21 +39,13 @@ function OakStreaming(OakName){
       self.forTesting_connectedToNewWebTorrentPeer = null;
 
       
-      /** This method returns the number of bytes downloaded from the Web server.
-      * @pulic
-      * @method
-      * @returns {Number}
-      */      
+  
       self.get_number_of_bytes_downloaded_from_server = function(){
          return bytesReceivedFromServer;
       };
 
       
-      /** This method returns the number of bytes downloaded from the peer-to-peer network. The return value includes bytes that were sent by the seeder. 
-      * @pulic
-      * @method
-      * @returns {Number}
-      */      
+
       self.get_number_of_bytes_downloaded_P2P = function(){
          if(theTorrent){
             return theTorrent.downloaded;
@@ -74,11 +55,7 @@ function OakStreaming(OakName){
       };
 
 
-      /** This method returns the number of bytes uploaded to the peer-to-peer network. 
-      * @pulic
-      * @method
-      * @returns {Number}
-      */       
+     
       self.get_number_of_bytes_uploaded_P2P = function(){
          if(theTorrent){
             return theTorrent.uploaded;
@@ -88,11 +65,7 @@ function OakStreaming(OakName){
       };
 
       
-      /** This method returns the number of bytes downloaded from the peer-to-peer network. 
-      * @pulic
-      * @method
-      * @returns {Number}
-      */      
+
       self.get_percentage_downloaded_of_torrent = function(){
          if(theTorrent){
             return theTorrent.progress;
@@ -102,27 +75,14 @@ function OakStreaming(OakName){
       };
       
       
-      /** This method returns the size in bytes of the video file that is or has been streamed/received.
-      * @pulic
-      * @method
-      * @returns {Number}
-      */   
+
       self.get_file_size = function(){
          return SIZE_OF_VIDEO_FILE;
       };
       
 
 
-      /**
-      * @callback OakStreaming~createSignalingData1_callback
-      * @param {SignalingData} signalingDataObject - Other OakStreaming instances can pass this object as an argument to their createSignalingDataResponse method in order to create another SignalingData object which is necessary for successfully finishing building up the peer-to-peer connection.
-      */ 
       
-      /** This method creates signaling data that can be put into the createSignalingDataResponse method of another OakStreaming instance in order to manually building up a peer-to-peer connection between both OakStreaming instances.
-      * @pulic
-      * @method
-      * @param {OakStreaming~createSignalingData_callback} callback - This callback function gets called as soon as the signaling data has been created.
-      */      
       self.createSignalingData = function (callback){
          var alreadyCalledCallback = false;
          var oakNumber = simplePeerCreationCounter;
@@ -141,18 +101,7 @@ function OakStreaming(OakName){
  
  
       // This method creates (WebRTC-)signaling data as a response to singaling data of a createSignalingData method of another OakStreaming instance.
-      // This mehtod returns new (WebRTC-)signaling data which has to be put into processSignalingResponse method of the OakStreaming instance which created the original singaling data.     
-      /**
-      * @callback OakStreaming~createSignalingData2_callback
-      * @param {SignalingData} signalingData - An object that the OakStreaming instance that created the initial signalingData object can pass as an argument to its processSignalingResponse method in order to build up the peer-to-peer connection.
-      */ 
-      
-      /** This method expects a signaling data object that was created by the createSignalingData method of another OakStreaming instance and generates the respective response signaling data object. In order to complete the signaling data exchange, this response signaling data object then has to be put into the processSignalingResponse method of the OakStreaming instance which has initialized the signaling.
-      * @pulic
-      * @method
-      * @param {SignalingData} signalingData - A signaling data object that was created by the createSignalingData method of another OakStreaming instance.
-      * @param {OakStreaming~createSignalingData2_callback} callback - This callback function gets called as soon as the response signaling data object has been created.
-      */   
+      // This mehtod returns new (WebRTC-)signaling data which has to be put into processSignalingResponse method of the OakStreaming instance which created the original singaling data.        
       self.createSignalingDataResponse = function (signalingData, callback){
          var oakNumber = signalingData.oakNumber;
          ////console.log("In createSignalingDataResponse. In the beginning oakNumber: " + oakNumber);
@@ -180,16 +129,6 @@ function OakStreaming(OakName){
       
 
       // This method finally establishes a Web-RTC connection between the two OakStreaming instances. From now on both OakStreaming instances exchange video fragments.
-      /**
-      * @callback OakStreaming~createSignalingData3_callback
-      */ 
-      
-      /** This method expects a signaling data object that a createSignalingResponse method of another OakStreaming has generated based on a signaling data object that the createSignalingData method of this OakStreaming method created. After the signaling data object has been processed, this OakStreaming instance automatically builds up a peer-to-peer connection to the other OakStreaming instance. After the peer-to-peer connection has been established, both OakStreaming instances automatically exchange video fragments.
-      * @pulic
-      * @method
-      * @param {SignalingData} signalingData - A signaling data object that was created by the createSignalingResponse method of another OakStreaming instance. A necessary requirement is that the createSigngalingResponse method created the signaling data object based on a singaling data object that the createSignalingData method of this OakStreaming instance generated.
-      * @param {OakStreaming~createSignalingData3_callback} [callback] - This callback function gets called as soon as the peer-to-peer connection between the two OakStreaming instances has been established.
-      */ 
       self.processSignalingResponse = function (signalingData, callback){
          ////console.log("In processSignalingResponse,  signalingData paramter: " + JSON.stringify(signalingData));
          var oakNumber = signalingData.oakNumber;
@@ -210,35 +149,7 @@ function OakStreaming(OakName){
       };
        
        
-       /**
-       * @typedef Stream_Information
-       * @type {object}
-       * @property {number} video_file_size - The size in byte of the video file that was passed as the first argument to this method.
-       */
-       
-      /**
-       * @callback OakStreaming~streamVideoFinished
-       * @param {Stream_Information} stream_information - An object that other OakStreaming instances can pass as an argument to their loadVideo method to download the video from this and other OakStreaming instances and/or a Web server.
-       */
 
-      /**
-       * This method creates a Stream_Information object that other OakStreaming instances can pass as an argument to their loadVideo method to download the video from this and other OakStreaming instances and/or a Web server.
-       * @pulic
-       * @method
-       * @param {object} video_file - The video file that should be streamed peer-to-peer to other OakStreaming instances. This paramter can either be a {@link https://developer.mozilla.org/en-US/docs/Web/API/File |W3C File object}, a {@link https://developer.mozilla.org/en-US/docs/Web/API/FileList |W3C FileList}, a {@link https://nodejs.org/api/buffer.html |Node Buffer object} or a {@link https://nodejs.org/api/stream.html#stream_class_stream_readable |Readable stream object}.
-       * @param {object} options - Options for the creation of the Stream_Information object. After its creation, the Stream_Information object gets passed by the streamVideo method as an argument to the callback function.
-       * @param {string} [options.web_server_URL] - URL of a Web server that can serve the video file. If this property is not set, XML HTTP Requests (XHRs) will be send to the Web server that served the Web page. If this property is set to false (not only falsy), no Web server will be requested.
-       * @param {number} [options.web_server_port = 80] - Port that will be used when communicating with the Web server that was specified in the web_server_URL property. This property should only be set when the web_server_URL property is set too.
-       * @param {string} [options.path_to_file_on_Web_server] - This path will be used for the XML HTTP Requests (XHRs). For example, a valid path could be "/videos/aVideoFile.mp4". The default value of this property is "/" concatenated with the name of the file that is seeded.
-       * @param {string} [options.hash_value] - The SHA-256 hash value of the video file that should by (partially) requested from the Web server. If this hash_value property is defined, it instead of the path_to_file_on_Web_server property will be used for XHRs.
-       * @param {number} [options.download_from_server_time_range = 5] - How many seconds of video playback must be buffered in advance such that no data is requested from the Web server.
-       * @param {string[][]} options.webTorrent_trackers - Array of arrays of WebTorrent tracking server URLs (strings). These WebTorrent trackers will be used to connect to other OakStreaming instances. In which order these tracking server a contacted is described in {@link http://www.bittorrent.org/beps/bep_0012.html}.
-       * @param {number} [options.Sequential_Requests_time_range = 20] - How many seconds of video playback must be buffered in advance such that no sequential data streams are requested from the WebTorrent network and instead video fragments are requested according to the rarest-peace-first strategy.
-       * @param {number} [options.create_readStream_request_size = 5000000] - The size of the sequential byte range requests to the WebTorrent network. Keeping the default value is sufficient for most use cases.
-       * @param {number} [options.peer_upload_limit_multiplier = 2] - The OakStreaming client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throtting as soon as the before mentioned inequality is no longer true.
-       * @param {number} [options.peer_upload_limit_addend = 3000000] - The OakStreaming client will severly throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throtting as soon as the before mentioned inequality is no longer true.
-       * @param {OakStreaming~streamVideoFinished} callback - This callback function gets called with the generated Stream_Information object at the end of the execution of streamVideo.
-       */
          //(04.08.16) So ist es eigentlich: function streamVideo(video_file, options, callback, returnTorrent, destroyTorrent){
          function streamVideo(){                  
 
@@ -342,12 +253,12 @@ function OakStreaming(OakName){
             var self = this; 
             
             
-            webTorrentClient.on('torrent', function (torrent) {
+            webTorrentClient.on('torrent', function (torrentSession) {
                console.log("webTorrentClient.on('torrent',...) is called");
-               theTorrent = torrent;
-               webTorrentFile = torrent.files[0];
+               theTorrent = torrentSession;
+               webTorrentFile = theTorrent.files[0];
                
-               if(torrent.infoHash){
+               if(theTorrent.infoHash){
                   for(var j=0; j< peersToAdd.length; j++){
                      theTorrent.addPeer(peersToAdd[j][0]);
                      console.log("I manually added a peer to the swarm");
@@ -357,7 +268,7 @@ function OakStreaming(OakName){
                   }                  
                   
                } else {
-                  torrent.on('infoHash', function(){
+                  theTorrent.on('infoHash', function(){
                        
                      // Peers which used the offered methods to manually connect to this OakStreaming instance
                      // before a torrent file was loaded are added now to the set of peers that are used for video data exchange.
@@ -490,38 +401,25 @@ function OakStreaming(OakName){
          */
       }
 
-      function waitStartPlayingOffset(stream_information, callback, end_streaming_when_video_loaded){
+      function waitStartPlayingOffset(stream_information, callback, stop_uploading_when_video_downloaded){
          if(Date.now() - timeReceiptStreamInformationObject >= startPlayingOffset){
             //console.log("Video gets loaded");
             timeLoadVideoMethodWasCalled = Date.now();
-            self.loadVideo(stream_information, callback, end_streaming_when_video_loaded);  
+            self.loadVideo(stream_information, callback, stop_uploading_when_video_downloaded);  
          } else {
-            setTimeout(function(){waitStartPlayingOffset(stream_information, callback, end_streaming_when_video_loaded);},10);
+            setTimeout(function(){waitStartPlayingOffset(stream_information, callback, stop_uploading_when_video_downloaded);},10);
          }
       }
       
       //A Wrapper for the Technical Evaluation
-      function loadVideo_technical_evaluation(stream_information, callback, end_streaming_when_video_loaded){
+      function loadVideo_technical_evaluation(stream_information, callback, stop_uploading_when_video_downloaded){
          timeReceiptStreamInformationObject = Date.now();      
-         waitStartPlayingOffset(stream_information, callback, end_streaming_when_video_loaded);      
+         waitStartPlayingOffset(stream_information, callback, stop_uploading_when_video_downloaded);      
       }
 
 
-      /**
-       * @callback OakStreaming~downloadingVideoFinished
-       */ 
-       
-      /**
-       * This method tries to receive the video stream described in the stream_information object.
-       * After this method has been called, the OakStreaming instance offers received video data to all OakStreaming instances with whom it is connected.
-       * The received video data will be streamed into the first HTML video element of the DOM.
-       * @pulic
-       * @method
-       * @param {Stream_Information} stream_information - This object contains all data that is needed to initiate downloading the video from other OakStreaming instances and/or a Web server. Stream_Information objects can be created by the {@link streamVideo|streamVideo} method.
-       * @param {OakStreaming~downloadingVideoFinished} callback - This callback gets called when the video has been buffered entirely.
-       * @param {boolean} end_streaming_when_video_downloaded - If this argument is true, all uploading to other OakStreaming instances is permanently cancelled and all processing of the loadVideo method permanently stopped as soon as the video has been downloaded completely.
-       */
-       //(04.08.16) Eigentlich: loadVideo(stream_information, callback, end_streaming_when_video_loaded)
+
+       //(04.08.16) Eigentlich: loadVideo(stream_information, callback, stop_uploading_when_video_downloaded)
       function loadVideo(){       
          ////console.log("loadVideo is called");
          ////console.log("option paramter:\n" + JSON.stringify(stream_information));
@@ -538,14 +436,14 @@ function OakStreaming(OakName){
          */
          var stream_information = arguments[0];
          var callback = function(){};
-         var end_streaming_when_video_loaded = false;
+         var stop_uploading_when_video_downloaded = false;
          
          if(typeof arguments[1] === 'function'){
             callback = arguments[1];
-            end_streaming_when_video_loaded = arguments[2];
+            stop_uploading_when_video_downloaded = arguments[2];
          } else {
             callback = undefined;
-            end_streaming_when_video_loaded = arguments[1];
+            stop_uploading_when_video_downloaded = arguments[1];
          }
                   
                   
@@ -677,12 +575,12 @@ function OakStreaming(OakName){
             
             // A magnetURI contains URLs to tracking servers and the info hash of the torrent.
             //The client receives the complete torrent file from a tracking server.
-            webTorrentClient.add(THE_RECEIVED_TORRENT_FILE, webTorrentOptions, function (torrent){
+            webTorrentClient.add(THE_RECEIVED_TORRENT_FILE, webTorrentOptions, function (torrentSession){
                // From this point on the WebTorrent instance will download video data from the WebTorrent network in the background in a rarest-peace-first manner as fast as possible.
                // Sequential stream request like createreadstrime are prioritized over this rarest-peace-first background downloading.
                
                ////console.log("webTorrentClient.add   torrent meta data ready");         
-               theTorrent = torrent;
+               theTorrent = torrentSession;
                
                /*
                if(infoHashReady){
@@ -732,9 +630,9 @@ function OakStreaming(OakName){
                   });
                }
                
-               webTorrentFile = torrent.files[0];
+               webTorrentFile = theTorrent.files[0];
                      
-               torrent.on('done', function () {
+               theTorrent.on('done', function () {
                   VideoCompletelyLoadedByWebtorrent = true;
                });
                
@@ -750,7 +648,7 @@ function OakStreaming(OakName){
                      notificationsBecauseNewWires--;
                      var callbackCalled = false;
                      
-                     torrent.on('wire', function(wire){
+                     theTorrent.on('wire', function(wire){
                         if(!callbackCalled){
                            callback();
                            callbackCalled = true;
@@ -762,7 +660,7 @@ function OakStreaming(OakName){
                   }
                };
                
-               torrent.on('wire', function (wire){
+               theTorrent.on('wire', function (wire){
                   ////console.log("torrent.on('wire', ..) is fired");
                   wires.push(wire);
                   if(!window.firstWire){
@@ -1257,13 +1155,13 @@ function OakStreaming(OakName){
                      videoCompletelyLoadedByVideoPlayer = true;   // brauche da verschiende boolean werte
                      //console.log("My program thinks the wohle video has been loaded into the video Player buffer");
                      if(callback){
-                        if(end_streaming_when_video_loaded){
+                        if(stop_uploading_when_video_downloaded){
                            callback();
                         } else {
                            callback(theTorrent);
                         }
                      }
-                     if(end_streaming_when_video_loaded){
+                     if(stop_uploading_when_video_downloaded){
                         if(theTorrent){
                            theTorrent.destroy();
                            webTorrentClient = null;
