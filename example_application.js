@@ -1,7 +1,7 @@
 var OakStreaming = require("./OakStreaming");
 var oakStreaming = new OakStreaming();
 
-console.log("Version Bear");
+console.log("Version Mounten Giant");
 
 var theSharedMap = null;
 var iAmSeeder = false;
@@ -45,14 +45,12 @@ Y({
          } else {
             step++;
          }
-      } else {
-         /*
+      } else {       
          if(step === 3){
             step++;
             console.log("step === 3");
             oakStreaming.processSignalingResponse(theSharedMap.get("3"), function(){console.log("processSignalingResponse has finished")});
          }
-         */
          if(step === 2) {
             step++;
          }
@@ -88,8 +86,8 @@ window.handleFiles = function (files) {
    // files[0] is the video file that the user selected.
    // addToSharedMap(object, I)  adds object at index I of the shared array.
    
-   // , {webTorrent_tracker: false, web_server_URL: "http://gaudi.informatik.rwth-aachen.de:9912"}
-   oakStreaming.streamVideo(files[0], {webTorrent_trackers: ["wss://tracker.openwebtorrent.com", "wss://tracker.webtorrent.io"], web_server_URL: false}, function(streamInformationObject){
+   // , {webTorrent_tracker: false, web_server_URL: "http://gaudi.informatik.rwth-aachen.de:9912"}   webTorrent_trackers: ["wss://tracker.openwebtorrent.com", "wss://tracker.webtorrent.io"]
+   oakStreaming.streamVideo(files[0], {web_server_URL: false}, function(streamInformationObject){
       console.log("streamInformationObject" + JSON.stringify(streamInformationObject));
       addToSharedMap(streamInformationObject, "1");
    });
