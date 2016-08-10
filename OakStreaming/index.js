@@ -175,8 +175,8 @@ function OakStreaming(OakName){
   
          var stream_information = options;  
          
-         if(!stream_information.path_to_file_on_Web_server){
-            stream_information.path_to_file_on_Web_server = "/" + video_file.name;
+         if(!stream_information.path_to_file_on_web_server){
+            stream_information.path_to_file_on_web_server = "/" + video_file.name;
          }    
         
          if(stream_information.web_server_URL === false){
@@ -228,7 +228,7 @@ function OakStreaming(OakName){
        
        
        
-         var webTorrentClient = new WebTorrent();
+         var webTorrentClient = new WebTorrent({dht: true, tracker: true});
        
          if(video_file){
             var seedingOptions = {
@@ -503,7 +503,7 @@ function OakStreaming(OakName){
          var XHR_hostname = stream_information.XHR_hostname;
          var XHR_port = stream_information.XHR_port;
            
-         var pathToFileOnXHRServer = stream_information.path_to_file_on_Web_server;
+         var pathToFileOnXHRServer = stream_information.path_to_file_on_web_server;
          var hashValue = stream_information.hash_value;
          //var webTorrentTrackers = stream_information.webTorrent_trackers;
          var MAGNET_URI = stream_information.magnetURI;

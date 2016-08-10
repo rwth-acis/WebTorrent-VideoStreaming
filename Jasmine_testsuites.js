@@ -167,7 +167,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
             }
          }, true);
          myStreamingB.loadVideo(streamInformationObject,  function(){
-            console.log("last new spec. callback of myStreamingA.loadVideo");
+            console.log("last new spec. callback of myStreamingB.loadVideo");
             if(oneStreamingCompleted){
                testTorrent.destroy();
                done();
