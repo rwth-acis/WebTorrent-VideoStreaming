@@ -48,7 +48,7 @@
 
 
 <div class="description">
-    This constructor creates a OakStreaming instance. OakStreaming instances can seed and/or receive and/or relay video streams.In order to stream a video from one OakStreaming instance to another, a peer-to-peer connection between both OakStreaming instances has to be established.To build up a peer-to-peer connection between two OakStreaming instances, signaling data has to be exchanged between both instances.This exchange of signaling data can happen automatically via a signaling server or manually by using the createSignalingData, createSignalingDataResponseand procressSignalingData methods of the OakStreaming instances. OakStreaming instances can seed a video stream by using the streamVideo method.OakStreaming instances can receive, play back and relay a video stream by using the loadVideo method.OakStreaming instances can also (partly) receive a video stream from a Web server via XML HTTP Requests (XHRs).
+    This constructor creates a OakStreaming instance. OakStreaming instances can seed and/or receive and/or relay video streams.In order to stream a video from one OakStreaming instance to another, a peer-to-peer connection between both OakStreaming instances has to be established.To build up a peer-to-peer connection between two OakStreaming instances, signaling data has to be exchanged between both instances.This exchange of signaling data can happen automatically via a signaling server or manually by using the signaling1, signaling2and signaling3 methods of the OakStreaming instances. OakStreaming instances can seed a video stream by using the create_stream method.OakStreaming instances can receive, play back and relay a video stream by using the receive_stream method.OakStreaming instances can also (partly) receive a video stream from a Web server via XML HTTP Requests (XHRs).
 </div>
 
 
@@ -141,14 +141,14 @@
 
     
 
-    <h4 class="name" id="~createSignalingData"><span class="type-signature">(inner) </span>createSignalingData<span class="signature">(callback)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="~create_stream"><span class="type-signature">(inner) </span>create_stream<span class="signature">(video_file<span class="signature-attributes">opt</span>, options<span class="signature-attributes">opt</span>, callback)</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    This method creates signaling data that can be put into the createSignalingDataResponse method of another OakStreaming instance in order to manually building up a peer-to-peer connection between both OakStreaming instances.
+    This method creates a Stream_Ticket object that other OakStreaming instances can pass as an argument to their receive_stream method to download the video from this and other OakStreaming instances and/or a Web server.
 </div>
 
 
@@ -172,6 +172,8 @@
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -184,23 +186,470 @@
 
         <tr>
             
-                <td class="name"><code>callback</code></td>
+                <td class="name"><code>video_file</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type"><a href="OakStreaming.html#~createSignalingData1_callback">OakStreaming~createSignalingData1_callback</a></span>
+<span class="param-type">object</span>
 
 
             
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last">This callback function gets called with the generated signalingData object as soon as the signaling data has been created.</td>
+            <td class="description last">The video file that should be streamed peer-to-peer to other OakStreaming instances. This parameter can either be a <a href="https://developer.mozilla.org/en-US/docs/Web/API/File%20">W3C File object</a>, a <a href="https://developer.mozilla.org/en-US/docs/Web/API/FileList%20">W3C FileList</a>, a <a href="https://nodejs.org/api/buffer.html%20">Node Buffer object</a> or a <a href="https://nodejs.org/api/stream.html#stream_class_stream_readable%20">Readable stream object</a>.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Options for the creation of the Stream_Ticket object. After its creation, the Stream_Ticket object gets passed by the create_stream method as an argument to the callback function.
+                <h6>Properties</h6>
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>web_server_URL</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">URL of a Web server that can serve the video file. If this property is not set, XML HTTP Requests (XHRs) will be send to the Web server that served the Web page. If this property is set to false (not only falsy), no Web server will be requested. The default port value is 80.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>path_to_file_on_web_server</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">This path will be used for the XML HTTP Requests (XHRs). For example, a valid path could be "/videos/aVideoFile.mp4". The default value of this property is "/" concatenated with the name of the file that is seeded.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>hash_value</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">The SHA-256 hash value of the video file that should by (partially) requested from the Web server. If this hash_value property is defined, it instead of the path_to_file_on_Web_server property will be used for XHRs.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>download_from_server_time_range</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    5
+                
+                </td>
+            
+
+            <td class="description last">How many seconds of video playback must be buffered in advance such that no data is requested from the Web server.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>webTorrent_trackers</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;string></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">Array of WebTorrent torrent tracker URLs (strings). One of these torrent trackers will be used to connect to other OakStreaming instances. The OakStreaming client will first try to connect to the torrent tracker URL at index 0 of the array, then to the URL at index 1 and so forth. If this parameter is set to false (not only falsy), the OakStreaming instance will not build up a connection to any torrent tracker. If this parameter is not set, the following URL list will be used: ["wss://tracker.webtorrent.io", "wss://tracker.openwebtorrent.com", "wss://tracker.fastcast.nz", "wss://tracker.btorrent.xyz"]</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>sequential_requests_time_range</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    20
+                
+                </td>
+            
+
+            <td class="description last">How many seconds of video playback must be buffered in advance such that no sequential data streams are requested from the WebTorrent network and instead video fragments are requested according to the rarest-peace-first strategy.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>size_of_sequential_requests</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    5000000
+                
+                </td>
+            
+
+            <td class="description last">The size of the sequential byte range requests to the WebTorrent network. Keeping the default value is sufficient for most use cases.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>peer_upload_limit_multiplier</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    2
+                
+                </td>
+            
+
+            <td class="description last">The OakStreaming client will severely throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throttling as soon as the before mentioned inequality is no longer true.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>peer_upload_limit_addend</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+                <td class="default">
+                
+                    3000000
+                
+                </td>
+            
+
+            <td class="description last">The OakStreaming client will severely throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throttling as soon as the before mentioned inequality is no longer true.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+            </td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="OakStreaming.html#~createStream_finished">OakStreaming~createStream_finished</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">This callback function gets called with the generated Stream_Ticket object at the end of the execution of create_stream.</td>
         </tr>
 
     
@@ -241,161 +690,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Doku.js.html">Doku.js</a>, <a href="Doku.js.html#line71">line 71</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="~createSignalingDataResponse"><span class="type-signature">(inner) </span>createSignalingDataResponse<span class="signature">(signalingData, callback)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    This method expects a SignalingData object that was created by the createSignalingData method of another OakStreaming instance and generates the respective response SignalingData object. In order to complete the signaling data exchange, this response signalingData object then has to be put into the processSignalingResponse method of the OakStreaming instance which has initialized the signaling.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>signalingData</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">SignalingData</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">A signaling data object that was created by the createSignalingData method of another OakStreaming instance.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>callback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="OakStreaming.html#~createSignalingData2_callback">OakStreaming~createSignalingData2_callback</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">This callback function gets called with the generated signalingData object.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Doku.js.html">Doku.js</a>, <a href="Doku.js.html#line85">line 85</a>
+        <a href="Doku.js.html">Doku.js</a>, <a href="Doku.js.html#line131">line 131</a>
     </li></ul></dd>
     
 
@@ -930,14 +1225,14 @@
 
     
 
-    <h4 class="name" id="~loadVideo"><span class="type-signature">(inner) </span>loadVideo<span class="signature">(stream_information_object, callback<span class="signature-attributes">opt</span>, stop_uploading_when_video_downloaded<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="~receive_stream"><span class="type-signature">(inner) </span>receive_stream<span class="signature">(stream_ticket_object, callback<span class="signature-attributes">opt</span>, stop_uploading_when_video_downloaded<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    This method tries to receive the video stream described in the stream_information object.After this method has been called, the OakStreaming instance offers received video data to all OakStreaming instances with whom it is connected.The received video data will be streamed into the first HTML video element of the DOM.
+    This method tries to receive the video stream described in the Stream_Ticket object.After this method has been called, the OakStreaming instance offers received video data to all OakStreaming instances with whom it is connected.The received video data will be streamed into the first HTML video element of the DOM.
 </div>
 
 
@@ -975,13 +1270,13 @@
 
         <tr>
             
-                <td class="name"><code>stream_information_object</code></td>
+                <td class="name"><code>stream_ticket_object</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Stream_Information</span>
+<span class="param-type">Stream_Ticket</span>
 
 
             
@@ -999,7 +1294,7 @@
 
             
 
-            <td class="description last">This object contains all data that is needed to initiate downloading the video from other OakStreaming instances and/or a Web server. Stream_Information objects can be created by the streamVideo method.</td>
+            <td class="description last">This object contains all data that is needed to initiate downloading the video from other OakStreaming instances and/or a Web server. Stream_Ticket objects can be created by the create_stream method.</td>
         </tr>
 
     
@@ -1065,7 +1360,7 @@
 
             
 
-            <td class="description last">If this argument is true, all uploading to other OakStreaming instances is permanently cancelled and all processing of the loadVideo method permanently stopped as soon as the video has been downloaded completely.</td>
+            <td class="description last">If this argument is true, all uploading to other OakStreaming instances is permanently canceled and all processing of the receive_stream method permanently stopped as soon as the video has been downloaded completely.</td>
         </tr>
 
     
@@ -1137,14 +1432,299 @@
 
     
 
-    <h4 class="name" id="~processSignalingResponse"><span class="type-signature">(inner) </span>processSignalingResponse<span class="signature">(signalingData, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="~signaling1"><span class="type-signature">(inner) </span>signaling1<span class="signature">(callback)</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    This method expects a signaling data object that a createSignalingResponse method of another OakStreaming has generated based on a signaling data object that the createSignalingData method of this OakStreaming method created. After the signaling data object has been processed, this OakStreaming instance automatically builds up a peer-to-peer connection to the other OakStreaming instance. After the peer-to-peer connection has been established, both OakStreaming instances automatically exchange video fragments.
+    This method creates signaling data that can be put into the signaling2 method of another OakStreaming instance in order to manually building up a peer-to-peer connection between both OakStreaming instances.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="OakStreaming.html#~signaling1_callback">OakStreaming~signaling1_callback</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">This callback function gets called with the generated signalingData object as soon as the signaling data has been created.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Doku.js.html">Doku.js</a>, <a href="Doku.js.html#line71">line 71</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="~signaling2"><span class="type-signature">(inner) </span>signaling2<span class="signature">(signalingData, callback)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    This method expects a SignalingData object that was created by the signaling1 method of another OakStreaming instance and generates the respective response SignalingData object. In order to complete the signaling data exchange, this response signalingData object then has to be put into the signaling3 method of the OakStreaming instance which has initialized the signaling.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>signalingData</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">SignalingData</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A signaling data object that was created by the signaling1 method of another OakStreaming instance.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="OakStreaming.html#~signaling2_callback">OakStreaming~signaling2_callback</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">This callback function gets called with the generated signalingData object.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Doku.js.html">Doku.js</a>, <a href="Doku.js.html#line85">line 85</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="~signaling3"><span class="type-signature">(inner) </span>signaling3<span class="signature">(signalingData, callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    This method expects a signaling data object that a signaling2 method of another OakStreaming has generated based on a signaling data object that the signaling1 method of this OakStreaming method created. After the signaling data object has been processed, this OakStreaming instance automatically builds up a peer-to-peer connection to the other OakStreaming instance. After the peer-to-peer connection has been established, both OakStreaming instances automatically exchange video fragments.
 </div>
 
 
@@ -1206,7 +1786,7 @@
 
             
 
-            <td class="description last">A signaling data object that was created by the createSignalingResponse method of another OakStreaming instance. A necessary requirement is that the createSigngalingResponse method created the signaling data object based on a signalingdata object that the createSignalingData method of this OakStreaming instance generated.</td>
+            <td class="description last">A signaling data object that was created by the signaling2 method of another OakStreaming instance. A necessary requirement is that the signaling2 method created the signaling data object based on a signalingdata object that the signaling1 method of this OakStreaming instance generated.</td>
         </tr>
 
     
@@ -1219,7 +1799,7 @@
             <td class="type">
             
                 
-<span class="param-type"><a href="OakStreaming.html#~createSignalingData3_callback">OakStreaming~createSignalingData3_callback</a></span>
+<span class="param-type"><a href="OakStreaming.html#~signaling3_callback">OakStreaming~signaling3_callback</a></span>
 
 
             
@@ -1307,586 +1887,6 @@
 
 
         
-            
-
-    
-
-    <h4 class="name" id="~streamVideo"><span class="type-signature">(inner) </span>streamVideo<span class="signature">(video_file<span class="signature-attributes">opt</span>, options<span class="signature-attributes">opt</span>, callback)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    This method creates a Stream_Information object that other OakStreaming instances can pass as an argument to their loadVideo method to download the video from this and other OakStreaming instances and/or a Web server.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>video_file</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">object</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">The video file that should be streamed peer-to-peer to other OakStreaming instances. This parameter can either be a <a href="https://developer.mozilla.org/en-US/docs/Web/API/File%20">W3C File object</a>, a <a href="https://developer.mozilla.org/en-US/docs/Web/API/FileList%20">W3C FileList</a>, a <a href="https://nodejs.org/api/buffer.html%20">Node Buffer object</a> or a <a href="https://nodejs.org/api/stream.html#stream_class_stream_readable%20">Readable stream object</a>.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">object</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">Options for the creation of the Stream_Information object. After its creation, the Stream_Information object gets passed by the streamVideo method as an argument to the callback function.
-                <h6>Properties</h6>
-                
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>web_server_URL</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last">URL of a Web server that can serve the video file. If this property is not set, XML HTTP Requests (XHRs) will be send to the Web server that served the Web page. If this property is set to false (not only falsy), no Web server will be requested. The default port value is 80.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>path_to_file_on_Web_server</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last">This path will be used for the XML HTTP Requests (XHRs). For example, a valid path could be "/videos/aVideoFile.mp4". The default value of this property is "/" concatenated with the name of the file that is seeded.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>hash_value</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last">The SHA-256 hash value of the video file that should by (partially) requested from the Web server. If this hash_value property is defined, it instead of the path_to_file_on_Web_server property will be used for XHRs.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>download_from_server_time_range</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    5
-                
-                </td>
-            
-
-            <td class="description last">How many seconds of video playback must be buffered in advance such that no data is requested from the Web server.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>webTorrent_trackers</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array.&lt;string></span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last">Array of WebTorrent torrent tracker URLs (strings). One of these torrent trackers will be used to connect to other OakStreaming instances. The OakStreaming client will first try to connect to the torrent tracker URL at index 0 of the array, then to the URL at index 1 and so forth. If this parameter is set to false (not only falsy), the OakStreaming instance will not build up a connection to any torrent tracker. If this parameter is not set, the following URL list will be used: ["wss://tracker.webtorrent.io", "wss://tracker.openwebtorrent.com", "wss://tracker.fastcast.nz", "wss://tracker.btorrent.xyz"]</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>sequential_requests_time_range</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    20
-                
-                </td>
-            
-
-            <td class="description last">How many seconds of video playback must be buffered in advance such that no sequential data streams are requested from the WebTorrent network and instead video fragments are requested according to the rarest-peace-first strategy.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>size_of_sequential_requests</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    5000000
-                
-                </td>
-            
-
-            <td class="description last">The size of the sequential byte range requests to the WebTorrent network. Keeping the default value is sufficient for most use cases.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>peer_upload_limit_multiplier</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    2
-                
-                </td>
-            
-
-            <td class="description last">The OakStreaming client will severely throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throttling as soon as the before mentioned inequality is no longer true.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>peer_upload_limit_addend</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-                <td class="default">
-                
-                    3000000
-                
-                </td>
-            
-
-            <td class="description last">The OakStreaming client will severely throttle the video data upload to other peers when (bytes_uploaded_to_other_peers * peer_upload_limit_multiplier + peer_upload_limit_addend >  bytes_downloaded_from_other_peers). The OakStreaming client will stop the throttling as soon as the before mentioned inequality is no longer true.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-            </td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>callback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="OakStreaming.html#~streamVideoFinished">OakStreaming~streamVideoFinished</a></span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">This callback function gets called with the generated Stream_Information object at the end of the execution of streamVideo.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Doku.js.html">Doku.js</a>, <a href="Doku.js.html#line131">line 131</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
     
 
     
@@ -1908,7 +1908,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Aug 10 2016 13:47:55 GMT+0200 (W. Europe Daylight Time)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Thu Aug 11 2016 20:58:59 GMT+0200 (W. Europe Daylight Time)
 </footer>
 
 <script> prettyPrint(); </script>
