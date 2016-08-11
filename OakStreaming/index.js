@@ -1513,5 +1513,10 @@ function OakStreaming(OakName){
             peersToAdd.push(pair);
          }
       }
+      self.signaling1 = self.createSignalingData;
+      self.signaling2 = self.createSignalingDataResponse;
+      self.signaling3 = self.processSignalingResponse;
+      self.create_stream = self.streamVideo;
+      self.receive_stream = self.loadVideo;
    })();
 }
