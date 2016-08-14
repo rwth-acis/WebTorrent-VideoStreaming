@@ -228,7 +228,7 @@ function OakStreaming(OakName){
        
        
        
-         var webTorrentClient = new WebTorrent({dht: true, tracker: true});
+         var webTorrentClient = new WebTorrent({dht: false, tracker: true});
        
          if(video_file){
             var seedingOptions = {
@@ -906,10 +906,10 @@ function OakStreaming(OakName){
                      //////////console.log("After new Multistream. thisRequest.start: " + thisRequest.start);
                      //////////console.log("webTorrentFile.length: " + webTorrentFile.length);
                      var endCreateReadStream;
-                     if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length-1){
+                     if(thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE - 1 >= webTorrentFile.length-1){
                         endCreateReadStream = webTorrentFile.length-1;
                      } else {
-                        endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE;
+                        endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE - 1;
                      }
                      thisRequest.webTorrentStream = webTorrentFile.createReadStream({"start" : thisRequest.start, "end" : endCreateReadStream});
                      thisRequest.lastEndCreateReadStream = endCreateReadStream;
