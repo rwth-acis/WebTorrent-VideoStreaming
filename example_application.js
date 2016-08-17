@@ -1,112 +1,66 @@
-var OakStreaming = require("./OakStreaming");
 var oakStreaming = new OakStreaming();
 
-console.log("Version Mounten Giant");
 
-var theSharedMap = null;
-var iAmSeeder = false;
+var theSharedArray = null;
+var streamSource = false;  
 
-console.log("This is task 4");
-var step = 1; // New variable in task 4
+
+console.log("This is task 3");
+
 
 Y({
   db: {
     name: 'memory'
   },
   connector: {
-    url : "http://localhost:8889", // http://gaudi.informatik.rwth-aachen.de:9914
+    url : "http://gaudi.informatik.rwth-aachen.de:9914",
     name: 'webrtc',
-    room: 'fdssfgsZVD23d'
+    room: 'User1'
   },
   share: {
-     myMap : 'Map'
+     myArray : 'Array'
   }
 }).then(function (y){
-   theSharedMap = y.share.myMap;
+   theSharedArray = y.share.myArray;
   
-  
-  
-   // Task 4.2
-   //-------------------------------------------------------------------------
-   theSharedMap.observe(function(event){
-      console.log("The shared array got updated");
- 
-      // the step variable is initialized with 1
-      // addToSharedMap(object, I)   adds object at index I of the shared array.
-      // theSharedMap.get(I)   returns the object at index I of the shared array.
-
-      if(iAmSeeder){
-         if(step === 2){
-            oakStreaming.createSignalingDataResponse(theSharedMap.get("2"), function(signalingData){
-               console.log("result createSignalingDataResponse: " + JSON.stringify(signalingData));
-               step++;
-               addToSharedMap(signalingData, "3");
-            });
-         } else {
-            step++;
-         }
-      } else {       
-         if(step === 3){
-            step++;
-            console.log("step === 3");
-            oakStreaming.processSignalingResponse(theSharedMap.get("3"), function(){console.log("processSignalingResponse has finished")});
-         }
-         if(step === 2) {
-            step++;
-         }
-         if(step === 1){
-            console.log('theSharedMap.get("1"): ' + JSON.stringify(theSharedMap.get("1")));
-            oakStreaming.loadVideo(theSharedMap.get("1"));
-            
-            console.log("After oakStreaming.loadVideo");
-            oakStreaming.createSignalingData(function(signalingData){
-               console.log("result createSignalingData: " + JSON.stringify(signalingData));
-               step++;
-               addToSharedMap(signalingData, "2");
-            });
-         }
+   theSharedArray.observe(function(event){
+      console.log("The following event-type was thrown: "+ event.type);
+      console.log("The event object has more information:");
+      console.log(event);
+      if(!streamSource){
+         // returns the received Stream_Information object:    theSharedArray.get(0)
+         // Task 3.2
+         oakStreaming.loadVideo(theSharedArray.get(0), function(){console.log("loadVideo callback: All video data has been received");});  
       }
-      
    });
-   //-------------------------------------------------------------------------   
 });
 
-
-
-
-
-
-// Task 4.1
-//-------------------------------------------------------------------------
 window.handleFiles = function (files) {
-   iAmSeeder = true;
-   
-   
-   // sha-256 hash value of video file:  fd461d08157e91b3811b6581d8abcfa55fc7e27b808f957878140a7bc117f5ea
-   // files[0] is the video file that the user selected.
-   // addToSharedMap(object, I)  adds object at index I of the shared array.
-   
-   // , {webTorrent_tracker: false, web_server_URL: "http://gaudi.informatik.rwth-aachen.de:9912"}   webTorrent_trackers: ["wss://tracker.openwebtorrent.com", "wss://tracker.webtorrent.io"]
-   oakStreaming.streamVideo(files[0], {web_server_URL: false}, function(streamInformationObject){
-      console.log("streamInformationObject" + JSON.stringify(streamInformationObject));
-      addToSharedMap(streamInformationObject, "1");
+   streamSource = true;
+   // files[0] contains the file from the user
+   // addToSharedArray(content)   transfers content to all other peers
+   // Task 3.1
+   oakStreaming.streamVideo(files[0], {webTorrent_trackers: [["wss://tracker.webtorrent.io"]], peer_upload_limit_multiplier: 1, XHR_server_URL : "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, download_from_server_time_range: 4}, function(streamInformationObject){      
+      addToSharedArray(streamInformationObject);
    });
-     
 }
-//-------------------------------------------------------------------------  
 
 
+// Task 3.3
 function updateChart(){
-   document.getElementById("statistics").innerHTML = "Size of video file in byte: " + oakStreaming.get_file_size() + " Number ob bytes downloaded from peer-to-peer network: " + oakStreaming.get_number_of_bytes_downloaded_P2P() + "\n P2P uploaded: " + oakStreaming.get_number_of_bytes_uploaded_P2P() + "\n Progress P2P download: " + oakStreaming.get_percentage_downloaded_of_torrent() + "\n Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
+   document.getElementById("statistics").innerHTML = "webTorrentFile.length: " + oakStreaming.get_file_size() + "\n torrent.downloaded: " + oakStreaming.get_number_of_bystes_downloaded_P2P() + "\n torrent.uploaded: " + oakStreaming.get_number_of_bytes_uploaded_P2P() + "\n torrent.progress: " + oakStreaming.get_percentage_downloaded_of_torrent() + "\n Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
    setTimeout(updateChart, 500);
 }
 updateChart(); 
 
 
-function addToSharedMap(streamInformationObject, index){
-   if(theSharedMap !== null){
-      theSharedMap.set(index, streamInformationObject);
+
+
+
+function addToSharedArray(streamInformationObject){
+   if(theSharedArray !== null){
+      theSharedArray.insert(0, [streamInformationObject]);
    } else {
-      setTimeout(function(){addToSharedMap(streamInformationObject, index);},100);
+      setTimeout(function(){addToSharedArray(streamInformationObject);},250);
    }   
 }
