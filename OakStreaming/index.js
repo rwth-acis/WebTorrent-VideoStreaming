@@ -6,23 +6,34 @@ var Videostream = require('videostream');
 var ut_pex = require('ut_pex');
 var WebTorrent = require('webtorrent');
 var SimplePeer = require('simple-peer');
-var SimplePeer = require('simple-peer');
 
 
 
 
-
+/**
+ * @module OakStreaming
+ */
 module.exports = OakStreaming;
 
 
-
+ /**
+ * This constructor creates a OakStreaming instance. OakStreaming instances can seed and/or receive and/or relay video streams.
+ * In order to stream a video from one OakStreaming instance to another, a peer-to-peer connection between both OakStreaming instances has to be established.
+ * To build up a peer-to-peer connection between two OakStreaming instances, signaling data has to be exchanged between both instances.
+ * This exchange of signaling data can happen automatically via a signaling server or manually by using the signaling1, signaling2
+ * and signaling3 methods of the OakStreaming instances. OakStreaming instances can seed a video stream by using the create_stream method.
+ * OakStreaming instances can receive, play back and relay a video stream by using the receive_stream method.
+ * OakStreaming instances can also (partly) receive a video stream from a Web server via XML HTTP Requests (XHRs). 
+ * @constructor
+ */ 
 function OakStreaming(OakName){
    var self = this;
    (function(){  
       var OakName = OakName || Math.floor(Math.random() * Math.pow(10,300) + 1);
       
-      // Only methods should be part of the API, i.e. only methods should be publically accessible.
-      // Every method should have access to these variables. Therefore they are defined at this high scope.
+      
+      // Every method should have access to these variables.
+      // Therefore, they are defined at this high scope.
       var simplePeerCreationCounter = 0;
       var connectionsWaitingForSignalingData = [];
       var theTorrent = null;
@@ -32,19 +43,33 @@ function OakStreaming(OakName){
       var notificationsBecauseNewWires = 0;
       var SIZE_OF_VIDEO_FILE = 0;
       
-      
+
+      // Only methods should be part of the OakStreaming API, i.e. only methods should be publically accessible.
+      // The OakStreaming API comprises only the OakStreaming construtor and all public methods of the Object that the constructor creates.
+      // In this paragraph, all keys (i.e. properties) of the object that the OakStreaming constructor creates are set.
       self.streamVideo = streamVideo;
       self.loadVideo = loadVideo;
-      self.forTesting_connectedToNewWebTorrentPeer = null;
-
-      
+      self.forTesting_connectedToNewWebTorrentPeer = null;  
   
+  
+      // The methods whose name begin with get return satistical data about the streaming session.
+      // A (new) streaming session begins when the streamVideo or loadVideo method is called. 
+      
+      /** 
+      * This method returns the number of bytes downloaded from the Web server.
+      * @public
+      * @returns {Number}
+      */ 
       self.get_number_of_bytes_downloaded_from_server = function(){
          return bytesReceivedFromServer;
       };
 
       
-
+      /** 
+      * This method returns the number of bytes downloaded from the peer-to-peer network. The return value includes bytes that were sent by the seeder. 
+      * @public
+      * @returns {Number}
+      */  
       self.get_number_of_bytes_downloaded_P2P = function(){
          if(theTorrent){
             return theTorrent.downloaded;
@@ -52,19 +77,25 @@ function OakStreaming(OakName){
             return 0;
          }
       };
-
-
-     
+      
+      
+      /** This method returns the number of bytes uploaded to the peer-to-peer network. 
+      * @public
+      * @returns {Number}
+      */  
       self.get_number_of_bytes_uploaded_P2P = function(){
          if(theTorrent){
             return theTorrent.uploaded;
          } else {
             return 0;
          }
-      };
+      }; 
 
       
-
+      /** This method returns the percentage of the video file that the OakStreaming instance has already downloaded from the peer-to-peer network. 
+      * @public
+      * @returns {Number} A value between 0 and 1
+      */       
       self.get_percentage_downloaded_of_torrent = function(){
          if(theTorrent){
             return theTorrent.progress;
@@ -74,15 +105,17 @@ function OakStreaming(OakName){
       };
       
       
-
+      /** This method returns the size in bytes of the video file that is or has been streamed/received.
+      * @public
+      * @returns {Number}
+      */  
       self.get_file_size = function(){
          return SIZE_OF_VIDEO_FILE;
       };
-      
+ 
 
 
-      
-      self.createSignalingData = function (callback){
+      self.signaling1 = function (callback){
          var alreadyCalledCallback = false;
          var oakNumber = simplePeerCreationCounter;
          connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({initiator: true, trickle: false,  config: { iceServers: [{ url: 'stun:23.21.150.121' } ] }});
@@ -97,10 +130,9 @@ function OakStreaming(OakName){
          });
       };
  
- 
       // This method creates (WebRTC-)signaling data as a response to singaling data of a createSignalingData method of another OakStreaming instance.
       // This mehtod returns new (WebRTC-)signaling data which has to be put into processSignalingResponse method of the OakStreaming instance which created the original singaling data.        
-      self.createSignalingDataResponse = function (signalingData, callback){
+      self.signaling2 = function (signalingData, callback){
          var oakNumber = signalingData.oakNumber;
          signalingData.oakNumber = undefined;
          
@@ -121,9 +153,8 @@ function OakStreaming(OakName){
          });
       };
       
-
       // This method finally establishes a Web-RTC connection between the two OakStreaming instances. From now on both OakStreaming instances exchange video fragments.
-      self.processSignalingResponse = function (signalingData, callback){
+      self.signaling3 = function (signalingData, callback){
          var oakNumber = signalingData.oakNumber;
          signalingData.oakNumber = undefined;
          var self = this;

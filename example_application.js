@@ -1,3 +1,4 @@
+var OakStreaming = require("./OakStreaming");
 var oakStreaming = new OakStreaming();
 
 
@@ -5,7 +6,7 @@ var theSharedArray = null;
 var streamSource = false;  
 
 
-console.log("This is task 3");
+console.log("This is the live demo");
 
 
 Y({
@@ -13,7 +14,7 @@ Y({
     name: 'memory'
   },
   connector: {
-    url : "http://gaudi.informatik.rwth-aachen.de:9914",
+    url : "http://localhost:8084",                           //"http://gaudi.informatik.rwth-aachen.de:9914",
     name: 'webrtc',
     room: 'User1'
   },
@@ -40,7 +41,7 @@ window.handleFiles = function (files) {
    // files[0] contains the file from the user
    // addToSharedArray(content)   transfers content to all other peers
    // Task 3.1
-   oakStreaming.streamVideo(files[0], {webTorrent_trackers: [["wss://tracker.webtorrent.io"]], peer_upload_limit_multiplier: 1, XHR_server_URL : "gaudi.informatik.rwth-aachen.de", XHR_port: 9912, download_from_server_time_range: 4}, function(streamInformationObject){      
+   oakStreaming.streamVideo(files[0], {webTorrent_trackers: [["wss://tracker.webtorrent.io"]], peer_upload_limit_multiplier: 1, web_server_URL : "http://gaudi.informatik.rwth-aachen.de:9912", download_from_server_time_range: 4}, function(streamInformationObject){      
       addToSharedArray(streamInformationObject);
    });
 }
@@ -48,8 +49,14 @@ window.handleFiles = function (files) {
 
 // Task 3.3
 function updateChart(){
-   document.getElementById("statistics").innerHTML = "webTorrentFile.length: " + oakStreaming.get_file_size() + "\n torrent.downloaded: " + oakStreaming.get_number_of_bystes_downloaded_P2P() + "\n torrent.uploaded: " + oakStreaming.get_number_of_bytes_uploaded_P2P() + "\n torrent.progress: " + oakStreaming.get_percentage_downloaded_of_torrent() + "\n Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
-   setTimeout(updateChart, 500);
+   document.getElementById("A").innerHTML = "File length in byte: " + oakStreaming.get_file_size();
+   document.getElementById("B").innerHTML = "Bytes downloaded from other peers: " + oakStreaming.get_number_of_bytes_downloaded_P2P();
+   document.getElementById("C").innerHTML = "Bytes uploaded to other peers: " + oakStreaming.get_number_of_bytes_uploaded_P2P();
+   document.getElementById("D").innerHTML = "Percentage of video file downloaded from P2P network: " + oakStreaming.get_percentage_downloaded_of_torrent();
+   document.getElementById("E").innerHTML = "Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
+   //document.getElementById("statistics1").innerHTML = "File length in byte: " + oakStreaming.get_file_size() + "Bytes downloaded from other peers: " + oakStreaming.get_number_of_bytes_downloaded_P2P() + "\n Bytes uploaded to other peers: " + oakStreaming.get_number_of_bytes_uploaded_P2P();
+   //document.getElementById("statistics2").innerHTML = "Percentage of video file downloaded from P2P network: " + oakStreaming.get_percentage_downloaded_of_torrent() + "\n Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
+   setTimeout(updateChart, 50);
 }
 updateChart(); 
 
@@ -61,6 +68,6 @@ function addToSharedArray(streamInformationObject){
    if(theSharedArray !== null){
       theSharedArray.insert(0, [streamInformationObject]);
    } else {
-      setTimeout(function(){addToSharedArray(streamInformationObject);},250);
+      setTimeout(function(){addToSharedArray(streamInformationObject);}, 10);
    }   
 }

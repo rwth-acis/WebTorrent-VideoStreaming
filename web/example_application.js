@@ -10,18 +10,29 @@ var Videostream = require('videostream');
 var ut_pex = require('ut_pex');
 var WebTorrent = require('webtorrent');
 var SimplePeer = require('simple-peer');
-var SimplePeer = require('simple-peer');
 
+/**
+ * @module OakStreaming
+ */
 module.exports = OakStreaming;
 
+/**
+* This constructor creates a OakStreaming instance. OakStreaming instances can seed and/or receive and/or relay video streams.
+* In order to stream a video from one OakStreaming instance to another, a peer-to-peer connection between both OakStreaming instances has to be established.
+* To build up a peer-to-peer connection between two OakStreaming instances, signaling data has to be exchanged between both instances.
+* This exchange of signaling data can happen automatically via a signaling server or manually by using the signaling1, signaling2
+* and signaling3 methods of the OakStreaming instances. OakStreaming instances can seed a video stream by using the create_stream method.
+* OakStreaming instances can receive, play back and relay a video stream by using the receive_stream method.
+* OakStreaming instances can also (partly) receive a video stream from a Web server via XML HTTP Requests (XHRs). 
+* @constructor
+*/
 function OakStreaming(OakName) {
    var self = this;
    (function () {
       var OakName = OakName || Math.floor(Math.random() * Math.pow(10, 300) + 1);
-      ////console.log("Version: Archer   In OakStreaming constructor. this.name: " + OakName);
 
-      // Only methods should be part of the API, i.e. only methods should be publically accessible.
-      // Every method should have access to these variables. Therefore they are defined at this high scope.
+      // Every method should have access to these variables.
+      // Therefore, they are defined at this high scope.
       var simplePeerCreationCounter = 0;
       var connectionsWaitingForSignalingData = [];
       var theTorrent = null;
@@ -31,14 +42,30 @@ function OakStreaming(OakName) {
       var notificationsBecauseNewWires = 0;
       var SIZE_OF_VIDEO_FILE = 0;
 
+      // Only methods should be part of the OakStreaming API, i.e. only methods should be publically accessible.
+      // The OakStreaming API comprises only the OakStreaming construtor and all public methods of the Object that the constructor creates.
+      // In this paragraph, all keys (i.e. properties) of the object that the OakStreaming constructor creates are set.
       self.streamVideo = streamVideo;
       self.loadVideo = loadVideo;
       self.forTesting_connectedToNewWebTorrentPeer = null;
 
+      // The methods whose name begin with get return satistical data about the streaming session.
+      // A (new) streaming session begins when the streamVideo or loadVideo method is called. 
+
+      /** 
+      * This method returns the number of bytes downloaded from the Web server.
+      * @public
+      * @returns {Number}
+      */
       self.get_number_of_bytes_downloaded_from_server = function () {
          return bytesReceivedFromServer;
       };
 
+      /** 
+      * This method returns the number of bytes downloaded from the peer-to-peer network. The return value includes bytes that were sent by the seeder. 
+      * @public
+      * @returns {Number}
+      */
       self.get_number_of_bytes_downloaded_P2P = function () {
          if (theTorrent) {
             return theTorrent.downloaded;
@@ -47,6 +74,10 @@ function OakStreaming(OakName) {
          }
       };
 
+      /** This method returns the number of bytes uploaded to the peer-to-peer network. 
+      * @public
+      * @returns {Number}
+      */
       self.get_number_of_bytes_uploaded_P2P = function () {
          if (theTorrent) {
             return theTorrent.uploaded;
@@ -55,6 +86,10 @@ function OakStreaming(OakName) {
          }
       };
 
+      /** This method returns the percentage of the video file that the OakStreaming instance has already downloaded from the peer-to-peer network. 
+      * @public
+      * @returns {Number} A value between 0 and 1
+      */
       self.get_percentage_downloaded_of_torrent = function () {
          if (theTorrent) {
             return theTorrent.progress;
@@ -63,14 +98,17 @@ function OakStreaming(OakName) {
          }
       };
 
+      /** This method returns the size in bytes of the video file that is or has been streamed/received.
+      * @public
+      * @returns {Number}
+      */
       self.get_file_size = function () {
          return SIZE_OF_VIDEO_FILE;
       };
 
-      self.createSignalingData = function (callback) {
+      self.signaling1 = function (callback) {
          var alreadyCalledCallback = false;
          var oakNumber = simplePeerCreationCounter;
-         //////console.log("In createSignalingData for oakNumber: " + oakNumber);
          connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({ initiator: true, trickle: false, config: { iceServers: [{ url: 'stun:23.21.150.121' }] } });
          simplePeerCreationCounter++;
 
@@ -85,9 +123,8 @@ function OakStreaming(OakName) {
 
       // This method creates (WebRTC-)signaling data as a response to singaling data of a createSignalingData method of another OakStreaming instance.
       // This mehtod returns new (WebRTC-)signaling data which has to be put into processSignalingResponse method of the OakStreaming instance which created the original singaling data.        
-      self.createSignalingDataResponse = function (signalingData, callback) {
+      self.signaling2 = function (signalingData, callback) {
          var oakNumber = signalingData.oakNumber;
-         //////console.log("In createSignalingDataResponse. In the beginning oakNumber: " + oakNumber);
          signalingData.oakNumber = undefined;
 
          var myPeer = new SimplePeer({ initiator: false, trickle: false, config: { iceServers: [{ url: 'stun:23.21.150.121' }] } });
@@ -96,37 +133,29 @@ function OakStreaming(OakName) {
          simplePeerCreationCounter++;
 
          myPeer.on('signal', function (answerSignalingData) {
-            //////console.log("In createSignalingDataResponse, after onSignal oakNumber: " + oakNumber);
             answerSignalingData.oakNumber = oakNumber;
-            //////console.log("In createSignalingDataResponse,  object that is returned with callback: " + JSON.stringify(answerSignalingData));
             callback(answerSignalingData);
          });
          myPeer.signal(signalingData);
 
          var self = this;
          myPeer.on('connect', function () {
-            //console.log('Established a simple-peer connection');
-            addSimplePeerInstance(connectionsWaitingForSignalingData[index], {}, function () {/*//console.log("addSimplePeerInstance ended");*/});
+            addSimplePeerInstance(connectionsWaitingForSignalingData[index], {}, function () {});
          });
       };
 
       // This method finally establishes a Web-RTC connection between the two OakStreaming instances. From now on both OakStreaming instances exchange video fragments.
-      self.processSignalingResponse = function (signalingData, callback) {
-         //////console.log("In processSignalingResponse,  signalingData paramter: " + JSON.stringify(signalingData));
+      self.signaling3 = function (signalingData, callback) {
          var oakNumber = signalingData.oakNumber;
          signalingData.oakNumber = undefined;
-         //////console.log("In processSignalingResponse,  oakNumber: " + oakNumber);
-         //////console.log("connectionsWaitingForSignalingData: " + connectionsWaitingForSignalingData);
          var self = this;
          connectionsWaitingForSignalingData[oakNumber].on('connect', function () {
-            //console.log('Established a simple-peer connection');
             addSimplePeerInstance(connectionsWaitingForSignalingData[oakNumber]);
             connectionsWaitingForSignalingData[oakNumber] = undefined;
             if (callback) {
                callback();
             }
          });
-         //////console.log("In processSignalingResponse,  object that is passed to .signal(): " + JSON.stringify(signalingData));
          connectionsWaitingForSignalingData[oakNumber].signal(signalingData);
       };
 
@@ -154,8 +183,8 @@ function OakStreaming(OakName) {
 
          var stream_information = options;
 
-         if (!stream_information.path_to_file_on_Web_server) {
-            stream_information.path_to_file_on_Web_server = "/" + video_file.name;
+         if (!stream_information.path_to_file_on_web_server) {
+            stream_information.path_to_file_on_web_server = "/" + video_file.name;
          }
 
          if (stream_information.web_server_URL === false) {
@@ -205,7 +234,7 @@ function OakStreaming(OakName) {
             stream_information.XHR_port = XHR_port;
          }
 
-         var webTorrentClient = new WebTorrent();
+         var webTorrentClient = new WebTorrent({ dht: false, tracker: true });
 
          if (video_file) {
             var seedingOptions = {
@@ -229,14 +258,12 @@ function OakStreaming(OakName) {
             var self = this;
 
             webTorrentClient.on('torrent', function (torrentSession) {
-               //console.log("webTorrentClient.on('torrent',...) is called");
                theTorrent = torrentSession;
                webTorrentFile = theTorrent.files[0];
 
                if (theTorrent.infoHash) {
                   for (var j = 0; j < peersToAdd.length; j++) {
                      theTorrent.addPeer(peersToAdd[j][0]);
-                     //console.log("I manually added a peer to the swarm");
                      if (peersToAdd[j][1]) {
                         peersToAdd[j][1]();
                      }
@@ -249,7 +276,6 @@ function OakStreaming(OakName) {
                      for (var j = 0; j < peersToAdd.length; j++) {
                         // Vorher hatte ich das onInfohash gemacht
                         theTorrent.addPeer(peersToAdd[j][0]);
-                        //console.log("I manually added a peer to the swarm");
                         if (peersToAdd[j][1]) {
                            peersToAdd[j][1]();
                         }
@@ -260,7 +286,6 @@ function OakStreaming(OakName) {
                      // Peers which used the offered methods to manually connect to this OakStreaming instance
                      // before a torrent file was loaded are added now to the set of peers that are used for video data exchange.
                      for (var j = 0; j < peersToAdd.length; j++) {
-                        //console.log("I manually added a peer to the swarm");                     
                         theTorrent.addPeer(peersToAdd[j][0]);
                         if (peersToAdd[j][1]) {
                            peersToAdd[j][1]();
@@ -271,10 +296,6 @@ function OakStreaming(OakName) {
             });
 
             webTorrentClient.seed(video_file, seedingOptions, function onSeed(torrent) {
-
-               //console.log("onSeed is called");
-
-               //////console.log("torrent file is seeded");
 
                /* K42 Maybe I will need this later
                var torrentFileAsBlobURL = torrent.torrentFileBlobURL;
@@ -305,15 +326,11 @@ function OakStreaming(OakName) {
                   stream_information.size_of_video_file += torrent.files[i].length;
                }
 
-               //////console.log("Creaded stream_information:\n" + JSON.stringify(stream_information));
-
                // var bufferTorrent = parseTorrent(stream_information.parsedTorrent); K42
 
-               //////console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
                // This function calls the callback function when this OakStreaming instance already connected to another peer
                // or as soon as it connects to another peer.
                self.forTesting_connectedToNewWebTorrentPeer = function (callback) {
-                  //////console.log("In streamVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets executed");
                   if (notificationsBecauseNewWires <= 0) {
                      notificationsBecauseNewWires--;
                      var callbackCalled = false;
@@ -371,7 +388,6 @@ function OakStreaming(OakName) {
 
       function waitStartPlayingOffset(stream_information, callback, stop_uploading_when_video_downloaded) {
          if (Date.now() - timeReceiptStreamInformationObject >= startPlayingOffset) {
-            ////console.log("Video gets loaded");
             timeLoadVideoMethodWasCalled = Date.now();
             self.loadVideo(stream_information, callback, stop_uploading_when_video_downloaded);
          } else {
@@ -389,8 +405,6 @@ function OakStreaming(OakName) {
 
       //(04.08.16) Eigentlich: loadVideo(stream_information, callback, stop_uploading_when_video_downloaded)
       function loadVideo() {
-         //////console.log("loadVideo is called");
-         //////console.log("option paramter:\n" + JSON.stringify(stream_information));
 
          // This block is solely for the Technical Evaluation   
 
@@ -467,16 +481,13 @@ function OakStreaming(OakName) {
          var XHR_hostname = stream_information.XHR_hostname;
          var XHR_port = stream_information.XHR_port;
 
-         var pathToFileOnXHRServer = stream_information.path_to_file_on_Web_server;
+         var pathToFileOnXHRServer = stream_information.path_to_file_on_web_server;
          var hashValue = stream_information.hash_value;
-         //var webTorrentTrackers = stream_information.webTorrent_trackers;
          var MAGNET_URI = stream_information.magnetURI;
-         //////console.log("MAGNET_URI: "  + MAGNET_URI);
          if (deliveryByWebtorrent) {
             var THE_RECEIVED_TORRENT_FILE = Buffer.from(stream_information.torrentFile, 'base64');
          }
          SIZE_OF_VIDEO_FILE = stream_information.size_of_video_file;
-         //////console.log("stream_information.size_of_video_file: "  + stream_information.size_of_video_file);
 
          var DOWNLOAD_FROM_P2P_TIME_RANGE = stream_information.sequential_requests_time_range || 20; // eigentlich 20
          var CREATE_READSTREAM_REQUEST_SIZE = stream_information.size_of_sequential_requests || 6000000; // 12000000
@@ -522,7 +533,6 @@ function OakStreaming(OakName) {
          MyReadableStream.prototype._read = function (size) {};
 
          if (deliveryByWebtorrent) {
-            //////console.log("entered if(deliveryByWebtorrent)");
             webTorrentClient = new WebTorrent();
 
             var webTorrentOptions = {}; // {announce: []};
@@ -539,7 +549,6 @@ function OakStreaming(OakName) {
                // From this point on the WebTorrent instance will download video data from the WebTorrent network in the background in a rarest-peace-first manner as fast as possible.
                // Sequential stream request like createreadstrime are prioritized over this rarest-peace-first background downloading.
 
-               //////console.log("webTorrentClient.add   torrent meta data ready");         
                theTorrent = torrentSession;
 
                /*
@@ -557,7 +566,6 @@ function OakStreaming(OakName) {
                */
                if (theTorrent.infoHash) {
                   for (var j = 0; j < peersToAdd.length; j++) {
-                     //console.log("I manually added a peer to the swarm");                     
                      theTorrent.addPeer(peersToAdd[j][0]);
                      if (peersToAdd[j][1]) {
                         peersToAdd[j][1]();
@@ -569,7 +577,6 @@ function OakStreaming(OakName) {
                      // Peers which used the offered methods to manually connect to this OakStreaming instance
                      // before a torrent file was loaded are added now to the set of peers that are used for video data exchange.
                      for (var j = 0; j < peersToAdd.length; j++) {
-                        //console.log("I manually added a peer to the swarm");                     
                         theTorrent.addPeer(peersToAdd[j][0]);
                         if (peersToAdd[j][1]) {
                            peersToAdd[j][1]();
@@ -581,7 +588,6 @@ function OakStreaming(OakName) {
                      // Peers which used the offered methods to manually connect to this OakStreaming instance
                      // before a torrent file was loaded are added now to the set of peers that are used for video data exchange.
                      for (var j = 0; j < peersToAdd.length; j++) {
-                        //console.log("I manually added a peer to the swarm");                     
                         theTorrent.addPeer(peersToAdd[j][0]);
                         if (peersToAdd[j][1]) {
                            peersToAdd[j][1]();
@@ -597,11 +603,9 @@ function OakStreaming(OakName) {
                });
 
                // This function has the same purpose 
-               //////console.log("In loadVideo    " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer gets created");
                // This function calls the callback function when this OakStreaming instance already connected to another peer
                // or as soon as it connects to another peer.
                self.forTesting_connectedToNewWebTorrentPeer = function (callback) {
-                  //////console.log("In loadVideo     " + self.OakName + ".forTesting_connectedToNewWebTorrentPeer   gets called");
                   if (notificationsBecauseNewWires <= 0) {
                      notificationsBecauseNewWires--;
                      var callbackCalled = false;
@@ -619,7 +623,6 @@ function OakStreaming(OakName) {
                };
 
                theTorrent.on('wire', function (wire) {
-                  //////console.log("torrent.on('wire', ..) is fired");
                   wires.push(wire);
                   if (!window.firstWire) {
                      window.firstWire = wire;
@@ -650,8 +653,6 @@ function OakStreaming(OakName) {
                   // To answer a createReadStream request a Multistream (https://www.npmjs.com/package/multistream) is returned which requests a Node readableStream as soon as its buffer has went dry.
                   // The current callback which should be called with the created readableStream is saved in currentlyExpectedCallback
                   if (thisRequest.currentlyExpectedCallback !== null) {
-                     //////console.log("In onTorrent nachträglich webtorrent stream erzeugen  thisRequest.start: " + thisRequest.start);
-                     ////////console.log("In onTorrent  webTorrentFile.length: " + webTorrentFile.length);
 
                      if (myVideo.duration) {
                         timeOfLastWebTorrentRequest = myVideo.currentTime;
@@ -703,7 +704,6 @@ function OakStreaming(OakName) {
          // The VideoStream object will call createReadStream several times with different values for the start property of ops.
          fileLikeObject.prototype.createReadStream = function (opts) {
             if (opts.start >= SIZE_OF_VIDEO_FILE) {
-               //////console.log("opts.start > SIZE_OF_VIDEO_FILE therefore cb(null,null) every time");
                return new MultiStream(function (cb) {
                   cb(null, null);
                });
@@ -711,10 +711,6 @@ function OakStreaming(OakName) {
             inCritical = true;
 
             var thisRequest = new VideostreamRequestHandler(++globalvideostreamRequestNumber, opts, this);
-
-            ////console.log(" called createreadStream: createRequestNumber: " + thisRequest.createReadStreamNumber);
-            ////console.log("opts.start: " + opts.start);
-            ////console.log(" opts.end: " + opts.end);
 
             // Everytime I printed out the value of opts.end is was NaN.
             // I suppose that should be interpreted as "till the end of the file"
@@ -734,12 +730,8 @@ function OakStreaming(OakName) {
             };
             util.inherits(thisRequest.MyWriteableStream, readableStream.Writable);
             thisRequest.MyWriteableStream.prototype._write = function (chunk, encoding, done) {
-               ////console.log("A chunk from the WebTorrent network has been received. It's size is: " + chunk.length);
-               //////console.log("MyWriteableStream _write is called");   
-               //////console.log("A byte range request to the WebTorrent network received a chunk");
 
                if (thisRequest.start - thisRequest.oldStartWebTorrent < chunk.length) {
-                  //////////////console.log("MyWriteableStream _write: pushing received data in answerStream")
                   bytesTakenFromWebTorrent += chunk.length - (thisRequest.start - thisRequest.oldStartWebTorrent);
                   var streamHasMemoryLeft = thisRequest.answerStream.push(chunk.slice(thisRequest.start - thisRequest.oldStartWebTorrent, chunk.length));
                   thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start - thisRequest.oldStartWebTorrent);
@@ -753,7 +745,6 @@ function OakStreaming(OakName) {
                         thisRequest.bytesInAnswerStream = 0;
                         var res = thisRequest.answerStream;
                         thisRequest.answerStream = new MyReadableStream({ highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM });
-                        ////////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                         if (thisRequest.webTorrentStream) {
                            //thisRequest.webTorrentStream.pause();   11.07.16  more a try   Sollte höchst wahrscheinlich aus code raus
                         }
@@ -774,7 +765,6 @@ function OakStreaming(OakName) {
                         thisRequest.bytesInAnswerStream = 0;
                         var res = thisRequest.answerStream;
                         thisRequest.answerStream = new MyReadableStream({ highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM });
-                        ////////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                         if (thisRequest.webTorrentStream) {
                            //thisRequest.webTorrentStream.pause();
                         }
@@ -790,10 +780,7 @@ function OakStreaming(OakName) {
             videostreamRequestHandlers.push(thisRequest);
 
             if (webTorrentFile) {
-               // Um Einhaltung des Upload limits kümmert sich doch chokeIfNecessary   && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT){
-               //////////////console.log("after new videostreamRequest creating a corresponding webtorrent stream");
-               //////////console.log("opts.start: " + opts.start);
-               //////////console.log("webTorrentFile.length: " + webTorrentFile.length);
+               // Um Einhaltung des Upload limits kümmert sich doch chokeIfNecessary   && theTorrent.uploaded <= UPLOAD_LIMIT * theTorrent.downloaded + ADDITION_TO_UPLOAD_LIMIT)
 
                if (myVideo.duration) {
                   timeOfLastWebTorrentRequest = myVideo.currentTime;
@@ -813,20 +800,15 @@ function OakStreaming(OakName) {
             }
 
             function factoryFunctionForStreamCreation(cb) {
-               ////console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + "    does a cb request");         
                if (thisRequest.end >= 0 && thisRequest.start >= thisRequest.end) {
-                  //////console.log("called cb(null,null) from " + thisRequest.createReadStreamNumber);             
                   if (thisRequest.req) {
                      thisRequest.req.destroy();
                      thisRequest.req = null;
                   }
-                  //////console.log("cb(null, null) is called");
                   return cb(null, null);
                }
 
                thisRequest.callbackNumber++;
-               ////////////console.log(thisRequest.callbackNumber + ". call of function(cb) from " + videostreamRequestNumber);
-               //////////////console.log(start: " + thisRequest.start);
 
                thisRequest.currentlyExpectedCallback = cb;
                thisRequest.noMoreData = false;
@@ -856,14 +838,11 @@ function OakStreaming(OakName) {
                   if (thisRequest.webTorrentStream) {
                      // thisRequest.webTorrentStream.resume();  11.07.16 more a try
                   } else if (webTorrentFile) {
-                     //////////////console.log("New cb function was called and I subsequently create a new torrentStream for it because non existed before for this videostreamRequest");
-                     //////////console.log("After new Multistream. thisRequest.start: " + thisRequest.start);
-                     //////////console.log("webTorrentFile.length: " + webTorrentFile.length);
                      var endCreateReadStream;
-                     if (thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length - 1) {
+                     if (thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE - 1 >= webTorrentFile.length - 1) {
                         endCreateReadStream = webTorrentFile.length - 1;
                      } else {
-                        endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE;
+                        endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE - 1;
                      }
                      thisRequest.webTorrentStream = webTorrentFile.createReadStream({ "start": thisRequest.start, "end": endCreateReadStream });
                      thisRequest.lastEndCreateReadStream = endCreateReadStream;
@@ -883,17 +862,11 @@ function OakStreaming(OakName) {
             var multi = new MultiStream(factoryFunctionForStreamCreation);
 
             var deconstructorAlreadyCalled = false;
-            //////////////console.log(" terminate createReadStream");
             var destroy = multi.destroy;
             multi.destroy = function () {
                if (deconstructorAlreadyCalled) {
-                  //////console.log("Deconstructor of " + thisRequest.createReadStreamNumber + " has already been called");
                   return;
                }
-               ////console.log("Deconstructor of " + thisRequest.createReadStreamNumber + " is called");
-               //////console.log("In deconstructor call thisRequest.start has value: " + thisRequest.start);
-               //////console.log("In deconstructor call thisRequest.end has value: " + thisRequest.end);
-               //////console.log("In deconstructor call thisRequest.currentlyExpectedCallback === null: " + (thisRequest.currentlyExpectedCallback === null));
                deconstructorAlreadyCalled = true;
                if (thisRequest.req) {
                   thisRequest.req.destroy();
@@ -930,7 +903,6 @@ function OakStreaming(OakName) {
             if (videoCompletelyLoadedByVideoPlayer) {
                return;
             }
-            //////console.log("frequentlyCheckIfNewCreateReadStreamNecessary gets executed");
 
             /* Working version where only a minimal time limit is set when a new createReadStream to WebTorrent network is conducted
             if(myVideo.duration){
@@ -968,7 +940,6 @@ function OakStreaming(OakName) {
                   if (timeRanges.end(i) - myVideo.currentTime <= DOWNLOAD_FROM_P2P_TIME_RANGE) {
                      for (var j = 0, length2 = videostreamRequestHandlers.length; j < length2; j++) {
                         var thisRequest = videostreamRequestHandlers[j];
-                        ////console.log("createReadStream enlargement for request " + thisRequest.createReadStreamNumber);
                         if (theTorrent && thisRequest.currentlyExpectedCallback !== null && thisRequest.start > thisRequest.lastEndCreateReadStream && thisRequest.start < SIZE_OF_VIDEO_FILE) {
                            var endCreateReadStream;
                            if (thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE >= webTorrentFile.length - 1) {
@@ -976,7 +947,6 @@ function OakStreaming(OakName) {
                            } else {
                               endCreateReadStream = thisRequest.start + CREATE_READSTREAM_REQUEST_SIZE;
                            }
-                           ////console.log("I set a new createReadstream for videostream request number " + thisRequest.createReadStreamNumber);
                            thisRequest.webTorrentStream.unpipe();
                            thisRequest.webTorrentStream = webTorrentFile.createReadStream({ "start": thisRequest.start, "end": endCreateReadStream });
                            thisRequest.lastEndCreateReadStream = endCreateReadStream;
@@ -1009,11 +979,7 @@ function OakStreaming(OakName) {
          // This function checks for a given videostreamRequestHandler if we have called enough video data to call the callback function.
          // If it is the case, the callback function gets called togehter with the buffered data.
          function ceckIfAnswerStreamReady(thisRequest) {
-            //////////////console.log("At the beginning of thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream);
-            //////////////console.log("In ceckIfAnswerStreamReady of videostreamRequest number " + thisRequest.createReadStreamNumber +  ". thisRequest.bytesInAnswerStream: " + thisRequest.bytesInAnswerStream + "     thisRequest.currentlyExpectedCallback: " + thisRequest.currentlyExpectedCallback);
             if (thisRequest.createReadStreamNumber < 4 && thisRequest.currentlyExpectedCallback && thisRequest.bytesInAnswerStream >= 2000 || thisRequest.currentlyExpectedCallback && (thisRequest.bytesInAnswerStream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM || thisRequest.start >= SIZE_OF_VIDEO_FILE)) {
-               //////////////console.log("answerStream from videostream Request number " + thisRequest.createReadStreamNumber + " and CB number " + thisRequest.callbackNumber + " gets returned");
-               // ////////////console.log("Returing answerStream out of ceckIfAnswerStreamReady()");
                var theCallbackFunction = thisRequest.currentlyExpectedCallback;
                thisRequest.currentlyExpectedCallback = null;
                thisRequest.answerStream.push(null);
@@ -1023,7 +989,6 @@ function OakStreaming(OakName) {
                thisRequest.bytesInAnswerStream = 0;
                var res = thisRequest.answerStream;
                thisRequest.answerStream = new MyReadableStream({ highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM });
-               ////////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                theCallbackFunction(null, res);
                return true;
             }
@@ -1043,7 +1008,6 @@ function OakStreaming(OakName) {
                }
                */
                for (var i = 0, length = wires.length; i < length; i++) {
-                  ////////console.log("I choked a peer");
                   wires[i].choke();
                }
             }
@@ -1096,20 +1060,14 @@ function OakStreaming(OakName) {
          // First, if the video is completely loaded.
          // Second, if less than DOWNLOAD_FROM_SERVER_TIME_RANGE seconds of video playback are buffered in advance.
          function checkIfBufferFullEnough(justOnce) {
-            ////////console.log("checkIfBufferFullEnough is called");
             if (videoCompletelyLoadedByVideoPlayer) {
                return;
             }
-            ////////console.log("video.duration: " + myVideo.duration);
             if (myVideo.duration) {
                var timeRanges = myVideo.buffered;
                if (timeRanges.length >= 1) {
-                  ////////console.log("timeRanges.start(0): " + timeRanges.start(0));
-                  ////////console.log("timeRanges.end(0): " + timeRanges.end(0));
                   if (timeRanges.start(0) == 0 && timeRanges.end(0) == myVideo.duration) {
-                     // //////console.log("In checkIfBufferFullEnough: callback should be called");
                      videoCompletelyLoadedByVideoPlayer = true; // brauche da verschiende boolean werte
-                     ////console.log("My program thinks the wohle video has been loaded into the video Player buffer");
                      if (callback) {
                         if (stop_uploading_when_video_downloaded) {
                            callback();
@@ -1131,11 +1089,9 @@ function OakStreaming(OakName) {
                // From here on it is checked wether there are less seconds buffered than DOWNLOAD_FROM_SERVER_TIME_RANGE
                inCritical = true;
                for (var i = 0, length = timeRanges.length; i < length; i++) {
-                  //////////////console.log("Time range number " + i + ": start(" + timeRanges.start(i) + ") end(" + timeRanges.end(i) + ")");
                   if (myVideo.currentTime >= timeRanges.start(i) && myVideo.currentTime <= timeRanges.end(i) + 1) {
                      if (timeRanges.end(i) - myVideo.currentTime >= DOWNLOAD_FROM_SERVER_TIME_RANGE) {
                         inCritical = false;
-                        //////////////console.log("I set inCritical to false");
                      }
                   }
                }
@@ -1151,7 +1107,6 @@ function OakStreaming(OakName) {
             // Added at 08.08
             if (theTorrent && theTorrent.progress === 1) {
                videoCompletelyLoadedByVideoPlayer = true; // brauche da verschiende boolean werte
-               ////console.log("My program thinks the wohle video has been loaded into the video Player buffer");
                if (callback) {
                   if (stop_uploading_when_video_downloaded) {
                      callback();
@@ -1172,7 +1127,6 @@ function OakStreaming(OakName) {
 
          // This function conductes a XHR reuqest for the videostreamRequestHandler which is handed over to the function as its first and only paramter.
          function conductXHR(thisRequest) {
-            ////console.log("In conductXHR");
             if (thisRequest.currentlyExpectedCallback === null) {
                return;
             }
@@ -1181,7 +1135,6 @@ function OakStreaming(OakName) {
 
             if (thisRequest.createReadStreamNumber < 4) {
                // War vorher === 1     statt < 4
-               ////console.log("Because createReadStreamNumber <4 only a 2000byte XHR is conducted");
                var reqEnd = reqStart + 2000;
             } else {
                var reqEnd = reqStart + XHR_REQUEST_SIZE;
@@ -1194,7 +1147,6 @@ function OakStreaming(OakName) {
             }
 
             if (reqStart >= reqEnd) {
-               ////////console.log("called cb(null,null)");
 
                // !!!!!!!!! dieser if block neu fix versuch
                if (thisRequest.req) {
@@ -1215,15 +1167,10 @@ function OakStreaming(OakName) {
             return thisRequest.currentlyExpectedCallback(null, null);
             }
             */
-            if (consoleCounter < 10000000) {
-               ////////////////console.log(consoleCounter++ + "  videoStream " + thisRequest.createReadStreamNumber + "  CB number " + thisRequest.callbackNumber + "    reqStart: " + reqStart);
-               ////////////////console.log(consoleCounter++ + "  Multistream " + thisRequest.createReadStreamNumber + "   CB number " + thisRequest.callbackNumber + "    reqEnd: " + reqEnd);
-            }
 
             var XHRDataHandler = function XHRDataHandler(chunk) {
                bytesReceivedFromServer += chunk.length;
                // thisRequest.oldStartServer += chunk.length; War noch vom meinem 2000 byte buffer versuch
-               ////////console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + " received a chunk of length " + chunk.length);
 
                /* Erstmal rausgenommen weil ich darauf net klar kam. Etwas zu verwirrend
                if(numberBytesInfirst2000BytesOfVideo < 2000 && thisRequest.start == numberBytesInfirst2000BytesOfVideo){
@@ -1270,7 +1217,6 @@ function OakStreaming(OakName) {
                   bytesTakenFromServer += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
                   thisRequest.bytesInAnswerStream += chunk.length - (thisRequest.start - thisRequest.oldStartServer);
                   var myBuffer = chunk.slice(thisRequest.start - thisRequest.oldStartServer, chunk.length);
-                  ////////console.log("In XHRDataHandler   myBuffer.length: " + myBuffer.length);
                   var StreamHasMemoryLeft = thisRequest.answerStream.push(myBuffer);
                   if (!StreamHasMemoryLeft) {
                      if (thisRequest.currentlyExpectedCallback !== null) {
@@ -1280,7 +1226,6 @@ function OakStreaming(OakName) {
                         thisRequest.bytesInAnswerStream = 0;
                         var res = thisRequest.answerStream;
                         thisRequest.answerStream = new MyReadableStream({ highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM });
-                        ////////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                         if (thisRequest.webTorrentStream) {
                            //thisRequest.webTorrentStream.pause();
                         }
@@ -1299,7 +1244,6 @@ function OakStreaming(OakName) {
                         thisRequest.bytesInAnswerStream = 0;
                         var res = thisRequest.answerStream;
                         thisRequest.answerStream = new MyReadableStream({ highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM });
-                        ////////console.log("called CB with data out of answerStream from videostreamRequest number " + thisRequest.createReadStreamNumber);
                         if (thisRequest.webTorrentStream) {
                            //thisRequest.webTorrentStream.pause();
                         }
@@ -1312,11 +1256,6 @@ function OakStreaming(OakName) {
             };
 
             var XHREnd = function XHREnd() {
-               //////console.log("ReadableStream request number " + thisRequest.createReadStreamNumber + " XHREnd");
-               if (consoleCounter < 1000000000000) {
-                  ////////////////console.log("XHREnd from videostreamRequest number " + thisRequest.createReadStreamNumber);
-               }
-
                if (thisRequest.createReadStreamNumber < 4 && thisRequest.currentlyExpectedCallback) {
                   var theCallbackFunction = thisRequest.currentlyExpectedCallback;
                   thisRequest.currentlyExpectedCallback = null;
@@ -1366,7 +1305,6 @@ function OakStreaming(OakName) {
                   thisRequest.XHRConducted = false;
                }
                */
-               ////////console.log("XHREnd from videostreamRequest number " + thisRequest.createReadStreamNumber + " thisRequest.currentlyExpectedCallback === null : " + (thisRequest.currentlyExpectedCallback === null));
                thisRequest.XHRConducted = false;
                ceckIfAnswerStreamReady(thisRequest);
                checkIfBufferFullEnough(true);
@@ -1375,8 +1313,6 @@ function OakStreaming(OakName) {
             };
 
             thisRequest.oldStartServer = reqStart;
-
-            ////////console.log("At htto.get   reqStart: " + reqStart + "     reqEnd: " + reqEnd);
 
             var XHROptionObject = {
                path: thisRequest.self.pathToFileOnXHRServer,
@@ -1396,25 +1332,25 @@ function OakStreaming(OakName) {
             thisRequest.req = http.get(XHROptionObject, function (res) {
                var contentRange = res.headers['content-range'];
                if (contentRange) {
-                  ////////console.log("parseInt(contentRange.split('/')[1], 10) XHR: " + parseInt(contentRange.split('/')[1], 10));
                   // Hat zu bugs geführt. Hat geringe priorität einzubauen das file_size auch vom XHR server erfragt wird.
                   //SIZE_OF_VIDEO_FILE = parseInt(contentRange.split('/')[1], 10);
                   //if(thisRequest.end === 0){
                   thisRequest.XHR_filesize = parseInt(contentRange.split('/')[1], 10);
                   //}
                }
-               ////////////////console.log("I return currentlyExpectedCallback with http response stream");
-               //////////////////console.log("function(res) is executed from readstream number " + createReadStreamCounter + " and CB number " + thiscallbackNumber);
 
                // res.setHeader('Access-Control-Allow-Headers', thisRequest.req.header.origin);
 
                res.on('end', XHREnd);
                res.on('data', XHRDataHandler);
-               res.on('error', function (err) {////console.log("The http.get response object has yield the following error"); console.error(err);});
+               res.on('error', function (err) {
+                  // To-Do yield real error instead of simple console output
+                  console.log("The http.get response object has yield the following error");console.error(err);
                });
-               thisRequest.req.on('error', function (err) {
-                  ////console.log("thisRequest.req has yield the following error message: " + err.message);
-               });
+            });
+            thisRequest.req.on('error', function (err) {
+               // To-Do yield real error instead of simple console output
+               console.log("The XHR has yield the following error message: " + err.message);
             });
          }
          frequentlyCheckIfNewCreateReadStreamNecessary();
@@ -1423,7 +1359,6 @@ function OakStreaming(OakName) {
          // frequentlyCeckIfAnswerStreamReady(); Am 17.07 entschlossen das rauszunehmen. Ich hatte mir das ja schon mehrmals überlegt
          checkIfBufferFullEnough();
 
-         ////////////console.log("I call Videostream constructor");
          if (hashValue) {
             Videostream(new fileLikeObject(hashValue), myVideo);
          } else {
@@ -1439,12 +1374,10 @@ function OakStreaming(OakName) {
             if (theTorrent.infoHash) {
                // Vorher war das wenn info hash ready
                theTorrent.addPeer(simplePeerInstance);
-               //console.log("addSimplePeerInstance successfully added a peer connection");
                if (callback) {
                   callback();
                }
             } else {
-               //console.log("In addSimplePeerInstance theTorrent is not yet ready");
                var pair = [];
                pair.push(simplePeerInstance);
                pair.push(callback);
@@ -1452,13 +1385,17 @@ function OakStreaming(OakName) {
                // theTorrent.on('infoHash', function() {infoHashReady = true; theTorrent.addPeer(simplePeerInstance); //console.log("addSimplePeerInstance successfully added a peer connection"); if(callback){callback();}});
             }
          } else {
-            //console.log("In addSimplePeerInstance theTorrent is not initialized yet");
             var pair = [];
             pair.push(simplePeerInstance);
             pair.push(callback);
             peersToAdd.push(pair);
          }
       }
+      self.signaling1 = self.createSignalingData;
+      self.signaling2 = self.createSignalingDataResponse;
+      self.signaling3 = self.processSignalingResponse;
+      self.create_stream = self.streamVideo;
+      self.receive_stream = self.loadVideo;
    })();
 }
 
@@ -1470,105 +1407,70 @@ function OakStreaming(OakName) {
 var OakStreaming = require("./OakStreaming");
 var oakStreaming = new OakStreaming();
 
-console.log("Version Mounten Giant");
+var theSharedArray = null;
+var streamSource = false;
 
-var theSharedMap = null;
-var iAmSeeder = false;
-
-console.log("This is task 4");
-var step = 1; // New variable in task 4
+console.log("This is the live demo");
 
 Y({
    db: {
       name: 'memory'
    },
    connector: {
-      url: "http://localhost:8889", // http://gaudi.informatik.rwth-aachen.de:9914
+      url: "http://localhost:8084", //"http://gaudi.informatik.rwth-aachen.de:9914",
       name: 'webrtc',
-      room: 'fdssfgsZVD23d'
+      room: 'User1'
    },
    share: {
-      myMap: 'Map'
+      myArray: 'Array'
    }
 }).then(function (y) {
-   theSharedMap = y.share.myMap;
+   theSharedArray = y.share.myArray;
 
-   // Task 4.2
-   //-------------------------------------------------------------------------
-   theSharedMap.observe(function (event) {
-      console.log("The shared array got updated");
-
-      // the step variable is initialized with 1
-      // addToSharedMap(object, I)   adds object at index I of the shared array.
-      // theSharedMap.get(I)   returns the object at index I of the shared array.
-
-      if (iAmSeeder) {
-         if (step === 2) {
-            oakStreaming.createSignalingDataResponse(theSharedMap.get("2"), function (signalingData) {
-               console.log("result createSignalingDataResponse: " + JSON.stringify(signalingData));
-               step++;
-               addToSharedMap(signalingData, "3");
-            });
-         } else {
-            step++;
-         }
-      } else {
-         if (step === 3) {
-            step++;
-            console.log("step === 3");
-            oakStreaming.processSignalingResponse(theSharedMap.get("3"), function () {
-               console.log("processSignalingResponse has finished");
-            });
-         }
-         if (step === 2) {
-            step++;
-         }
-         if (step === 1) {
-            console.log('theSharedMap.get("1"): ' + JSON.stringify(theSharedMap.get("1")));
-            oakStreaming.loadVideo(theSharedMap.get("1"));
-
-            console.log("After oakStreaming.loadVideo");
-            oakStreaming.createSignalingData(function (signalingData) {
-               console.log("result createSignalingData: " + JSON.stringify(signalingData));
-               step++;
-               addToSharedMap(signalingData, "2");
-            });
-         }
+   theSharedArray.observe(function (event) {
+      console.log("The following event-type was thrown: " + event.type);
+      console.log("The event object has more information:");
+      console.log(event);
+      if (!streamSource) {
+         // returns the received Stream_Information object:    theSharedArray.get(0)
+         // Task 3.2
+         oakStreaming.loadVideo(theSharedArray.get(0), function () {
+            console.log("loadVideo callback: All video data has been received");
+         });
       }
    });
-   //-------------------------------------------------------------------------   
 });
 
-// Task 4.1
-//-------------------------------------------------------------------------
 window.handleFiles = function (files) {
-   iAmSeeder = true;
-
-   // sha-256 hash value of video file:  fd461d08157e91b3811b6581d8abcfa55fc7e27b808f957878140a7bc117f5ea
-   // files[0] is the video file that the user selected.
-   // addToSharedMap(object, I)  adds object at index I of the shared array.
-
-   // , {webTorrent_tracker: false, web_server_URL: "http://gaudi.informatik.rwth-aachen.de:9912"}   webTorrent_trackers: ["wss://tracker.openwebtorrent.com", "wss://tracker.webtorrent.io"]
-   oakStreaming.streamVideo(files[0], { web_server_URL: false }, function (streamInformationObject) {
-      console.log("streamInformationObject" + JSON.stringify(streamInformationObject));
-      addToSharedMap(streamInformationObject, "1");
+   streamSource = true;
+   // files[0] contains the file from the user
+   // addToSharedArray(content)   transfers content to all other peers
+   // Task 3.1
+   oakStreaming.streamVideo(files[0], { webTorrent_trackers: [["wss://tracker.webtorrent.io"]], peer_upload_limit_multiplier: 1, web_server_URL: "http://gaudi.informatik.rwth-aachen.de:9912", download_from_server_time_range: 4 }, function (streamInformationObject) {
+      addToSharedArray(streamInformationObject);
    });
 };
-//-------------------------------------------------------------------------  
 
+// Task 3.3
 function updateChart() {
-   document.getElementById("statistics").innerHTML = "Size of video file in byte: " + oakStreaming.get_file_size() + " Number ob bytes downloaded from peer-to-peer network: " + oakStreaming.get_number_of_bytes_downloaded_P2P() + "\n P2P uploaded: " + oakStreaming.get_number_of_bytes_uploaded_P2P() + "\n Progress P2P download: " + oakStreaming.get_percentage_downloaded_of_torrent() + "\n Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
-   setTimeout(updateChart, 500);
+   document.getElementById("A").innerHTML = "File length in byte: " + oakStreaming.get_file_size();
+   document.getElementById("B").innerHTML = "Bytes downloaded from other peers: " + oakStreaming.get_number_of_bytes_downloaded_P2P();
+   document.getElementById("C").innerHTML = "Bytes uploaded to other peers: " + oakStreaming.get_number_of_bytes_uploaded_P2P();
+   document.getElementById("D").innerHTML = "Percentage of video file downloaded from P2P network: " + oakStreaming.get_percentage_downloaded_of_torrent();
+   document.getElementById("E").innerHTML = "Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
+   //document.getElementById("statistics1").innerHTML = "File length in byte: " + oakStreaming.get_file_size() + "Bytes downloaded from other peers: " + oakStreaming.get_number_of_bytes_downloaded_P2P() + "\n Bytes uploaded to other peers: " + oakStreaming.get_number_of_bytes_uploaded_P2P();
+   //document.getElementById("statistics2").innerHTML = "Percentage of video file downloaded from P2P network: " + oakStreaming.get_percentage_downloaded_of_torrent() + "\n Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
+   setTimeout(updateChart, 50);
 }
 updateChart();
 
-function addToSharedMap(streamInformationObject, index) {
-   if (theSharedMap !== null) {
-      theSharedMap.set(index, streamInformationObject);
+function addToSharedArray(streamInformationObject) {
+   if (theSharedArray !== null) {
+      theSharedArray.insert(0, [streamInformationObject]);
    } else {
       setTimeout(function () {
-         addToSharedMap(streamInformationObject, index);
-      }, 100);
+         addToSharedArray(streamInformationObject);
+      }, 10);
    }
 }
 

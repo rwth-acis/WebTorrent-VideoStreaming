@@ -1,17 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-   <title>Task 3</title>
+   <title>Example Application</title>
+   <style>
+   table, th, td {
+       border: 1px solid black;
+       border-collapse: collapse;
+   }
+   th, td {
+       padding: 5px;
+   }
+   th {
+       text-align: left;
+   }
+   </style>
 </head>
 <body>
-   <p id="statistics"></p>
+<table style="width:90%">
+  <tr>
+    <td id= "A"></th> 
+    <td id= "B"></th>   
+    <td id= "C"></th>
+   </tr>
+   
+   <tr>
+    <td id= "D"></th>
+    <td id= "E"></th> 
+  </tr> 
+
+</table>
    <input type="file" id="input" onchange="handleFiles(this.files)">
    <video controls autoplay id="myVideo"></video>
    <script src="./Modules/bower_components/yjs/y.js"></script>
    <script src="./Modules/bower_components/y-array/y-array.js"></script>
    <script src="./Modules/bower_components/y-memory/y-memory.js"></script>
    <script src="./Modules/bower_components/y-webrtc/y-webrtc.js"></script>
-   <script src='./Modules/OakStreaming.js'></script>
    <script src='example_application.js'></script>
 </body>
 </html>

@@ -17,6 +17,7 @@ module.exports = OakStreaming;
 function OakStreaming(OakName){
    var self = this;
    
+   
       /** 
       * This method returns the number of bytes downloaded from the Web server.
       * @public
@@ -97,7 +98,7 @@ function OakStreaming(OakName){
       * @param {OakStreaming~signaling3_callback} [callback] - This callback function gets called with no arguments as soon as the peer-to-peer connection between the two OakStreaming instances has been established.
       */ 
       function signaling3(signalingData, callback){ }
-      self.signaling2 = signaling2;
+      self.signaling3 = signaling3;
       
       
       /**
