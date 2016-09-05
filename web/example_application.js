@@ -1417,9 +1417,9 @@ Y({
       name: 'memory'
    },
    connector: {
-      url: "http://localhost:8084", //"http://gaudi.informatik.rwth-aachen.de:9914",
+      url: "http://gaudi.informatik.rwth-aachen.de:9914", //"http://localhost:8084" ,
       name: 'webrtc',
-      room: 'User1'
+      room: 'schduukfherkn32k3289h821'
    },
    share: {
       myArray: 'Array'
@@ -1445,8 +1445,8 @@ window.handleFiles = function (files) {
    streamSource = true;
    // files[0] contains the file from the user
    // addToSharedArray(content)   transfers content to all other peers
-   // Task 3.1
-   oakStreaming.streamVideo(files[0], { webTorrent_trackers: [["wss://tracker.webtorrent.io"]], peer_upload_limit_multiplier: 1, web_server_URL: "http://gaudi.informatik.rwth-aachen.de:9912", download_from_server_time_range: 4 }, function (streamInformationObject) {
+   // Task 3.1    // webTorrent_trackers: [["wss://tracker.webtorrent.io"]] web_server_URL : "http://gaudi.informatik.rwth-aachen.de:9912"
+   oakStreaming.streamVideo(files[0], { peer_upload_limit_multiplier: 1, download_from_server_time_range: 4 }, function (streamInformationObject) {
       addToSharedArray(streamInformationObject);
    });
 };
