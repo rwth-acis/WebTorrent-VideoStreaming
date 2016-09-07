@@ -41,7 +41,7 @@ window.handleFiles = function (files) {
    // files[0] contains the file from the user
    // addToSharedArray(content)   transfers content to all other peers
    // Task 3.1    // webTorrent_trackers: [["wss://tracker.webtorrent.io"]] web_server_URL : "http://gaudi.informatik.rwth-aachen.de:9912"  download_from_server_time_range: 4
-   oakStreaming.streamVideo(files[0], {web_server_URL: false, peer_upload_limit_multiplier: 1, sequential_requests_time_range: 15}, function(streamInformationObject){      
+   oakStreaming.streamVideo(files[0], function(streamInformationObject){      
       addToSharedArray(streamInformationObject);
    });
 }

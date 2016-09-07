@@ -1445,8 +1445,8 @@ window.handleFiles = function (files) {
    streamSource = true;
    // files[0] contains the file from the user
    // addToSharedArray(content)   transfers content to all other peers
-   // Task 3.1    // webTorrent_trackers: [["wss://tracker.webtorrent.io"]] web_server_URL : "http://gaudi.informatik.rwth-aachen.de:9912"
-   oakStreaming.streamVideo(files[0], { peer_upload_limit_multiplier: 1, download_from_server_time_range: 4 }, function (streamInformationObject) {
+   // Task 3.1    // webTorrent_trackers: [["wss://tracker.webtorrent.io"]] web_server_URL : "http://gaudi.informatik.rwth-aachen.de:9912"  download_from_server_time_range: 4
+   oakStreaming.streamVideo(files[0], function (streamInformationObject) {
       addToSharedArray(streamInformationObject);
    });
 };
@@ -1457,9 +1457,7 @@ function updateChart() {
    document.getElementById("B").innerHTML = "Bytes downloaded from other peers: " + oakStreaming.get_number_of_bytes_downloaded_P2P();
    document.getElementById("C").innerHTML = "Bytes uploaded to other peers: " + oakStreaming.get_number_of_bytes_uploaded_P2P();
    document.getElementById("D").innerHTML = "Percentage of video file downloaded from P2P network: " + oakStreaming.get_percentage_downloaded_of_torrent();
-   document.getElementById("E").innerHTML = "Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
-   //document.getElementById("statistics1").innerHTML = "File length in byte: " + oakStreaming.get_file_size() + "Bytes downloaded from other peers: " + oakStreaming.get_number_of_bytes_downloaded_P2P() + "\n Bytes uploaded to other peers: " + oakStreaming.get_number_of_bytes_uploaded_P2P();
-   //document.getElementById("statistics2").innerHTML = "Percentage of video file downloaded from P2P network: " + oakStreaming.get_percentage_downloaded_of_torrent() + "\n Bytes received from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
+   document.getElementById("E").innerHTML = "Bytes downloaded from server: " + oakStreaming.get_number_of_bytes_downloaded_from_server();
    setTimeout(updateChart, 50);
 }
 updateChart();
