@@ -140,6 +140,8 @@ function OakStreaming(OakName){
        
      
     function create_stream(){
+      console.log("Version AM");
+      
       var video_file;
       var options = {};
       var callback = function(){};
@@ -469,9 +471,10 @@ function OakStreaming(OakName){
        
       // All these declared variables until 'var self = this' are intended to be constants.
       var deliveryByServer = (streamTicket.XHR_hostname !== false && (
-              streamTicket.path_to_file_on_XHR_server || streamTicket.hash_value)) ? true : false;
+              streamTicket.path_to_file_on_web_server || streamTicket.hash_value)) ? true : false;
       var deliveryByWebtorrent = streamTicket.torrentFile ? true : false;
-       
+      console.log("deliveryByServer:" + deliveryByServer);
+      
       var XHR_hostname = streamTicket.XHR_hostname;
       var XHR_port = streamTicket.XHR_port;
          
@@ -1162,6 +1165,8 @@ function OakStreaming(OakName){
        
       // This function conductes a XHR reuqest for the videostreamRequestHandler which is handed over to the function as its first and only paramter.
       function conductXHR(thisRequest) {
+        console.log("A XHR is conducted");
+        
         if(thisRequest.currentlyExpectedCallback === null){
           return;
         }
