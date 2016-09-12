@@ -543,7 +543,6 @@ function OakStreaming(OakName){
       
       if(deliveryByWebtorrent){
         webtorrentClient = new WebTorrent();
-
         var webtorrentOptions = {};
           
         /*
@@ -613,18 +612,14 @@ function OakStreaming(OakName){
                 }
               } 
             });
-          }
-           
+          }          
           webtorrentFile = theTorrentSession.files[0];
 
           // Emitted as soon as the complete video file has been downloaded via the WebTorrent network.
           theTorrentSession.on('done', function () {
             videoCompletelyLoadedByWebtorrent = true;
           });
-
           
-
-
           // If this OakStreaming instance is already connected to another peer, this function calls the callback
           // function, which has been passed to it, immediately. Otherwise, the callback function gets called as soon as
           // this OakStreaming instance connects to another peer.
@@ -723,40 +718,36 @@ function OakStreaming(OakName){
                  
               // Data that is received from the sequential byte range request gets immediately pumped into a writeable 
               // stream called collectorStreamForWebtorrent which processes the new data.
-              thisRequest.webtorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
-           
+              thisRequest.webtorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);           
             }
           }
         });
-      }
-       
+      }    
       // first2000BytesOfVideo = new MyReadableStream({highWaterMark: 2000});    hatte ich ja rausgenommen weil verfangen
-       
-       
+
+      
       var fileLikeObject = function (pathToFileOnXHRServer){
         this.pathToFileOnXHRServer = pathToFileOnXHRServer;
       };
+      
       // The videostream library will call createReadStream several times with different values for the start property 
       // of opts. The OakStreaming client has to return the byte range specified by the start and end property of opts.
       fileLikeObject.prototype.createReadStream = function (opts){
         if(opts.start >= SIZE_OF_VIDEO_FILE){
           return (new MultiStream(function (cb){cb(null, null);}));
         }
-        inCritical = true;
-          
+        inCritical = true;      
         var thisRequest = new VideostreamRequestHandler(++globalVideostreamRequestNumber, opts, this);
-          
-          
+                  
         // Every time I printed out the value of opts.end, it was NaN.
         // I suppose that should be interpreted as "till the end of the file".
         // In this case, the stream that this createReadStream method will return should, nevertheless, not buffer the hole video file 
-        // in advance but instead retrieve and put out chunks of video data on-demand.
-          
+        // in advance but instead retrieve and put out chunks of video data on-demand.        
         if(opts.end && !isNaN(opts.end)){
-          thisRequest.end = opts.end + 1;
+          thisRequest.endIndex = opts.end + 1;
         } else {
           if(SIZE_OF_VIDEO_FILE !== 0){
-            thisRequest.end = SIZE_OF_VIDEO_FILE;
+            thisRequest.endIndex = SIZE_OF_VIDEO_FILE;
           }
         }
                  
@@ -777,7 +768,7 @@ function OakStreaming(OakName){
                     thisRequest.nextByteWebtorrent);
         
             if(streamHasMemoryLeft){            
-              if(thisRequest.callbackOfMultistream !== null && thisRequest.nextNeededByte >= thisRequest.end){
+              if(thisRequest.callbackOfMultistream !== null && thisRequest.nextNeededByte >= thisRequest.endIndex){
                 var theCallbackFunction = thisRequest.callbackOfMultistream;
                 thisRequest.callbackOfMultistream = null;
                 thisRequest.nextStreamForMultistream.push(null);
@@ -819,12 +810,12 @@ function OakStreaming(OakName){
         videostreamRequestHandlers.push(thisRequest);
 
         if(webtorrentFile){
-
           if(htmlVideoTag.duration){
             timeOfLastWebtorrentRequest = htmlVideoTag.currentTime;
           } else {
             timeOfLastWebtorrentRequest = 0;
           }
+          
           var endCreateReadStream;
           if(thisRequest.nextNeededByte + CREATE_READSTREAM_REQUEST_SIZE >= webtorrentFile.length-1){
             endCreateReadStream = webtorrentFile.length-1;
@@ -837,12 +828,12 @@ function OakStreaming(OakName){
           thisRequest.webtorrentStream.pipe(thisRequest.collectorStreamForWebtorrent);
         }
 
-          
-        function factoryFunctionForStreamCreation(cb){      
-          if(thisRequest.end >= 0 && thisRequest.nextNeededByte >= thisRequest.end){          
-            if (thisRequest.req) {
-              thisRequest.req.destroy();
-              thisRequest.req = null;
+        
+        function streamFactory(cb){      
+          if(thisRequest.endIndex >= 0 && thisRequest.nextNeededByte >= thisRequest.endIndex){          
+            if (thisRequest.xhrRequest) {
+              thisRequest.xhrRequest.destroy();
+              thisRequest.xhrRequest = null;
             }
             return cb(null, null);
           }
@@ -898,7 +889,7 @@ function OakStreaming(OakName){
         }
           
         // A new Multistream gets created which will be the answer the the request from the VideoStream request
-        var multi = new MultiStream(factoryFunctionForStreamCreation);
+        var multi = new MultiStream(streamFactory);
           
         var deconstructorAlreadyCalled = false;
         var destroy = multi.destroy;
@@ -907,8 +898,8 @@ function OakStreaming(OakName){
             return;
           }
           deconstructorAlreadyCalled = true;
-          if (thisRequest.req) {
-            thisRequest.req.destroy();
+          if (thisRequest.xhrRequest) {
+            thisRequest.xhrRequest.destroy();
           }
           var theCallback = thisRequest.callbackOfMultistream;
           thisRequest.callbackOfMultistream = null;
@@ -1066,7 +1057,6 @@ function OakStreaming(OakName){
        */
       function VideostreamRequestHandler(createReadStreamNumber, opts, self){
         this.createReadStreamNumber = createReadStreamNumber;
-        this.opts = opts;
         this.nextNeededByte = opts.start || 0;
         this.nextByteWebtorrent = -42;
         this.nextByteServer = -42;
@@ -1082,14 +1072,14 @@ function OakStreaming(OakName){
         this.bytesInNextStreamForMultistream = 0;
         this.collectorStreamForWebtorrent = null;
         this.XHRConducted = false;
-        this.end = -42;
+        this.endIndex = -42;
         this.self = self;
         this.bytesTakenFromWebtorrent = 0;
         this.bytesTakenFromServer = 0;
         this.forNowNoDataNeeded = false;
-        this.req = null;
+        this.xhrRequest = null;
         this.lastEndCreateReadStream = -42;
-        this.XHR_filesize = -42;
+        this.xhrFilesize = -42;
       }
 
       // This function frequently checks for every videostreamRequestHandler if there is enough data buffer to call the corresponding callback function with the buffered data
@@ -1193,17 +1183,17 @@ function OakStreaming(OakName){
           var reqEnd = reqStart + XHR_REQUEST_SIZE;
         }
           
-        if(thisRequest.XHR_filesize > 0 && reqEnd > thisRequest.XHR_filesize){
-          reqEnd = thisRequest.XHR_filesize;
-        } else if (thisRequest.end >= 0 && reqEnd > thisRequest.end) {
-          reqEnd = thisRequest.end;
+        if(thisRequest.xhrFilesize > 0 && reqEnd > thisRequest.xhrFilesize){
+          reqEnd = thisRequest.xhrFilesize;
+        } else if (thisRequest.endIndex >= 0 && reqEnd > thisRequest.endIndex) {
+          reqEnd = thisRequest.endIndex;
         }
           
         if (reqStart >= reqEnd){
              
           // !!!!!!!!! dieser if block neu fix versuch
-          if(thisRequest.req){
-            thisRequest.req.destroy();
+          if(thisRequest.xhrRequest){
+            thisRequest.xhrRequest.destroy();
           }
           thisRequest.XHRConducted = false;
              
@@ -1217,7 +1207,7 @@ function OakStreaming(OakName){
 
         /* glaube ich unnötiger und/oder gefährlicher müll
         if (reqStart >= reqEnd) {
-          req = null;
+          xhrRequest = null;
           return thisRequest.callbackOfMultistream(null, null);
         }
         */
@@ -1293,7 +1283,7 @@ function OakStreaming(OakName){
                 }
               }
             } else {
-              if (thisRequest.nextNeededByte >= thisRequest.end && thisRequest.callbackOfMultistream !== null){
+              if (thisRequest.nextNeededByte >= thisRequest.endIndex && thisRequest.callbackOfMultistream !== null){
                 var theCallbackFunction = thisRequest.callbackOfMultistream;
                 thisRequest.callbackOfMultistream = null;
                 thisRequest.nextStreamForMultistream.push(null);
@@ -1345,9 +1335,9 @@ function OakStreaming(OakName){
          
           /*
           if(!noMoreData){
-            if(thisRequest.nextNeededByte < SIZE_OF_VIDEO_FILE && thisRequest.nextNeededByte < thisRequest.XHR_filesize){
-              if(thisRequest.end > 0 ){
-                if(thisRequest.nextNeededByte < thisRequest.end){
+            if(thisRequest.nextNeededByte < SIZE_OF_VIDEO_FILE && thisRequest.nextNeededByte < thisRequest.xhrFilesize){
+              if(thisRequest.endIndex > 0 ){
+                if(thisRequest.nextNeededByte < thisRequest.endIndex){
                   conductXHR(thisRequest); // try to solve example_application.js:14013 Uncaught Error: Data too short
                 } else {
                   thisRequest.XHRConducted = false
@@ -1387,17 +1377,17 @@ function OakStreaming(OakName){
           XHROptionObject.port = XHR_port;
         }
           
-        thisRequest.req = http.get(XHROptionObject, function (res){
+        thisRequest.xhrRequest = http.get(XHROptionObject, function (res){
           var contentRange = res.headers['content-range'];
           if (contentRange) {
             // Hat zu bugs geführt. Hat geringe priorität einzubauen das file_size auch vom XHR server erfragt wird.
             //SIZE_OF_VIDEO_FILE = parseInt(contentRange.split('/')[1], 10);
-            //if(thisRequest.end === 0){
-            thisRequest.XHR_filesize = parseInt(contentRange.split('/')[1], 10);
+            //if(thisRequest.endIndex === 0){
+            thisRequest.xhrFilesize = parseInt(contentRange.split('/')[1], 10);
             //}
           }
            
-          // res.setHeader('Access-Control-Allow-Headers', thisRequest.req.header.origin);
+          // res.setHeader('Access-Control-Allow-Headers', thisRequest.xhrRequest.header.origin);
            
           res.on('end', XHREnd);
           res.on('data', XHRDataHandler);
@@ -1406,7 +1396,7 @@ function OakStreaming(OakName){
             console.log("The http.get response object has yield the following error"); console.error(err);
           });
         });
-        thisRequest.req.on('error', function(err){
+        thisRequest.xhrRequest.on('error', function(err){
           // To-Do yield real error instead of simple console output
           console.log("The XHR has yield the following error message: " + err.message);
         });
