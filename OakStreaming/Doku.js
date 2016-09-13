@@ -144,11 +144,11 @@ function OakStreaming(OakName){
        * The received video data will be streamed into the first HTML video element of the DOM.
        * @public
        * @method
-       * @param {Stream_Ticket} stream_ticket_object - This object contains all data that is needed to initiate downloading the video from other OakStreaming instances and/or a Web server. Stream_Ticket objects can be created by the {@link create_stream|create_stream} method.
+       * @param {Stream_Ticket} stream_ticket - This object contains all data that is needed to initiate downloading the video from other OakStreaming instances and/or a Web server. Stream_Ticket objects can be created by the {@link create_stream|create_stream} method.
        * @param {OakStreaming~downloadingVideoFinished} [callback] - This callback gets called when the video has been buffered entirely.
        * @param {boolean} [stop_uploading_when_video_downloaded] - If this argument is true, all uploading to other OakStreaming instances is permanently canceled and all processing of the receive_stream method permanently stopped as soon as the video has been downloaded completely.
        */
-      function receive_stream(stream_ticket_object, callback, end_streaming_when_video_loaded){}
+      function receive_stream(stream_ticket, callback, end_streaming_when_video_loaded){}
       self.receive_stream = receive_stream;
       
 }
