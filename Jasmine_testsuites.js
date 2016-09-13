@@ -15,9 +15,9 @@ describe("Testing if manuallyAddingPeer methods", function(){
             
       var tryToSetCallbackA = (function(){
          return function(){
-            if(myStreamingA.forTesting_connectedToNewWebTorrentPeer){
-               console.log(" callback of myStreamingA.forTesting_connectedToNewWebTorrentPeer is set");
-               myStreamingA.forTesting_connectedToNewWebTorrentPeer(function(){
+            if(myStreamingA.forTesting_connectedToNewWtorrentPeer){
+               console.log(" callback of myStreamingA.forTesting_connectedToNewWtorrentPeer is set");
+               myStreamingA.forTesting_connectedToNewWtorrentPeer(function(){
                   if(receivedCallbacks === 1){
                      twoPeersAreConnected = true;
                      done();
@@ -36,9 +36,9 @@ describe("Testing if manuallyAddingPeer methods", function(){
       
       var tryToSetCallbackB = (function(){
          return function(){
-            if(myStreamingB.forTesting_connectedToNewWebTorrentPeer){
-                  console.log("callback of myStreamingB.forTesting_connectedToNewWebTorrentPeer is set");
-                  myStreamingB.forTesting_connectedToNewWebTorrentPeer(function(){
+            if(myStreamingB.forTesting_connectedToNewWtorrentPeer){
+                  console.log("callback of myStreamingB.forTesting_connectedToNewWtorrentPeer is set");
+                  myStreamingB.forTesting_connectedToNewWtorrentPeer(function(){
                      if(receivedCallbacks === 1){
                         twoPeersAreConnected = true;            
                         done();
@@ -106,8 +106,8 @@ describe("Testing if manuallyAddingPeer methods", function(){
          console.log("In second last sec. checkIfnewConnectionsAreCreated is called");
          if(twoPeersStreamedToAnother){
             console.log("In second last spec. In if clause.");
-            myStreamingA.forTesting_connectedToNewWebTorrentPeer(function(){
-                console.log("In second last spec. " + "myStreamingA.forTesting_connectedToNewWebTorrentPeer gots called");
+            myStreamingA.forTesting_connectedToNewWtorrentPeer(function(){
+                console.log("In second last spec. " + "myStreamingA.forTesting_connectedToNewWtorrentPeer gots called");
                if(receivedCallbacks === 1){
                   threePeersAreConnected = true;
                   done();
@@ -115,8 +115,8 @@ describe("Testing if manuallyAddingPeer methods", function(){
                   receivedCallbacks++;
                }
             });
-            myStreamingB.forTesting_connectedToNewWebTorrentPeer(function(){
-               console.log("In second last spec. " + "myStreamingB.forTesting_connectedToNewWebTorrentPeer gots called");
+            myStreamingB.forTesting_connectedToNewWtorrentPeer(function(){
+               console.log("In second last spec. " + "myStreamingB.forTesting_connectedToNewWtorrentPeer gots called");
                if(receivedCallbacks === 1){
                   threePeersAreConnected = true;            
                   done();
@@ -131,7 +131,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
       checkIfnewConnectionsAreCreated();
       
       /* I think not needed
-      myStreamingC.forTesting_connectedToNewWebTorrentPeer(function(){
+      myStreamingC.forTesting_connectedToNewWtorrentPeer(function(){
          if(receivedCallbacks === 4){
             threePeersAreConnected = true;            
             done();
