@@ -23,11 +23,11 @@ function OakStreaming(OakName) {
     var simplePeerCreationCounter = 0;
     var connectionsWaitingForSignalingData = [];
     var theTorrentSession = null;
-    var webtorrentFile = null;
+    var webtorrentFile = null; // WebTorrent API object which represents the respective shared (video) file.
     var peersToAdd = [];
     var bytesReceivedFromServer = 0;
     var notificationsBecauseNewWire = 0;
-    var SIZE_OF_VIDEO_FILE = 0;
+    var SIZE_VIDEO_FILE = 0;
 
     // Only methods should be part of the OakStreaming API, i.e. only methods should be publically accessible.
     // The OakStreaming API comprises only the OakStreaming constructor and all public methods of the object that
@@ -35,7 +35,7 @@ function OakStreaming(OakName) {
     // constructor creates are set.
     self.create_stream = create_stream;
     self.receive_stream = receive_stream;
-    self.forTesting_connectedToNewWebTorrentPeer = null;
+    self.forTesting_connectedToNewWtorrentPeer = null;
 
     // The methods whose name begin with "get" return statistical data about the streaming session.
     // A (new) streaming session begins when the create_stream or receive_stream method is called. 
@@ -68,7 +68,7 @@ function OakStreaming(OakName) {
     };
 
     self.get_file_size = function () {
-      return SIZE_OF_VIDEO_FILE;
+      return SIZE_VIDEO_FILE;
     };
 
     self.signaling1 = function (callback) {
@@ -94,21 +94,20 @@ function OakStreaming(OakName) {
       var oakNumber = signalingData.oakNumber;
       signalingData.oakNumber = undefined;
 
-      var myPeer = new SimplePeer({ initiator: false, trickle: false, config: { iceServers: [{
+      var simplePeer = new SimplePeer({ initiator: false, trickle: false, config: { iceServers: [{
             url: 'stun:23.21.150.121' }] } });
       var index = simplePeerCreationCounter;
-      connectionsWaitingForSignalingData[index] = myPeer;
+      connectionsWaitingForSignalingData[index] = simplePeer;
       simplePeerCreationCounter++;
 
-      myPeer.on('signal', function (answerSignalingData) {
+      simplePeer.on('signal', function (answerSignalingData) {
         answerSignalingData.oakNumber = oakNumber;
         callback(answerSignalingData);
       });
-      myPeer.signal(signalingData);
+      simplePeer.signal(signalingData);
 
-      var self = this;
-      myPeer.on('connect', function () {
-        addSimplePeerInstance(connectionsWaitingForSignalingData[index], {}, function () {});
+      simplePeer.on('connect', function () {
+        addP2pConnectionToWtorrent(connectionsWaitingForSignalingData[index], {}, function () {});
       });
     };
 
@@ -119,7 +118,7 @@ function OakStreaming(OakName) {
       signalingData.oakNumber = undefined;
       var self = this;
       connectionsWaitingForSignalingData[oakNumber].on('connect', function () {
-        addSimplePeerInstance(connectionsWaitingForSignalingData[oakNumber]);
+        addP2pConnectionToWtorrent(connectionsWaitingForSignalingData[oakNumber]);
         connectionsWaitingForSignalingData[oakNumber] = undefined;
         if (callback) {
           callback();
@@ -161,50 +160,50 @@ function OakStreaming(OakName) {
       // The web_server_URL parameter gets parsed such that it can later easily be used for
       // XML HTTP Requests (XHRs) commands of the Node.js http module.
       if (streamTicket.web_server_URL === false) {
-        streamTicket.XHR_hostname = false;
+        streamTicket.xhr_hostname = false;
       } else if (streamTicket.web_server_URL === undefined) {
-        streamTicket.XHR_hostname = undefined;
+        streamTicket.xhr_hostname = undefined;
       } else if (streamTicket.web_server_URL) {
-        var XHR_hostname = "";
-        var XHR_port = -1;
+        var xhr_hostname = "";
+        var xhr_port = -1;
         var portNumberAsString = "";
 
         if (streamTicket.web_server_URL.indexOf("]") === -1) {
           // In this case, the URL does not contain a IPv6 address.
 
           if (streamTicket.web_server_URL.indexOf("http://") === 0) {
-            XHR_hostname = streamTicket.web_server_URL.substring(7);
+            xhr_hostname = streamTicket.web_server_URL.substring(7);
           } else {
-            XHR_hostname = streamTicket.web_server_URL;
+            xhr_hostname = streamTicket.web_server_URL;
           }
 
-          if (XHR_hostname.lastIndexOf(":") === -1) {
-            XHR_port = 80;
+          if (xhr_hostname.lastIndexOf(":") === -1) {
+            xhr_port = 80;
           } else {
-            portNumberAsString = XHR_hostname.substring(XHR_hostname.lastIndexOf(":") + 1);
-            XHR_port = parseInt(portNumberAsString, 10);
-            XHR_hostname = XHR_hostname.substring(0, XHR_hostname.lastIndexOf(":"));
+            portNumberAsString = xhr_hostname.substring(xhr_hostname.lastIndexOf(":") + 1);
+            xhr_port = parseInt(portNumberAsString, 10);
+            xhr_hostname = xhr_hostname.substring(0, xhr_hostname.lastIndexOf(":"));
           }
         } else {
           // In this case, the URL contains a IPv6 address.
 
           if (streamTicket.web_server_URL.indexOf("http://") === 0) {
-            XHR_hostname = streamTicket.web_server_URL.substring(7);
+            xhr_hostname = streamTicket.web_server_URL.substring(7);
           } else {
-            XHR_hostname = streamTicket.web_server_URL;
+            xhr_hostname = streamTicket.web_server_URL;
           }
 
-          var indexOfClosingBracket = XHR_hostname.lastIndexOf("]");
+          var indexOfClosingBracket = xhr_hostname.lastIndexOf("]");
 
           if (charAt(indexOfClosingBracket + 1) === ":") {
-            portNumberAsString = XHR_hostname.substring(indexOfClosingBracket + 2);
-            XHR_port = parseInt(portNumberAsString, 10);
+            portNumberAsString = xhr_hostname.substring(indexOfClosingBracket + 2);
+            xhr_port = parseInt(portNumberAsString, 10);
           } else {
-            XHR_port = 80;
+            xhr_port = 80;
           }
         }
-        streamTicket.XHR_hostname = XHR_hostname;
-        streamTicket.XHR_port = XHR_port;
+        streamTicket.xhr_hostname = xhr_hostname;
+        streamTicket.xhr_port = xhr_port;
       }
 
       var webtorrentClient = new WebTorrent({ dht: false, tracker: true });
@@ -275,10 +274,10 @@ function OakStreaming(OakName) {
 
         webtorrentClient.seed(video_file, seedingOptions, function onSeed(torrent) {
           /* K42 Maybe I will need this later
-          var torrentFileAsBlobURL = torrent.torrentFileBlobURL;
+          var torrent_fileAsBlobURL = torrent.torrent_fileBlobURL;
           var xhr = new XMLHttpRequest();
           var XHROrMethodEndHappend = false;
-          xhr.open('GET', torrentFileAsBlobURL, true);
+          xhr.open('GET', torrent_fileAsBlobURL, true);
           xhr.responseType = 'blob';
           xhr.onload = function(e) {
             if (this.status == 200) {
@@ -292,16 +291,16 @@ function OakStreaming(OakName) {
           };
           xhr.send();
           */
-          streamTicket.torrentFile = torrent.torrentFile.toString('base64');
-          streamTicket.magnetURI = torrent.magnetURI;
+          streamTicket.torrent_file = torrent.torrentFile.toString('base64');
+          streamTicket.magnet_URI = torrent.magnet_URI;
           streamTicket.infoHash = torrent.infoHash;
 
           // If a large video files is seeded, WebTorrent creates several torrent.files entries for it.
-          SIZE_OF_VIDEO_FILE = 0;
-          streamTicket.size_of_video_file = 0;
+          SIZE_VIDEO_FILE = 0;
+          streamTicket.SIZE_VIDEO_FILE = 0;
           for (var i = 0, length = torrent.files.length; i < length; i++) {
-            SIZE_OF_VIDEO_FILE += torrent.files[i].length;
-            streamTicket.size_of_video_file += torrent.files[i].length;
+            SIZE_VIDEO_FILE += torrent.files[i].length;
+            streamTicket.SIZE_VIDEO_FILE += torrent.files[i].length;
           }
 
           // var bufferTorrent = parseTorrent(streamTicket.parsedTorrent); K42
@@ -309,7 +308,7 @@ function OakStreaming(OakName) {
           // If this OakStreaming instance is already connected to another peer, this function calls the callback
           // function, which has been passed to it, immediately. Otherwise, the callback function gets called as soon as
           // this OakStreaming instance connects to another peer.
-          self.forTesting_connectedToNewWebTorrentPeer = function (callback) {
+          self.forTesting_connectedToNewWtorrentPeer = function (callback) {
             if (notificationsBecauseNewWire <= 0) {
               notificationsBecauseNewWire--;
               var callbackCalled = false;
@@ -326,7 +325,7 @@ function OakStreaming(OakName) {
             }
           };
 
-          // This is necessary such that the forTesting_connectedToNewWebTorrentPeer function knows how many peers
+          // This is necessary such that the forTesting_connectedToNewWtorrentPeer function knows how many peers
           // are already connected to this OakStreaming instance.
           torrent.on('wire', function (wire) {
             notificationsBecauseNewWire++;
@@ -368,21 +367,21 @@ function OakStreaming(OakName) {
     }
 
     // A function to start the video playback with a random time offset.
-    function waitStartPlayingOffset(streamTicket, callback, stop_uploading_when_video_downloaded) {
+    function waitStartPlayingOffset(streamTicket, callback, stopUploadingWhenVideoDownloaded) {
       if (Date.now() - timeReceiptStreamInformationObject >= startPlayingOffset) {
         timeLoadVideoMethodWasCalled = Date.now();
-        self.loadVideo(streamTicket, callback, stop_uploading_when_video_downloaded);
+        self.loadVideo(streamTicket, callback, stopUploadingWhenVideoDownloaded);
       } else {
         setTimeout(function () {
-          waitStartPlayingOffset(streamTicket, callback, stop_uploading_when_video_downloaded);
+          waitStartPlayingOffset(streamTicket, callback, stopUploadingWhenVideoDownloaded);
         }, 10);
       }
     }
 
     // In a Technical Evaluation, this method gets called instead of the receive_stream method.
-    function loadVideo_technical_evaluation(streamTicket, callback, stop_uploading_when_video_downloaded) {
+    function loadVideo_technical_evaluation(streamTicket, callback, stopUploadingWhenVideoDownloaded) {
       timeReceiptStreamInformationObject = Date.now();
-      waitStartPlayingOffset(streamTicket, callback, stop_uploading_when_video_downloaded);
+      waitStartPlayingOffset(streamTicket, callback, stopUploadingWhenVideoDownloaded);
     }
 
     function receive_stream() {
@@ -394,18 +393,18 @@ function OakStreaming(OakName) {
       var startPlayingOffset = Math.floor(Math.random() * 10) + 1;  
       */
 
-      // In order to enable that all but the stream_ticket_object parameter (i.e. the first parameter) of the
+      // In order to enable that all but the streamTicket_object parameter (i.e. the first parameter) of the
       // receive_stream method are optional, the arguments variable has to be read.
       var streamTicket = arguments[0];
       var callback = function callback() {};
-      var stop_uploading_when_video_downloaded = false;
+      var stopUploadingWhenVideoDownloaded = false;
 
       if (typeof arguments[1] === 'function') {
         callback = arguments[1];
-        stop_uploading_when_video_downloaded = arguments[2];
+        stopUploadingWhenVideoDownloaded = arguments[2];
       } else {
         callback = undefined;
-        stop_uploading_when_video_downloaded = arguments[1];
+        stopUploadingWhenVideoDownloaded = arguments[1];
       }
 
       // I was stupid and forgot to implement that the used video tag can be handed over to the receive_stream method.
@@ -416,7 +415,7 @@ function OakStreaming(OakName) {
 
       /* This block of code is solely for conducting Technical Evaluations.
       htmlVideoTag.onplay = function(){
-        onsole.log("event onplay is thrown");
+        console.log("event onplay is thrown");
         play = true;
         if(canplay){
           startUpTime = Date.now() - timeLoadVideoMethodWasCalled;
@@ -450,37 +449,37 @@ function OakStreaming(OakName) {
       */
 
       // All these declared variables until 'var self = this' are intended to be constants.
-      var deliveryByServer = streamTicket.XHR_hostname !== false && (streamTicket.path_to_file_on_web_server || streamTicket.hash_value) ? true : false;
-      var deliveryByWtorrent = streamTicket.torrentFile ? true : false;
-      console.log("deliveryByServer:" + deliveryByServer);
+      var deliveryByServer = streamTicket.xhr_hostname !== false && (streamTicket.path_to_file_on_web_server || streamTicket.hash_value) ? true : false;
+      var deliveryByWtorrent = streamTicket.torrent_file ? true : false;
 
-      var XHR_hostname = streamTicket.XHR_hostname;
-      var XHR_port = streamTicket.XHR_port;
+      var XHR_HOSTNAME = streamTicket.xhr_hostname;
+      var XHR_PORT = streamTicket.xhr_port;
 
-      var pathToFileOnXHRServer = streamTicket.path_to_file_on_web_server;
-      var hashValue = streamTicket.hash_value;
-      var MAGNET_URI = streamTicket.magnetURI;
+      var PATH_TO_FILE = streamTicket.path_to_file_on_web_server;
+      var HASH_VALUE = streamTicket.hash_value;
+      var MAGNET_URI = streamTicket.magnet_URI;
       if (deliveryByWtorrent) {
-        var THE_RECEIVED_TORRENT_FILE = Buffer.from(streamTicket.torrentFile, 'base64');
+        var TORRENT_FILE = Buffer.from(streamTicket.torrent_file, 'base64');
       }
-      SIZE_OF_VIDEO_FILE = streamTicket.size_of_video_file; // in byte
+      SIZE_VIDEO_FILE = streamTicket.SIZE_VIDEO_FILE; // in byte
 
-      var DOWNLOAD_FROM_P2P_TIME_RANGE = streamTicket.sequential_requests_time_range || 20; // in seconds
-      var CREATE_READSTREAM_REQUEST_SIZE = streamTicket.size_of_sequential_requests || 6000000; // in byte
+      var DOWNLOAD_FROM_P2P_TIME_RANGE = streamTicket.download_from_p2p_time_range || 20; // in seconds
+      var WTORRENT_REQUEST_SIZE = streamTicket.wtorrent_request_size || 6000000; // in byte
 
       var DOWNLOAD_FROM_SERVER_TIME_RANGE = streamTicket.download_from_server_time_range || 3; // in seconds
       var UPLOAD_LIMIT = streamTicket.peer_upload_limit_multiplier || 2;
       var ADDITION_TO_UPLOAD_LIMIT = streamTicket.peer_upload_limit_addend || 3000000; // in byte
 
-      var XHR_REQUEST_SIZE = streamTicket.xhrRequestSize || 2000000; // in byte
-      var THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM = streamTicket.thresholdForReturningnextStreamForMultistream || 1000000; // in byte
-      var WATERMARK_HEIGHT_OF_ANSWERSTREAM = streamTicket.watermarkHeightOfnextStreamForMultistream || 1999999; // in byte
+      var XHR_REQUEST_SIZE = streamTicket.XHR_request_size || 2000000; // in byte
+      var THRESHOLD_HAND_DATA_TO_MULTISTREAM = streamTicket.threshold_hand_data_to_multistream || 1000000; // in byte                                        
+      var MAX_SIZE_ANSWERSTREAM = streamTicket.max_size_next_stream_for_multistream || 1999999; // in byte
 
-      var CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL = streamTicket.checkIfBufferFullEnoughInterval || 500; // in milliseconds
-      var CHECK_IF_nextStreamForMultistream_READY_INTERVAL = streamTicket.checkIfnextStreamForMultistreamReadyInterval || 200; // in milliseconds
-      var UPDATE_CHART_INTERVAL = streamTicket.updateChartInterval || 1000; // in milliseconds
-      var CHOKE_IF_NECESSARY_INTERVAL = streamTicket.chokeIfNecessaryInterval || 300; // in milliseconds 
-      var CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL = streamTicket.checkIfNewCreateReadstreamInterval || 2000; // in milliseconds 
+      var CHECK_IF_VIDEO_BUFFER_FULL_ENOUGH_INTERVAL = streamTicket.check_if_video_buffer_full_enough_interval || 500; // in milliseconds
+
+      var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = streamTicket.check_if_answerstream_ready_interval || 200; // in milliseconds
+      var UPDATE_CHART_INTERVAL = streamTicket.update_chart_interval || 1000; // in milliseconds
+      var CHOKE_IF_NECESSARY_INTERVAL = streamTicket.choke_if_necessary_interval || 300; // in milliseconds 
+      var CHECK_IF_NEW_WTORRENT_REQUEST_INTERVAL = streamTicket.check_if_new_wtorrent_request_interval || 2000; // in milliseconds 
 
       // These variables are declared in this high scope in order to enable every function that is declared in 
       // receive_stream to access and manipulate these variables.
@@ -488,38 +487,39 @@ function OakStreaming(OakName) {
       var endStreaming = false;
       var webtorrentClient = null;
       var wires = []; // A wire is a P2P connection to another peer out of the WebTorrent network.
-      var globalVideostreamRequestNumber = 0;
+      var videostreamRequestCounter = 0;
       bytesReceivedFromServer = 0; // This variable gets only initialized not declared.
       var videostreamRequestHandlers = [];
       var inCritical = true; // inCritical === true means that there is less than DOWNLOAD_FROM_SERVER_TIME_RANGE
       // seconds of video playback buffered and consequently XHRs will be conducted.
-      var videoCompletelyLoadedByVideoPlayer = false;
-      var bytesTakenFromWtorrent = 0;
-      var bytesTakenFromServer = 0;
+      var videoCompletelyLoaded = false;
+      var bytesFromWtorrent = 0;
+      var bytesFromServer = 0;
       var consoleCounter = 0; // This variable is only for debugging purposes.
       // var first2000BytesOfVideo = null; Feature was too confusing to implement.
       // var numberBytesInFirst2000BytesOfVideo = 0; Feature was too confusing to implement.
       var videoCompletelyLoadedByWtorrent = false;
-      var timeOfLastWtorrentRequest = 0;
+      // var timeOfLastWtorrentRequest = 0; Not needed in this version
 
-      // Node.js readable streams are used to buffer received video data before it gets put into the source buffer object.
-      function MyReadableStream(options) {
+      // These Node.js readable streams will be used to buffer received video data before it gets put into the
+      // source buffer object.
+      function SimpleReadableStream(options) {
         readableStream.Readable.call(this, options);
       }
-      util.inherits(MyReadableStream, readableStream.Readable);
-      MyReadableStream.prototype._read = function (size) {};
+      util.inherits(SimpleReadableStream, readableStream.Readable);
+      SimpleReadableStream.prototype._read = function (size) {};
 
       if (deliveryByWtorrent) {
         webtorrentClient = new WebTorrent();
         var webtorrentOptions = {};
 
         /*
-        if(streamTicket.pathToFileToSeed){
-          webtorrentOptions.path = streamTicket.pathToFileToSeed;
+        if(streamTicket.PATH_TO_FILEToSeed){
+          webtorrentOptions.path = streamTicket.PATH_TO_FILEToSeed;
         }
         */
 
-        webtorrentClient.add(THE_RECEIVED_TORRENT_FILE, webtorrentOptions, function (torrentSession) {
+        webtorrentClient.add(TORRENT_FILE, webtorrentOptions, function (torrentSession) {
           // From this point of time onwards, the WebTorrent instance will start downloading video data from the
           // WebTorrent network. This downloading happens in the background and according to the rarest-peace-first
           // strategy. The OakStreaming client downloads the video data as fast as possible. 
@@ -590,7 +590,7 @@ function OakStreaming(OakName) {
           // If this OakStreaming instance is already connected to another peer, this function calls the callback
           // function, which has been passed to it, immediately. Otherwise, the callback function gets called as soon as
           // this OakStreaming instance connects to another peer.
-          self.forTesting_connectedToNewWebTorrentPeer = function (callback) {
+          self.forTesting_connectedToNewWtorrentPeer = function (callback) {
             if (notificationsBecauseNewWire <= 0) {
               notificationsBecauseNewWire--;
               var callbackCalled = false;
@@ -610,9 +610,6 @@ function OakStreaming(OakName) {
           // This event listener gets called when a peer has been added to the swarm of this OakStreaming instance.
           theTorrentSession.on('wire', function (wire) {
             wires.push(wire);
-            if (!window.firstWire) {
-              window.firstWire = wire;
-            }
             notificationsBecauseNewWire++;
 
             // This command activates the ut_pex extension for the communication with the new peer.
@@ -644,33 +641,37 @@ function OakStreaming(OakName) {
             // This callback should be called with the created readableStream which contains the next video data.
             if (thisRequest.callbackOfMultistream !== null) {
 
-              if (htmlVideoTag.duration) {
+              /* Not needed in this version
+              if(htmlVideoTag.duration){
                 timeOfLastWtorrentRequest = htmlVideoTag.currentTime;
               } else {
                 timeOfLastWtorrentRequest = 0;
               }
+              */
 
-              var endCreateReadStream;
-              if (thisRequest.nextNeededByte + CREATE_READSTREAM_REQUEST_SIZE > webtorrentFile.length - 1) {
-                endCreateReadStream = webtorrentFile.length - 1;
+              var endIndexRequest;
+              if (thisRequest.nextNeededByte + WTORRENT_REQUEST_SIZE > webtorrentFile.length - 1) {
+                endIndexRequest = webtorrentFile.length - 1;
               } else {
-                endCreateReadStream = thisRequest.nextNeededByte + CREATE_READSTREAM_REQUEST_SIZE;
+                endIndexRequest = thisRequest.nextNeededByte + WTORRENT_REQUEST_SIZE;
               }
 
               // The createReadStream method of the WebTorrent API conducts a sequential byte range request to the
               // WebTorrent network.
-              thisRequest.wtorrentStream = webtorrentFile.createReadStream({ "start": thisRequest.nextNeededByte, "end": endCreateReadStream });
+              thisRequest.wtorrentStream = webtorrentFile.createReadStream({ "start": thisRequest.nextNeededByte, "end": endIndexRequest });
 
               /*
               thisRequest.on('end', function(){
-                if(thisRequest.callbackOfMultistream !== null && thisRequest.nextNeededByte > thisRequest.endSequentialWtorrentReq && thisRequest.nextNeededByte < thisRequest.videoFileSize){
-                  var endCreateReadStream;
-                  if(thisRequest.nextNeededByte + CREATE_READSTREAM_REQUEST_SIZE >= webtorrentFile.length-1){
-                    endCreateReadStream = webtorrentFile.length-1;
+                if(thisRequest.callbackOfMultistream !== null && thisRequest.nextNeededByte > 
+                        thisRequest.endSequentialWtorrentReq && thisRequest.nextNeededByte < thisRequest.videoFileSize){
+                  var endIndexRequest;
+                  if(thisRequest.nextNeededByte + WTORRENT_REQUEST_SIZE >= webtorrentFile.length-1){
+                    endIndexRequest = webtorrentFile.length-1;
                   } else {
-                    endCreateReadStream = thisRequest.nextNeededByte + CREATE_READSTREAM_REQUEST_SIZE;
+                    endIndexRequest = thisRequest.nextNeededByte + WTORRENT_REQUEST_SIZE;
                   }                
-                  thisRequest.wtorrentStream = webtorrentFile.createReadStream({"start" : thisRequest.nextNeededByte, "end" : endCreateReadStream});
+                  thisRequest.wtorrentStream = webtorrentFile.createReadStream({"start" : thisRequest.nextNeededByte, 
+                          "end" : endIndexRequest});
                   thisRequest.nextByteWtorrent = thisRequest.nextNeededByte;
                   thisRequest.wtorrentStream.unpipe();
                   thisRequest.wtorrentStream.pipe(thisRequest.collectorStreamForWtorrent);
@@ -681,7 +682,7 @@ function OakStreaming(OakName) {
               // Every videostreamRequestHandler has to save the byte index that it expects next from the WebTorrent
               // network.
               thisRequest.nextByteWtorrent = thisRequest.nextNeededByte;
-              thisRequest.endSequentialWtorrentReq = endCreateReadStream;
+              thisRequest.endSequentialWtorrentReq = endIndexRequest;
 
               // Data that is received from the sequential byte range request gets immediately pumped into a writeable 
               // stream called collectorStreamForWtorrent which processes the new data.
@@ -690,32 +691,36 @@ function OakStreaming(OakName) {
           }
         });
       }
-      // first2000BytesOfVideo = new MyReadableStream({highWaterMark: 2000});    hatte ich ja rausgenommen weil verfangen
+      // The following line of code belongs to the "request first 2000 byte only once from server" feature
+      // The development of this feature has been canceled for now.
+      // first2000BytesOfVideo = new SimpleReadableStream({highWaterMark: 2000});
 
-      var fileLikeObject = function fileLikeObject(pathToFileOnXHRServer) {
-        this.pathToFileOnXHRServer = pathToFileOnXHRServer;
+      // This constructor will be used to create a file-like, seekable object that the videostream library queries for
+      // video data.
+      var FileLikeObject = function FileLikeObject(pathToFile) {
+        this.pathToFile = pathToFile;
       };
 
       // The videostream library will call createReadStream several times with different values for the start property 
       // of opts. The OakStreaming client has to return the byte range specified by the start and end property of opts.
-      fileLikeObject.prototype.createReadStream = function (opts) {
-        if (opts.start >= SIZE_OF_VIDEO_FILE) {
+      FileLikeObject.prototype.createReadStream = function (opts) {
+        if (opts.start >= SIZE_VIDEO_FILE) {
           return new MultiStream(function (cb) {
             cb(null, null);
           });
         }
         inCritical = true;
-        var thisRequest = new VideostreamRequestHandler(++globalVideostreamRequestNumber, opts, this);
+        var thisRequest = new VideostreamRequestHandler(++videostreamRequestCounter, opts, this);
 
         // Every time I printed out the value of opts.end, it was NaN.
         // I suppose that should be interpreted as "till the end of the file".
-        // In this case, the stream that this createReadStream method will return should, nevertheless, not buffer the hole video file 
-        // in advance but instead retrieve and put out chunks of video data on-demand.        
+        // In this case, the stream that this createReadStream method will return should, nevertheless, not buffer the 
+        // hole video file in advance but instead retrieve and put out chunks of video data on-demand.        
         if (opts.end && !isNaN(opts.end)) {
-          thisRequest.endIndex = opts.end + 1;
+          thisRequest.xhrEndIndex = opts.end + 1;
         } else {
-          if (SIZE_OF_VIDEO_FILE !== 0) {
-            thisRequest.endIndex = SIZE_OF_VIDEO_FILE;
+          if (SIZE_VIDEO_FILE !== 0) {
+            thisRequest.xhrEndIndex = SIZE_VIDEO_FILE;
           }
         }
 
@@ -726,25 +731,25 @@ function OakStreaming(OakName) {
         util.inherits(thisRequest.CollectorStreamForWtorrent, readableStream.Writable);
         thisRequest.CollectorStreamForWtorrent.prototype._write = function (chunk, encoding, done) {
           if (thisRequest.nextNeededByte - thisRequest.nextByteWtorrent < chunk.length) {
-            bytesTakenFromWtorrent += chunk.length - (thisRequest.nextNeededByte - thisRequest.nextByteWtorrent);
+            bytesFromWtorrent += chunk.length - (thisRequest.nextNeededByte - thisRequest.nextByteWtorrent);
             var streamHasMemoryLeft = thisRequest.nextStreamForMultistream.push(chunk.slice(thisRequest.nextNeededByte - thisRequest.nextByteWtorrent, chunk.length));
-            thisRequest.bytesInNextStreamForMultistream += chunk.length - (thisRequest.nextNeededByte - thisRequest.nextByteWtorrent);
+            thisRequest.bytesInStreamForMultistream += chunk.length - (thisRequest.nextNeededByte - thisRequest.nextByteWtorrent);
             thisRequest.nextNeededByte += chunk.length - (thisRequest.nextNeededByte - thisRequest.nextByteWtorrent);
 
             if (streamHasMemoryLeft) {
-              if (thisRequest.callbackOfMultistream !== null && thisRequest.nextNeededByte >= thisRequest.endIndex) {
+              if (thisRequest.callbackOfMultistream !== null && thisRequest.nextNeededByte >= thisRequest.xhrEndIndex) {
                 var theCallbackFunction = thisRequest.callbackOfMultistream;
                 thisRequest.callbackOfMultistream = null;
                 thisRequest.nextStreamForMultistream.push(null);
-                thisRequest.bytesInNextStreamForMultistream = 0;
+                thisRequest.bytesInStreamForMultistream = 0;
                 var res = thisRequest.nextStreamForMultistream;
-                thisRequest.nextStreamForMultistream = new MyReadableStream({ highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM });
+                thisRequest.nextStreamForMultistream = new SimpleReadableStream({ highWaterMark: MAX_SIZE_ANSWERSTREAM });
                 if (thisRequest.wtorrentStream) {
                   //thisRequest.wtorrentStream.pause(); 11.07.16  Unsure if this should be done. Probably not.
                 }
                 theCallbackFunction(null, res);
               } else {
-                ceckIfNextStreamForMultistreamReady(thisRequest);
+                checkIfAnswerstreamReady(thisRequest);
               }
             } else {
               if (thisRequest.callbackOfMultistream === null) {
@@ -756,9 +761,9 @@ function OakStreaming(OakName) {
                 var theCallbackFunction = thisRequest.callbackOfMultistream;
                 thisRequest.callbackOfMultistream = null;
                 thisRequest.nextStreamForMultistream.push(null);
-                thisRequest.bytesInNextStreamForMultistream = 0;
+                thisRequest.bytesInStreamForMultistream = 0;
                 var res = thisRequest.nextStreamForMultistream;
-                thisRequest.nextStreamForMultistream = new MyReadableStream({ highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM });
+                thisRequest.nextStreamForMultistream = new SimpleReadableStream({ highWaterMark: MAX_SIZE_ANSWERSTREAM });
                 if (thisRequest.wtorrentStream) {
                   //thisRequest.wtorrentStream.pause(); 11.07.16  Unsure if this should be done. Probably not.
                 }
@@ -769,35 +774,58 @@ function OakStreaming(OakName) {
           thisRequest.nextByteWtorrent += chunk.length;
           done();
         };
-        thisRequest.collectorStreamForWtorrent = new thisRequest.CollectorStreamForWtorrent({ highWaterMark: 16 });
+
+        thisRequest.collectorStreamForWtorrent = new thisRequest.CollectorStreamForWtorrent(16);
         videostreamRequestHandlers.push(thisRequest);
 
+        /* Not needed in current version of the OakStreaming library
+        if(htmlVideoTag.duration){
+          timeOfLastWtorrentRequest = htmlVideoTag.currentTime;
+        } else {
+          timeOfLastWtorrentRequest = 0;
+        }
+        */
+
         if (webtorrentFile) {
-          if (htmlVideoTag.duration) {
-            timeOfLastWtorrentRequest = htmlVideoTag.currentTime;
+          var endIndexRequest;
+          if (thisRequest.nextNeededByte + WTORRENT_REQUEST_SIZE >= webtorrentFile.length - 1) {
+            endIndexRequest = webtorrentFile.length - 1;
           } else {
-            timeOfLastWtorrentRequest = 0;
+            endIndexRequest = thisRequest.nextNeededByte + WTORRENT_REQUEST_SIZE;
           }
 
-          var endCreateReadStream;
-          if (thisRequest.nextNeededByte + CREATE_READSTREAM_REQUEST_SIZE >= webtorrentFile.length - 1) {
-            endCreateReadStream = webtorrentFile.length - 1;
-          } else {
-            endCreateReadStream = thisRequest.nextNeededByte + CREATE_READSTREAM_REQUEST_SIZE;
-          }
-          thisRequest.wtorrentStream = webtorrentFile.createReadStream({ "start": thisRequest.nextNeededByte, "end": endCreateReadStream });
-          thisRequest.endSequentialWtorrentReq = endCreateReadStream;
+          // Creates a sequential byte range requests to the WebTorrent network.
+          thisRequest.wtorrentStream = webtorrentFile.createReadStream({ "start": thisRequest.nextNeededByte, "end": endIndexRequest });
+
+          thisRequest.endSequentialWtorrentReq = endIndexRequest;
           thisRequest.nextByteWtorrent = thisRequest.nextNeededByte;
+
+          // Every byte that is received from the created sequential byte range request gets handed over to the
+          // collectorStreamForWtorrent stream.
           thisRequest.wtorrentStream.pipe(thisRequest.collectorStreamForWtorrent);
         }
 
+        /**
+        * @callback OakStreaming~callbackToMultistream
+        */
+
+        /**
+         * This inline function is intended to be passed to the Multistream constructor. The streamFactory function 
+         * requests data from the WebTorrent network and/or from a Web server. It returns, via the callback function, 
+         * a Node.js readable stream of video data. The content of this stream does not exceed more than 
+         * MAX_SIZE_ANSWERSTREAM bytes of video data. Moreover, the function returns the video data beginning from the 
+         * byte index saved in the thisRequest.nextNeededByte variable.
+         * @private
+         * @param {OakStreaming~callbackToMultistream} cb - This callback function gets called with a Node.js readable 
+         * stream containing the fetched video data.
+         */
         function streamFactory(cb) {
-          if (thisRequest.endIndex >= 0 && thisRequest.nextNeededByte >= thisRequest.endIndex) {
+          if (thisRequest.xhrEndIndex >= 0 && thisRequest.nextNeededByte >= thisRequest.xhrEndIndex) {
             if (thisRequest.xhrRequest) {
               thisRequest.xhrRequest.destroy();
               thisRequest.xhrRequest = null;
             }
-            return cb(null, null);
+            return cb(null, null); // This tells the Multistream that no more data will be delivered to it.
           }
 
           thisRequest.callbackNumber++;
@@ -806,43 +834,46 @@ function OakStreaming(OakName) {
           thisRequest.forNowNoDataNeeded = false;
 
           /* Erstmal rausgenommen, da ich mich beim XHRHanlder part dazu irgendwie verhäddert habe
-            if(firstBytesOfVideo && (thisRequest.nextNeededByte < firstBytesOfVideo.length - 200) && thisRequest.createReadStreamNumber < 5){ // Beim 10 mins big buck bunny video ist eben der erste lange createReadStream (und einzige?) createReadStream Nummer 5
+            if(firstBytesOfVideo && (thisRequest.nextNeededByte < firstBytesOfVideo.length - 200) && thisRequest.number < 5){ // Beim 10 mins big buck bunny video ist eben der erste lange createReadStream (und einzige?) createReadStream Nummer 5
               thisRequest.nextStreamForMultistream.push(firstBytesOfVideo.slice(thisRequest.nextNeededByte, firstBytesOfVideo.length));
-              bytesTakenFromServer += firstBytesOfVideo.length - thisRequest.nextNeededByte;
+              bytesFromServer += firstBytesOfVideo.length - thisRequest.nextNeededByte;
               thisRequest.nextNeededByte += firstBytesOfVideo.length - thisRequest.nextNeededByte;
               var theCallbackFunction = thisRequest.callbackOfMultistream;
               thisRequest.callbackOfMultistream = null;
               thisRequest.nextStreamForMultistream.push(null);
-              thisRequest.bytesInNextStreamForMultistream = 0;
+              thisRequest.bytesInStreamForMultistream = 0;
               var res = thisRequest.nextStreamForMultistream;
-              if(thisRequest.createReadStreamNumber < 4){
-                thisRequest.nextStreamForMultistream = new MyReadableStream({highWaterMark: 2000});
+              if(thisRequest.number < 4){
+                thisRequest.nextStreamForMultistream = new SimpleReadableStream({highWaterMark: 2000});
               } else {
-                thisRequest.nextStreamForMultistream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});                    
+                thisRequest.nextStreamForMultistream = new SimpleReadableStream({highWaterMark: MAX_SIZE_ANSWERSTREAM});                    
               }
-              ////console.log("A CB has been answered with a part of firstBytesOfVideo for readstream number " + thisRequest.createReadStreamNumber + " with callback number " + thisRequest.callbackNumber);
+              ////console.log("A CB has been answered with a part of firstBytesOfVideo for readstream number " + thisRequest.number + " with callback number " + thisRequest.callbackNumber);
               theCallbackFunction(null, res);
               return;
             }
           */
 
-          if (!ceckIfNextStreamForMultistreamReady(thisRequest)) {
+          if (!checkIfAnswerstreamReady(thisRequest)) {
+            // answerstream is nextStreamForMultistream
             if (thisRequest.wtorrentStream) {
               // thisRequest.wtorrentStream.resume();  11.07.16 more a try
             } else if (webtorrentFile) {
-              var endCreateReadStream;
-              if (thisRequest.nextNeededByte + CREATE_READSTREAM_REQUEST_SIZE - 1 >= webtorrentFile.length - 1) {
-                endCreateReadStream = webtorrentFile.length - 1;
+              var endIndexRequest;
+              if (thisRequest.nextNeededByte + WTORRENT_REQUEST_SIZE - 1 >= webtorrentFile.length - 1) {
+                endIndexRequest = webtorrentFile.length - 1;
               } else {
-                endCreateReadStream = thisRequest.nextNeededByte + CREATE_READSTREAM_REQUEST_SIZE - 1;
+                endIndexRequest = thisRequest.nextNeededByte + WTORRENT_REQUEST_SIZE - 1;
               }
-              thisRequest.wtorrentStream = webtorrentFile.createReadStream({ "start": thisRequest.nextNeededByte, "end": endCreateReadStream });
-              thisRequest.endSequentialWtorrentReq = endCreateReadStream;
+              thisRequest.wtorrentStream = webtorrentFile.createReadStream({ "start": thisRequest.nextNeededByte, "end": endIndexRequest });
+              thisRequest.endSequentialWtorrentReq = endIndexRequest;
               thisRequest.nextByteWtorrent = thisRequest.nextNeededByte;
+              console.log("thisRequest.collectorStreamForWtorrent: " + thisRequest.collectorStreamForWtorrent);
+              console.log("thisRequest.collectorStreamForWtorrent === null: " + (thisRequest.collectorStreamForWtorrent === null));
               thisRequest.wtorrentStream.pipe(thisRequest.collectorStreamForWtorrent);
             }
 
-            if (deliveryByServer && inCritical && !thisRequest.XHRConducted) {
+            if (deliveryByServer && inCritical && !thisRequest.xhrConducted) {
               if (!webtorrentFile || !videoCompletelyLoadedByWtorrent) {
                 conductXHR(thisRequest);
               }
@@ -850,7 +881,7 @@ function OakStreaming(OakName) {
           }
         }
 
-        // A new Multistream gets created which will be the answer the the request from the VideoStream request
+        // A Multistream gets created which will be returned as the answer to the request from the videostream library
         var multi = new MultiStream(streamFactory);
 
         var deconstructorAlreadyCalled = false;
@@ -876,14 +907,16 @@ function OakStreaming(OakName) {
               videostreamRequestHandlers.splice(i, 1);
             }
           }
+
           /*
+          // This if clause has been added after end of bachelor thesis
           if(theCallback){
             theCallback(null,null);
           }
           */
-          // thisRequest.wtorrentStream.destroy();                  Glaube ich unnötig!!!!
+          // thisRequest.wtorrentStream.destroy(); // Added after end of bachelor thesis      
           thisRequest.nextStreamForMultistream.resume(); // To avoid memory leaks. Ich sammel ja schon datan während ich auf den nächsten call von der streamFactoryFunction warte 
-          // thisRequest.collectorStreamForWtorrent.destroy(); Verbraucht ja eh nur ein paar byte
+          //thisRequest.collectorStreamForWtorrent.destroy(); // Added after end of bachelor thesis
           destroy.call(multi);
         };
         return multi;
@@ -892,7 +925,7 @@ function OakStreaming(OakName) {
       // This function frequently checks if less than DOWNLOAD_FROM_P2P_TIME_RANGE seconds of video data is buffered in advance.
       // If it is the case this function conducts a new sequential byte range request to the WebTorrent network
       function frequentlyCheckIfNewCreateReadStreamNecessary() {
-        if (videoCompletelyLoadedByVideoPlayer) {
+        if (videoCompletelyLoaded) {
           return;
         }
 
@@ -902,21 +935,21 @@ function OakStreaming(OakName) {
           if(theTorrentSession && (htmlVideoTag.currentTime - timeOfLastWtorrentRequest >= MINIMAL_TIMESPAN_BEFORE_NEW_WEBTORRENT_REQUEST)){
             for (var j = 0, length = videostreamRequestHandlers.length; j < length; j++) {
               var thisRequest = videostreamRequestHandlers[j];
-              ////console.log("createReadStream enlargement for request " + thisRequest.createReadStreamNumber);
-              if(thisRequest.callbackOfMultistream !== null && thisRequest.nextNeededByte > thisRequest.endSequentialWtorrentReq && thisRequest.nextNeededByte < SIZE_OF_VIDEO_FILE){
+              ////console.log("createReadStream enlargement for request " + thisRequest.number);
+              if(thisRequest.callbackOfMultistream !== null && thisRequest.nextNeededByte > thisRequest.endSequentialWtorrentReq && thisRequest.nextNeededByte < SIZE_VIDEO_FILE){
                 timeOfLastWtorrentRequest = htmlVideoTag.currentTime;
-                var endCreateReadStream;
-                if(thisRequest.nextNeededByte + CREATE_READSTREAM_REQUEST_SIZE >= webtorrentFile.length-1){
-                  endCreateReadStream = webtorrentFile.length-1;
+                var endIndexRequest;
+                if(thisRequest.nextNeededByte + WTORRENT_REQUEST_SIZE >= webtorrentFile.length-1){
+                  endIndexRequest = webtorrentFile.length-1;
                 } else {
-                  endCreateReadStream = thisRequest.nextNeededByte + CREATE_READSTREAM_REQUEST_SIZE;
+                  endIndexRequest = thisRequest.nextNeededByte + WTORRENT_REQUEST_SIZE;
                 }
-                ////console.log("I set a new createReadstream for videostream request number " + thisRequest.createReadStreamNumber);
+                ////console.log("I set a new createReadstream for videostream request number " + thisRequest.number);
                 thisRequest.wtorrentStream.unpipe();
-                thisRequest.wtorrentStream = webtorrentFile.createReadStream({"start" : thisRequest.nextNeededByte, "end" : endCreateReadStream});
-                thisRequest.endSequentialWtorrentReq = endCreateReadStream;
+                thisRequest.wtorrentStream = webtorrentFile.createReadStream({"start" : thisRequest.nextNeededByte, "end" : endIndexRequest});
+                thisRequest.endSequentialWtorrentReq = endIndexRequest;
                 thisRequest.nextByteWtorrent = thisRequest.nextNeededByte;
-                thisRequest.collectorStreamForWtorrent = new thisRequest.CollectorStreamForWtorrent({highWaterMark:16});
+                thisRequest.collectorStreamForWtorrent = new thisRequest.CollectorStreamForWtorrent(16);
                 thisRequest.wtorrentStream.pipe(thisRequest.collectorStreamForWtorrent);
               }
             }                                   
@@ -932,18 +965,18 @@ function OakStreaming(OakName) {
             if (timeRanges.end(i) - htmlVideoTag.currentTime <= DOWNLOAD_FROM_P2P_TIME_RANGE) {
               for (var j = 0, length2 = videostreamRequestHandlers.length; j < length2; j++) {
                 var thisRequest = videostreamRequestHandlers[j];
-                if (theTorrentSession && thisRequest.callbackOfMultistream !== null && thisRequest.nextNeededByte > thisRequest.endSequentialWtorrentReq && thisRequest.nextNeededByte < SIZE_OF_VIDEO_FILE) {
-                  var endCreateReadStream;
-                  if (thisRequest.nextNeededByte + CREATE_READSTREAM_REQUEST_SIZE >= webtorrentFile.length - 1) {
-                    endCreateReadStream = webtorrentFile.length - 1;
+                if (theTorrentSession && thisRequest.callbackOfMultistream !== null && thisRequest.nextNeededByte > thisRequest.endSequentialWtorrentReq && thisRequest.nextNeededByte < SIZE_VIDEO_FILE) {
+                  var endIndexRequest;
+                  if (thisRequest.nextNeededByte + WTORRENT_REQUEST_SIZE >= webtorrentFile.length - 1) {
+                    endIndexRequest = webtorrentFile.length - 1;
                   } else {
-                    endCreateReadStream = thisRequest.nextNeededByte + CREATE_READSTREAM_REQUEST_SIZE;
+                    endIndexRequest = thisRequest.nextNeededByte + WTORRENT_REQUEST_SIZE;
                   }
                   thisRequest.wtorrentStream.unpipe();
-                  thisRequest.wtorrentStream = webtorrentFile.createReadStream({ "start": thisRequest.nextNeededByte, "end": endCreateReadStream });
-                  thisRequest.endSequentialWtorrentReq = endCreateReadStream;
+                  thisRequest.wtorrentStream = webtorrentFile.createReadStream({ "start": thisRequest.nextNeededByte, "end": endIndexRequest });
+                  thisRequest.endSequentialWtorrentReq = endIndexRequest;
                   thisRequest.nextByteWtorrent = thisRequest.nextNeededByte;
-                  thisRequest.collectorStreamForWtorrent = new thisRequest.CollectorStreamForWtorrent({ highWaterMark: 16 });
+                  thisRequest.collectorStreamForWtorrent = new thisRequest.CollectorStreamForWtorrent(16);
                   thisRequest.wtorrentStream.pipe(thisRequest.collectorStreamForWtorrent);
                 }
               }
@@ -951,7 +984,7 @@ function OakStreaming(OakName) {
           }
         }
 
-        setTimeout(frequentlyCheckIfNewCreateReadStreamNecessary, CHECK_IF_NEW_CREATE_READSTREAM_NECESSARY_INTERVAL);
+        setTimeout(frequentlyCheckIfNewCreateReadStreamNecessary, CHECK_IF_NEW_WTORRENT_REQUEST_INTERVAL);
       }
 
       // The final version of the library should not include this function. This function updates the statistics that are shown above the video. This version shows values which are not intended for end user use.
@@ -961,7 +994,7 @@ function OakStreaming(OakName) {
           return;
         }
         if(theTorrentSession && webtorrentFile){
-          document.getElementById("WebTorrent-received").innerHTML = "webtorrentFile.length: " + webtorrentFile.length + "\n torrent.downloaded: " + theTorrentSession.downloaded + "\n torrent.received: " + theTorrentSession.downloaded + "\n torrent.uploaded: " + theTorrentSession.uploaded + "\n torrent.progress: " + theTorrentSession.progress + "\n Bytes received from server: " + bytesReceivedFromServer + "\n Bytes taken from server delivery: " + bytesTakenFromServer + "\n Bytes taken from WebTorrent delivery: " + bytesTakenFromWtorrent;
+          document.getElementById("WebTorrent-received").innerHTML = "webtorrentFile.length: " + webtorrentFile.length + "\n torrent.downloaded: " + theTorrentSession.downloaded + "\n torrent.received: " + theTorrentSession.downloaded + "\n torrent.uploaded: " + theTorrentSession.uploaded + "\n torrent.progress: " + theTorrentSession.progress + "\n Bytes received from server: " + bytesReceivedFromServer + "\n Bytes taken from server delivery: " + bytesFromServer + "\n Bytes taken from WebTorrent delivery: " + bytesFromWtorrent;
         }
         setTimeout(updateChart, UPDATE_CHART_INTERVAL);
       }         
@@ -969,17 +1002,17 @@ function OakStreaming(OakName) {
 
       // This function checks for a given videostreamRequestHandler if we have called enough video data to call the callback function.
       // If it is the case, the callback function gets called togehter with the buffered data.
-      function ceckIfNextStreamForMultistreamReady(thisRequest) {
-        if (thisRequest.createReadStreamNumber < 4 && thisRequest.callbackOfMultistream && thisRequest.bytesInNextStreamForMultistream >= 2000 || thisRequest.callbackOfMultistream && (thisRequest.bytesInNextStreamForMultistream >= THRESHOLD_FOR_RETURNING_OF_ANSWER_STREAM || thisRequest.nextNeededByte >= SIZE_OF_VIDEO_FILE)) {
+      function checkIfAnswerstreamReady(thisRequest) {
+        if (thisRequest.number < 4 && thisRequest.callbackOfMultistream && thisRequest.bytesInStreamForMultistream >= 2000 || thisRequest.callbackOfMultistream && (thisRequest.bytesInStreamForMultistream >= THRESHOLD_HAND_DATA_TO_MULTISTREAM || thisRequest.nextNeededByte >= SIZE_VIDEO_FILE)) {
           var theCallbackFunction = thisRequest.callbackOfMultistream;
           thisRequest.callbackOfMultistream = null;
           thisRequest.nextStreamForMultistream.push(null);
           if (thisRequest.wtorrentStream) {
             //thisRequest.wtorrentStream.pause();
           }
-          thisRequest.bytesInNextStreamForMultistream = 0;
+          thisRequest.bytesInStreamForMultistream = 0;
           var res = thisRequest.nextStreamForMultistream;
-          thisRequest.nextStreamForMultistream = new MyReadableStream({ highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM });
+          thisRequest.nextStreamForMultistream = new SimpleReadableStream({ highWaterMark: MAX_SIZE_ANSWERSTREAM });
           theCallbackFunction(null, res);
           return true;
         }
@@ -1010,32 +1043,32 @@ function OakStreaming(OakName) {
        * respective createReadStream call (which is a byte range request).
        * @private
        * @constructor
-       * @param {number} createReadStreamNumber - The number of the createReadStream call.
+       * @param {number} number - The number of the createReadStream call.
        * @param {object} opts - An object that specifies the start and end index of the createReadStream (which is
        * a byte range request).
-       * @param {object} oakStreamingInstance - A reference to the OakStreaming instance.
+       * @param {object} oakStreamInstance - A reference to the OakStreaming instance.
        */
-      function VideostreamRequestHandler(createReadStreamNumber, opts, oakStreamingInstance) {
-        this.createReadStreamNumber = createReadStreamNumber;
+      function VideostreamRequestHandler(number, opts, oakStreamInstance) {
+        this.number = number;
         this.nextNeededByte = opts.start || 0;
         this.nextByteWtorrent = -42;
         this.nextByteServer = -42;
         this.callbackOfMultistream = null;
         this.callbackNumber = 0;
         this.wtorrentStream = null;
-        if (createReadStreamNumber < 4) {
-          this.nextStreamForMultistream = new MyReadableStream({ highWaterMark: 2000 });
+        if (number < 4) {
+          this.nextStreamForMultistream = new SimpleReadableStream({ highWaterMark: 2000 });
         } else {
-          this.nextStreamForMultistream = new MyReadableStream({
-            highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM });
+          this.nextStreamForMultistream = new SimpleReadableStream({
+            highWaterMark: MAX_SIZE_ANSWERSTREAM });
         }
-        this.bytesInNextStreamForMultistream = 0;
+        this.bytesInStreamForMultistream = 0;
         this.collectorStreamForWtorrent = null;
-        this.XHRConducted = false;
-        this.endIndex = -42;
-        this.oakStreamingInstance = oakStreamingInstance;
-        this.bytesTakenFromWtorrent = 0;
-        this.bytesTakenFromServer = 0;
+        this.xhrConducted = false;
+        this.xhrEndIndex = -42;
+        this.oakStreamInstance = oakStreamInstance;
+        this.bytesFromWtorrent = 0;
+        this.bytesFromServer = 0;
         this.forNowNoDataNeeded = false;
         this.xhrRequest = null;
         this.endSequentialWtorrentReq = -42;
@@ -1044,37 +1077,37 @@ function OakStreaming(OakName) {
 
       // This function frequently checks for every videostreamRequestHandler if there is enough data buffer to call the corresponding callback function with the buffered data
       /* Brauche ich soviel ich weiß nicht
-      function frequentlyceckIfNextStreamForMultistreamReady(){
-        if(videoCompletelyLoadedByVideoPlayer){
+      function frequentlycheckIfAnswerstreamReady(){
+        if(videoCompletelyLoaded){
           return;
         }
         for (var i = 0, length = videostreamRequestHandlers.length; i < length; i++) {
-          ceckIfNextStreamForMultistreamReady(videostreamRequestHandlers[i]);
+          checkIfAnswerstreamReady(videostreamRequestHandlers[i]);
         }
-        setTimeout(frequentlyceckIfNextStreamForMultistreamReady, CHECK_IF_nextStreamForMultistream_READY_INTERVAL);
+        setTimeout(frequentlycheckIfAnswerstreamReady, CHECK_IF_ANWERSTREAM_READY_INTERVAL);
       }
       */
 
       // The job of this function is to frequently check to things.
       // First, if the video is completely loaded.
       // Second, if less than DOWNLOAD_FROM_SERVER_TIME_RANGE seconds of video playback are buffered in advance.
-      function checkIfBufferFullEnough(justOnce) {
-        if (videoCompletelyLoadedByVideoPlayer) {
+      function checkIfVideoBufferFullEnough(justOnce) {
+        if (videoCompletelyLoaded) {
           return;
         }
         if (htmlVideoTag.duration) {
           var timeRanges = htmlVideoTag.buffered;
           if (timeRanges.length >= 1) {
             if (timeRanges.start(0) == 0 && timeRanges.end(0) == htmlVideoTag.duration) {
-              videoCompletelyLoadedByVideoPlayer = true; // brauche da verschiende boolean werte
+              videoCompletelyLoaded = true; // brauche da verschiende boolean werte
               if (callback) {
-                if (stop_uploading_when_video_downloaded) {
+                if (stopUploadingWhenVideoDownloaded) {
                   callback();
                 } else {
                   callback(theTorrentSession);
                 }
               }
-              if (stop_uploading_when_video_downloaded) {
+              if (stopUploadingWhenVideoDownloaded) {
                 if (theTorrentSession) {
                   theTorrentSession.destroy();
                   webtorrentClient = null;
@@ -1096,7 +1129,7 @@ function OakStreaming(OakName) {
           }
           if (deliveryByServer && inCritical) {
             for (var j = 0, length = videostreamRequestHandlers.length; j < length; j++) {
-              if ((!webtorrentFile || !videoCompletelyLoadedByWtorrent) && videostreamRequestHandlers[j].callbackOfMultistream !== null && videostreamRequestHandlers[j].XHRConducted === false) {
+              if ((!webtorrentFile || !videoCompletelyLoadedByWtorrent) && videostreamRequestHandlers[j].callbackOfMultistream !== null && videostreamRequestHandlers[j].xhrConducted === false) {
                 conductXHR(videostreamRequestHandlers[j]);
               }
             }
@@ -1105,36 +1138,35 @@ function OakStreaming(OakName) {
 
         // Added at 08.08
         if (theTorrentSession && theTorrentSession.progress === 1) {
-          videoCompletelyLoadedByVideoPlayer = true; // brauche da verschiende boolean werte
+          videoCompletelyLoaded = true; // brauche da verschiende boolean werte
           if (callback) {
-            if (stop_uploading_when_video_downloaded) {
+            if (stopUploadingWhenVideoDownloaded) {
               callback();
             } else {
               callback(theTorrentSession);
             }
           }
-          if (stop_uploading_when_video_downloaded) {
+          if (stopUploadingWhenVideoDownloaded) {
             endStreaming = true;
             return;
           }
         }
 
         if (!justOnce) {
-          setTimeout(checkIfBufferFullEnough, CHECK_IF_BUFFER_FULL_ENOUGH_INTERVAL);
+          setTimeout(checkIfVideoBufferFullEnough, CHECK_IF_VIDEO_BUFFER_FULL_ENOUGH_INTERVAL);
         }
       }
 
       // This function conductes a XHR reuqest for the videostreamRequestHandler which is handed over to the function as its first and only paramter.
       function conductXHR(thisRequest) {
-        console.log("A XHR is conducted");
 
         if (thisRequest.callbackOfMultistream === null) {
           return;
         }
-        thisRequest.XHRConducted = true;
+        thisRequest.xhrConducted = true;
         var reqStart = thisRequest.nextNeededByte;
 
-        if (thisRequest.createReadStreamNumber < 4) {
+        if (thisRequest.number < 4) {
           // War vorher === 1     statt < 4
           var reqEnd = reqStart + 2000;
         } else {
@@ -1143,8 +1175,8 @@ function OakStreaming(OakName) {
 
         if (thisRequest.xhrFilesize > 0 && reqEnd > thisRequest.xhrFilesize) {
           reqEnd = thisRequest.xhrFilesize;
-        } else if (thisRequest.endIndex >= 0 && reqEnd > thisRequest.endIndex) {
-          reqEnd = thisRequest.endIndex;
+        } else if (thisRequest.xhrEndIndex >= 0 && reqEnd > thisRequest.xhrEndIndex) {
+          reqEnd = thisRequest.xhrEndIndex;
         }
 
         if (reqStart >= reqEnd) {
@@ -1153,7 +1185,7 @@ function OakStreaming(OakName) {
           if (thisRequest.xhrRequest) {
             thisRequest.xhrRequest.destroy();
           }
-          thisRequest.XHRConducted = false;
+          thisRequest.xhrConducted = false;
 
           if (thisRequest.callbackOfMultistream) {
             return thisRequest.callbackOfMultistream(null, null);
@@ -1180,27 +1212,27 @@ function OakStreaming(OakName) {
             first2000BytesOfVideo = Buffer.concat([first2000BytesOfVideo, chunk]); // chunk.slice(0, 2000-numberBytesInFirst2000BytesOfVideo)
           }
           if(thisRequest.callbackOfMultistream){
-            if(thisRequest.createReadStreamNumber<5 && thisRequest.callbackNumber <5){
-              if(thisRequest.bytesInNextStreamForMultistream > 0){
+            if(thisRequest.number<5 && thisRequest.callbackNumber <5){
+              if(thisRequest.bytesInStreamForMultistream > 0){
                 thisRequest.nextStreamForMultistream.push(chunk);
                 thisRequest.nextNeededByte += chunk.length;
-                thisRequest.bytesTakenFromServer += chunk.length;
+                thisRequest.bytesFromServer += chunk.length;
                 var theCallbackFunction = thisRequest.callbackOfMultistream;
                 thisRequest.callbackOfMultistream = null;
                 thisRequest.nextStreamForMultistream.push(null);
-                thisRequest.bytesInNextStreamForMultistream = 0;
+                thisRequest.bytesInStreamForMultistream = 0;
                 var res = thisRequest.nextStreamForMultistream;
-                if(thisRequest.createReadStreamNumber <4){
-                  thisRequest.nextStreamForMultistream = new MyReadableStream({highWaterMark: 2000});
+                if(thisRequest.number <4){
+                  thisRequest.nextStreamForMultistream = new SimpleReadableStream({highWaterMark: 2000});
                 } else {
-                  thisRequest.nextStreamForMultistream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});                              
+                  thisRequest.nextStreamForMultistream = new SimpleReadableStream({highWaterMark: MAX_SIZE_ANSWERSTREAM});                              
                 }
                 theCallbackFunction(null, res);
               } else {
-                var returnStream = new MyReadableStream(numberBytesInfirst2000BytesOfVideo - thisRequest.nextNeededByte);
+                var returnStream = new SimpleReadableStream(numberBytesInfirst2000BytesOfVideo - thisRequest.nextNeededByte);
                 returnStream.push(first2000BytesOfVideo.slice(this.start, numberBytesInFirst2000BytesOfVideo);
                 returnStream.push(null);
-                bytesTakenFromServer += numberBytesInfirst2000BytesOfVideo-thisRequest.nextNeededByte;  
+                bytesFromServer += numberBytesInfirst2000BytesOfVideo-thisRequest.nextNeededByte;  
                 thisRequest.nextNeededByte += numberBytesInfirst2000BytesOfVideo;
                 var theCallbackFunction = thisRequest.callbackOfMultistream;
                 thisRequest.callbackOfMultistream = null;
@@ -1215,8 +1247,8 @@ function OakStreaming(OakName) {
             return;
           }
           if (thisRequest.nextNeededByte - thisRequest.nextByteServer < chunk.length) {
-            bytesTakenFromServer += chunk.length - (thisRequest.nextNeededByte - thisRequest.nextByteServer);
-            thisRequest.bytesInNextStreamForMultistream += chunk.length - (thisRequest.nextNeededByte - thisRequest.nextByteServer);
+            bytesFromServer += chunk.length - (thisRequest.nextNeededByte - thisRequest.nextByteServer);
+            thisRequest.bytesInStreamForMultistream += chunk.length - (thisRequest.nextNeededByte - thisRequest.nextByteServer);
             var myBuffer = chunk.slice(thisRequest.nextNeededByte - thisRequest.nextByteServer, chunk.length);
             var StreamHasMemoryLeft = thisRequest.nextStreamForMultistream.push(myBuffer);
             if (!StreamHasMemoryLeft) {
@@ -1224,9 +1256,9 @@ function OakStreaming(OakName) {
                 var theCallbackFunction = thisRequest.callbackOfMultistream;
                 thisRequest.callbackOfMultistream = null;
                 thisRequest.nextStreamForMultistream.push(null);
-                thisRequest.bytesInNextStreamForMultistream = 0;
+                thisRequest.bytesInStreamForMultistream = 0;
                 var res = thisRequest.nextStreamForMultistream;
-                thisRequest.nextStreamForMultistream = new MyReadableStream({ highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM });
+                thisRequest.nextStreamForMultistream = new SimpleReadableStream({ highWaterMark: MAX_SIZE_ANSWERSTREAM });
                 if (thisRequest.wtorrentStream) {
                   //thisRequest.wtorrentStream.pause();
                 }
@@ -1238,13 +1270,13 @@ function OakStreaming(OakName) {
                 }
               }
             } else {
-              if (thisRequest.nextNeededByte >= thisRequest.endIndex && thisRequest.callbackOfMultistream !== null) {
+              if (thisRequest.nextNeededByte >= thisRequest.xhrEndIndex && thisRequest.callbackOfMultistream !== null) {
                 var theCallbackFunction = thisRequest.callbackOfMultistream;
                 thisRequest.callbackOfMultistream = null;
                 thisRequest.nextStreamForMultistream.push(null);
-                thisRequest.bytesInNextStreamForMultistream = 0;
+                thisRequest.bytesInStreamForMultistream = 0;
                 var res = thisRequest.nextStreamForMultistream;
-                thisRequest.nextStreamForMultistream = new MyReadableStream({ highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM });
+                thisRequest.nextStreamForMultistream = new SimpleReadableStream({ highWaterMark: MAX_SIZE_ANSWERSTREAM });
                 if (thisRequest.wtorrentStream) {
                   //thisRequest.wtorrentStream.pause();
                 }
@@ -1257,66 +1289,66 @@ function OakStreaming(OakName) {
         };
 
         var XHREnd = function XHREnd() {
-          if (thisRequest.createReadStreamNumber < 4 && thisRequest.callbackOfMultistream) {
+          if (thisRequest.number < 4 && thisRequest.callbackOfMultistream) {
             var theCallbackFunction = thisRequest.callbackOfMultistream;
             thisRequest.callbackOfMultistream = null;
             thisRequest.nextStreamForMultistream.push(null);
-            thisRequest.bytesInNextStreamForMultistream = 0;
+            thisRequest.bytesInStreamForMultistream = 0;
             var res = thisRequest.nextStreamForMultistream;
-            if (thisRequest.createReadStreamNumber < 3) {
-              thisRequest.nextStreamForMultistream = new MyReadableStream({ highWaterMark: 2000 });
+            if (thisRequest.number < 3) {
+              thisRequest.nextStreamForMultistream = new SimpleReadableStream({ highWaterMark: 2000 });
             } else {
-              thisRequest.nextStreamForMultistream = new MyReadableStream({ highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM });
+              thisRequest.nextStreamForMultistream = new SimpleReadableStream({ highWaterMark: MAX_SIZE_ANSWERSTREAM });
             }
             theCallbackFunction(null, res);
 
-            thisRequest.XHRConducted = false;
+            thisRequest.xhrConducted = false;
             return;
           }
 
           /* Want to solve example_application.js:14013 Uncaught Error: Data too short   Daher das hier auskommentiert
-          if(thisRequest.bytesInNextStreamForMultistream > 0 && thisRequest.callbackOfMultistream !== null){
+          if(thisRequest.bytesInStreamForMultistream > 0 && thisRequest.callbackOfMultistream !== null){
             thisRequest.nextStreamForMultistream.push(null);
-            thisRequest.bytesInNextStreamForMultistream = 0;
+            thisRequest.bytesInStreamForMultistream = 0;
             var res = thisRequest.nextStreamForMultistream;
-            thisRequest.nextStreamForMultistream = new MyReadableStream({highWaterMark: WATERMARK_HEIGHT_OF_ANSWERSTREAM});
+            thisRequest.nextStreamForMultistream = new SimpleReadableStream({highWaterMark: MAX_SIZE_ANSWERSTREAM});
             var theCallbackFunction = thisRequest.callbackOfMultistream;
             thisRequest.callbackOfMultistream = null;
-            ////////console.log("XHREnd: called CB with data out of nextStreamForMultistream from videostreamRequest number " + thisRequest.createReadStreamNumber);
+            ////////console.log("XHREnd: called CB with data out of nextStreamForMultistream from videostreamRequest number " + thisRequest.number);
             theCallbackFunction(null, res);
           }
           */
 
           /*
           if(!noMoreData){
-            if(thisRequest.nextNeededByte < SIZE_OF_VIDEO_FILE && thisRequest.nextNeededByte < thisRequest.xhrFilesize){
-              if(thisRequest.endIndex > 0 ){
-                if(thisRequest.nextNeededByte < thisRequest.endIndex){
+            if(thisRequest.nextNeededByte < SIZE_VIDEO_FILE && thisRequest.nextNeededByte < thisRequest.xhrFilesize){
+              if(thisRequest.xhrEndIndex > 0 ){
+                if(thisRequest.nextNeededByte < thisRequest.xhrEndIndex){
                   conductXHR(thisRequest); // try to solve example_application.js:14013 Uncaught Error: Data too short
                 } else {
-                  thisRequest.XHRConducted = false
+                  thisRequest.xhrConducted = false
                 }
               } else {
                 conductXHR(thisRequest);
               }
             } else {
-              thisRequest.XHRConducted = false;
+              thisRequest.xhrConducted = false;
             }
           } else {
-            thisRequest.XHRConducted = false;
+            thisRequest.xhrConducted = false;
           }
           */
-          thisRequest.XHRConducted = false;
-          ceckIfNextStreamForMultistreamReady(thisRequest);
-          checkIfBufferFullEnough(true);
-          //ceckIfNextStreamForMultistreamReady(thisRequest);  // Unsicher ob es drinn bleiben soll
+          thisRequest.xhrConducted = false;
+          checkIfAnswerstreamReady(thisRequest);
+          checkIfVideoBufferFullEnough(true);
+          //checkIfAnswerstreamReady(thisRequest);  // Unsicher ob es drinn bleiben soll
           //}                 
         };
 
         thisRequest.nextByteServer = reqStart;
 
         var XHROptionObject = {
-          path: thisRequest.oakStreamingInstance.pathToFileOnXHRServer,
+          path: thisRequest.oakStreamInstance.pathToFile,
           headers: {
             range: 'bytes=' + reqStart + '-' + (reqEnd - 1),
             connection: 'keep-alive'
@@ -1325,17 +1357,17 @@ function OakStreaming(OakName) {
             //???? method: 'CONNECT',
           }
         };
-        if (XHR_hostname) {
-          XHROptionObject.hostname = XHR_hostname;
-          XHROptionObject.port = XHR_port;
+        if (XHR_HOSTNAME) {
+          XHROptionObject.hostname = XHR_HOSTNAME;
+          XHROptionObject.port = XHR_PORT;
         }
 
         thisRequest.xhrRequest = http.get(XHROptionObject, function (res) {
           var contentRange = res.headers['content-range'];
           if (contentRange) {
             // Hat zu bugs geführt. Hat geringe priorität einzubauen das file_size auch vom XHR server erfragt wird.
-            //SIZE_OF_VIDEO_FILE = parseInt(contentRange.split('/')[1], 10);
-            //if(thisRequest.endIndex === 0){
+            //SIZE_VIDEO_FILE = parseInt(contentRange.split('/')[1], 10);
+            //if(thisRequest.xhrEndIndex === 0){
             thisRequest.xhrFilesize = parseInt(contentRange.split('/')[1], 10);
             //}
           }
@@ -1357,19 +1389,19 @@ function OakStreaming(OakName) {
       frequentlyCheckIfNewCreateReadStreamNecessary();
       chokeIfNecessary();
       // updateChart();   NIcht löschen. Aber gehört nicht in production!!
-      // frequentlyceckIfNextStreamForMultistreamReady(); Am 17.07 entschlossen das rauszunehmen. Ich hatte mir das ja schon mehrmals überlegt
-      checkIfBufferFullEnough();
+      // frequentlycheckIfAnswerstreamReady(); Am 17.07 entschlossen das rauszunehmen. Ich hatte mir das ja schon mehrmals überlegt
+      checkIfVideoBufferFullEnough();
 
-      if (hashValue) {
-        Videostream(new fileLikeObject(hashValue), htmlVideoTag);
+      if (HASH_VALUE) {
+        Videostream(new FileLikeObject(HASH_VALUE), htmlVideoTag);
       } else {
-        Videostream(new fileLikeObject(pathToFileOnXHRServer), htmlVideoTag);
+        Videostream(new FileLikeObject(PATH_TO_FILE), htmlVideoTag);
       }
     }
 
     // This function adds a simple-peer connection to the WebTorrent swarm of the OakStreaming instance.
     // A simple-peer is a wrapper for a Web-RTC connection.
-    function addSimplePeerInstance(simplePeerInstance, options, callback) {
+    function addP2pConnectionToWtorrent(simplePeerInstance, options, callback) {
       // The method add a simplePeer to the WebTorrent swarm instance
       if (theTorrentSession) {
         if (theTorrentSession.infoHash) {
@@ -1383,7 +1415,7 @@ function OakStreaming(OakName) {
           pair.push(simplePeerInstance);
           pair.push(callback);
           peersToAdd.push(pair);
-          // theTorrentSession.on('infoHash', function() {infoHashReady = true; theTorrentSession.addPeer(simplePeerInstance); //console.log("addSimplePeerInstance successfully added a peer connection"); if(callback){callback();}});
+          // theTorrentSession.on('infoHash', function() {infoHashReady = true; theTorrentSession.addPeer(simplePeerInstance); //console.log("addP2pConnectionToWtorrent successfully added a peer connection"); if(callback){callback();}});
         }
       } else {
         var pair = [];
