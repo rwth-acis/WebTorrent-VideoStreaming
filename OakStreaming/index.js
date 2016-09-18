@@ -98,7 +98,7 @@ function OakStreaming(OakName){
       
     // This method creates (WebRTC-)signaling data as a response to signaling data of a signaling1 call of
     // another OakStreaming instance. This method returns new (WebRTC-)signaling data which has to be put into
-    // signaling2 method of the OakStreaming instance which created the original signaling data.        
+    // signaling3 method of the OakStreaming instance which created the original signaling data.        
     self.signaling2 = function (signalingData, callback){
       var oakNumber = signalingData.oakNumber;
       signalingData.oakNumber = undefined;
@@ -116,7 +116,7 @@ function OakStreaming(OakName){
       simplePeer.signal(signalingData);
 
       simplePeer.on('connect', function(){
-        addP2pConnectionToWtorrent(connectionsWaitingForSignalingData[index], {}, function(){});
+        addP2pConnectionToWtorrent(connectionsWaitingForSignalingData[index], function(){});
       });
     };
 
@@ -1355,8 +1355,10 @@ function OakStreaming(OakName){
 
           // Tests conducted in the curse of the bachelor thesis have indicated that the first three requests 
           // from the videostream library fetch meta data and hence target only a byte range of less than 2000 byte.
-          // As a result of this, it has been implemented that the first four streams returned by the streamFactory
-          // function are not more than 2000 byte in size. Therefore, the fithe data of the first four XHR gets returned immediately to the multistream. 
+          // As a result of this, it has been implemented that the first three created mutlistreams each only
+          // get filled with one single 2000 byte large stream.
+          // Therefore, the first four XHRs only request 2000 byte of data and the received 2000 byte get returned 
+          // immediately to the multistream.
           if(thisRequest.videostreamRequestNumber < 4 && thisRequest.callbackOfMultistream){
             var theCallbackFunction = thisRequest.callbackOfMultistream;
             thisRequest.callbackOfMultistream = null;
@@ -1478,21 +1480,29 @@ function OakStreaming(OakName){
     }
 
     // This function adds a simple-peer connection to the WebTorrent swarm of the OakStreaming instance.
-    // A simple-peer is a wrapper for a Web-RTC connection.
-    function addP2pConnectionToWtorrent(simplePeerInstance, options, callback){
-      // The method add a simplePeer to the WebTorrent swarm instance
+    // A simple-peer connection is a wrapper for a WebRTC connection.
+    function addP2pConnectionToWtorrent(simplePeerInstance, callback){
       if(theTorrentSession){
-        if(theTorrentSession.infoHash){  // Vorher war das wenn info hash ready
+        if(theTorrentSession.infoHash){
+          // If the infoHash property of a torrentSession object is not undefined, the addPeer method 
+          // of the torrentSession object can be used to add simple-peer connections to the swarm 
+          // of the WebTorrent instance.
+          
           theTorrentSession.addPeer(simplePeerInstance);
           if(callback){
             callback();
           }
         } else {
+          // Because the infoHash property of the torrentSession object is undefined, the simple-peer 
+          // connection will be saved, together with the callback function, in an array. As soon as the 
+          // the infoHash property has been created by the WebTorrent instance, a callback function is called 
+          // which adds all simple-peer connections in the peersToAdd array to the swarm and calls
+          // each corresponding callback function.
+          
           var pair = [];
           pair.push(simplePeerInstance);
           pair.push(callback);
-          peersToAdd.push(pair);               
-          // theTorrentSession.on('infoHash', function() {infoHashReady = true; theTorrentSession.addPeer(simplePeerInstance); //console.log("addP2pConnectionToWtorrent successfully added a peer connection"); if(callback){callback();}});
+          peersToAdd.push(pair);
         }
       } else {
         var pair = [];
@@ -1501,6 +1511,10 @@ function OakStreaming(OakName){
         peersToAdd.push(pair);
       }
     }
+    
+    // Some method names of the OakStreaming library have changed during development.
+    // In order to increase the probability that applications which use the old method names still work,
+    // the current methods are also accessible via the old method names.
     self.createSignalingData = self.signaling1;
     self.createSignalingDataResponse = self.signaling2;
     self.processSignalingResponse = self.signaling3;  
