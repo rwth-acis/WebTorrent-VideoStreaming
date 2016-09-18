@@ -1087,9 +1087,9 @@ function OakStreaming(OakName){
        * @param {number} videostreamRequestNumber - The number of the videostream request, that is, the amount of times 
        * the createReadStream method of the FileLike object has been called.
        * @param {object} indexFirstNeededByte - The index of the byte which is needed first from the video file.
-       * @param {object} oakstreamInstance - A reference to the OakStreaming instance.
+       * @param {object} theFileLikeObject - A reference to the OakStreaming instance.
        */
-      function VideostreamRequestHandler(videostreamRequestNumber, indexFirstNeededByte, oakstreamInstance){
+      function VideostreamRequestHandler(videostreamRequestNumber, indexFirstNeededByte, theFileLikeObject){
         this.videostreamRequestNumber = videostreamRequestNumber;
         this.indexNextNeededByte = indexFirstNeededByte || 0;
         this.indexNextByteWtorrent = -42;
@@ -1106,7 +1106,7 @@ function OakStreaming(OakName){
         this.collectorStreamForWtorrent = null;
         this.xhrConducted = false;
         this.xhrEndIndex = -42;
-        this.oakstreamInstance = oakstreamInstance; 
+        this.theFileLikeObject = theFileLikeObject; 
         this.bytesFromWtorrent = 0;
         this.bytesFromServer = 0;
         this.forNowNoDataNeeded = false;
@@ -1424,7 +1424,7 @@ function OakStreaming(OakName){
         thisRequest.indexNextByteServer = reqStart;
 
         var xhrOptionObject = {
-          path: thisRequest.oakstreamInstance.pathToFile,
+          path: thisRequest.theFileLikeObject.pathToFile,
           headers: {
             range: 'bytes=' + reqStart + '-' + (reqEnd-1),
             connection : 'keep-alive'
@@ -1441,32 +1441,34 @@ function OakStreaming(OakName){
         thisRequest.xhrRequest = http.get(xhrOptionObject, function (res){
           var contentRange = res.headers['content-range'];
           if (contentRange) {
-            // Hat zu bugs geführt. Hat geringe priorität einzubauen das file_size auch vom XHR server erfragt wird.
-            //SIZE_VIDEO_FILE = parseInt(contentRange.split('/')[1], 10);
-            //if(thisRequest.xhrEndIndex === 0){
+            // The part which is commented out had led to bugs. Fixing this has low priority.
+            // SIZE_VIDEO_FILE = parseInt(contentRange.split('/')[1], 10);
+            // if(thisRequest.xhrEndIndex === 0){
             thisRequest.xhrFilesize = parseInt(contentRange.split('/')[1], 10);
-            //}
+            // }
           }
-           
+
+          // Setting this kind of headers seems not to be necessary for CORS.
           // res.setHeader('Access-Control-Allow-Headers', thisRequest.xhrRequest.header.origin);
-           
+          
           res.on('end', xhrEnd);
           res.on('data', xhrDataHandler);
           res.on('error', function(err){
-            // To-Do yield real error instead of simple console output
-            console.log("The http.get response object has yield the following error"); console.error(err);
+            console.log("The http.get response object has thrown the following error");
+            console.error(err);
           });
         });
         thisRequest.xhrRequest.on('error', function(err){
-          // To-Do yield real error instead of simple console output
-          console.log("The XHR has yield the following error message: " + err.message);
+          console.log("The XHR has thrown the following error message: " + err.message);
         });
       }
+      
+      // This three functions will each be called in a different, specifiable frequent interval.
+      // Each of this three functions calls setTimeout to call itself in a frequent interval.
       checkIfInP2pDownloadTimeRange();
       chokeIfNecessary();
-      // updateChart();   NIcht löschen. Aber gehört nicht in production!!
-      // frequentlycheckIfAnswerstreamReady(); Am 17.07 entschlossen das rauszunehmen. Ich hatte mir das ja schon mehrmals überlegt
       checkIfInServerDownloadTimeRange();
+      // updateChart();   Only for testing and debugging.
 
       if(HASH_VALUE){
         Videostream(new FileLike(HASH_VALUE), htmlVideoTag);
