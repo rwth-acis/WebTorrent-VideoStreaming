@@ -2,13 +2,13 @@ var theVideoFileSize = 788493;
 
 
 describe("Testing if manuallyAddingPeer methods", function(){   
-   var twoPeersAreConnected = false;
-   var threePeersAreConnected = false;
-   var twoPeersStreamedToAnother = false;
-   var testTorrentA, testTorrentB;
+  var twoPeersAreConnected = false;
+  var threePeersAreConnected = false;
+  var twoPeersStreamedToAnother = false;
+  var testTorrentA, testTorrentB;
    
-   it("can establish a WebTorrent connection between two OakStreaming instances", function(done){
-      expect(true).toBe(true); // every Jasmine spec has to have an expect expression
+  it("can establish a WebTorrent connection between two OakStreaming instances", function(done){
+    expect(true).toBe(true); // every Jasmine spec has to have an expect expression
       
       /*
       var receivedCallbacks = 0;    
@@ -55,31 +55,31 @@ describe("Testing if manuallyAddingPeer methods", function(){
       tryToSetCallbackB();
       */
 
-      myStreamingA.createSignalingData(function(signalingData){
-         myStreamingB.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-            myStreamingA.processSignalingResponse(signalingDataResponse, function(){console.log("Test case 1: Peers are connected"); twoPeersAreConnected = true; done();});
-         });
+    myStreamingA.createSignalingData(function(signalingData){
+      myStreamingB.createSignalingDataResponse(signalingData, function(signalingDataResponse){
+        myStreamingA.processSignalingResponse(signalingDataResponse, function(){console.log("Test case 1: Peers are connected"); twoPeersAreConnected = true; done();});
       });
-   }, 20000);
+    });
+  }, 20000);
 
   
-   it("can successfully connect two OakStreaming instances for streaming", function(done){
-      expect(true).toBe(true); // every Jasmine spec has to have an expect expression
+  it("can successfully connect two OakStreaming instances for streaming", function(done){
+    expect(true).toBe(true); // every Jasmine spec has to have an expect expression
       
       
-      function callback(streamInformationObject){
-         console.log("First spec, second test. Stream_Information: " + JSON.stringify(streamInformationObject));
-         console.log("First spec second test case: the callback from streamVideo is called");
-         myStreamingB.loadVideo(streamInformationObject, function(){console.log("First spec, second test. loadVideo callback is called: "); twoPeersStreamedToAnother = true; done();}, false);
-      }
+    function callback(streamInformationObject){
+      console.log("First spec, second test. Stream_Information: " + JSON.stringify(streamInformationObject));
+      console.log("First spec, second test case: the callback from streamVideo is called");
+      myStreamingB.loadVideo(streamInformationObject, function(){console.log("First spec, second test. loadVideo callback is called: "); twoPeersStreamedToAnother = true; done();}, false);
+    }
       
       function streamWhenConnectionEstablished(res){
          if(twoPeersAreConnected){
-            console.log("First sepc, second test case: streamVideo is called");
-            myStreamingA.streamVideo(res, {web_server_delivery: false, webTorrent_trackers: []}, callback, "It's a test", false);
-            // {webTorrentTrackers: [["ws://localhost:8081"]]}
+            console.log("First spec, second test case: streamVideo is called");
+            myStreamingA.streamVideo(res, {web_server_URL: false}, callback, "It's a test", false);
+            // {webTorrentTrackers: [["ws://localhost:8081"]]}   19.09: webTorrent_trackers: []
          } else {
-            setTimeout(function(){streamWhenConnectionEstablished(res);}, 2000);
+            setTimeout(function(){streamWhenConnectionEstablished(res);}, 1000);
          }
       }
       
@@ -94,8 +94,8 @@ describe("Testing if manuallyAddingPeer methods", function(){
             console.log("Test2 received video stream from server");
             streamWhenConnectionEstablished(res);
       });
-   }, 40000);
-
+  }, 40000);
+   
    it("can automatically establish WebTorrent connections between three OakStreaming instances", function(done){
       expect(true).toBe(true); // every Jasmine spec has to have an expect expression  
                 
@@ -317,3 +317,4 @@ describe("Testing if loadVideo method", function(){
       });
    }, 20000);
 });
+ 
