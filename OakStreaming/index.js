@@ -166,7 +166,7 @@ function OakStreaming(OakName){
       var streamTicket = options;  
          
       if(!streamTicket.path_to_file_on_web_server){
-        streamTicket.path_to_file_on_web_server = "/" + "bla" + video_file.name;
+        streamTicket.path_to_file_on_web_server = "/" + video_file.name;
       }    
         
       // The web_server_URL parameter gets parsed such that it can later easily be used for
