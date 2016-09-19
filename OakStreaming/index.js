@@ -166,7 +166,7 @@ function OakStreaming(OakName){
       var streamTicket = options;  
          
       if(!streamTicket.path_to_file_on_web_server){
-        streamTicket.path_to_file_on_web_server = "/" + video_file.name;
+        streamTicket.path_to_file_on_web_server = "/" + "bla" + video_file.name;
       }    
         
       // The web_server_URL parameter gets parsed such that it can later easily be used for
@@ -345,7 +345,7 @@ function OakStreaming(OakName){
           });
           // For some Jasmine tests, it is appropriate that the torrentSession object gets destroyed immediately after
           // the streamTicket has been created. The destruction of the torrentSession object stops the seeding.
-          if(returnTorrent === "It's a test"){
+          if(returnTorrent === "Return torrent"){
             if(destroyTorrent){
               notificationsBecauseNewWire = 0;
               torrent.destroy();
@@ -769,7 +769,6 @@ function OakStreaming(OakName){
         };
         util.inherits(thisRequest.CollectorStreamForWtorrent, readableStream.Writable);
         thisRequest.CollectorStreamForWtorrent.prototype._write = function(chunk, encoding, done){
-          console.log("A chunk of data from another WebTorrent peer has been received.");
           if(thisRequest.indexNextNeededByte - thisRequest.indexNextByteWtorrent < chunk.length){
             bytesFromWtorrent += chunk.length - 
                     (thisRequest.indexNextNeededByte - thisRequest.indexNextByteWtorrent);
@@ -1166,11 +1165,9 @@ function OakStreaming(OakName){
 
       // This function checks whether the video is completely downloaded.
       function checkIfVideoIsCompletelyLoaded (){
-        console.log("checkIfVideoIsCompletelyLoaded is called");
         if(videoCompletelyLoaded){
           return;
         }
-        console.log("checkIfVideoIsCompletelyLoaded gets executed");
         
         // This code block checks whether the video player has buffered the complete video.
         if(htmlVideoTag.duration){
@@ -1203,9 +1200,6 @@ function OakStreaming(OakName){
         // If this is the case, no more video data has to be requested from the WebTorrent network
         // and from the Web server. Video data that is buffered by the WebTorrent instance may not be loaded
         // into the buffer of the video player yet.
-        if(theTorrentSession){
-          console.log("theTorrentSession.progress: " + theTorrentSession.progress);  
-        }
         if(theTorrentSession && theTorrentSession.progress === 1){
           videoCompletelyLoaded = true;
           if(callback){
