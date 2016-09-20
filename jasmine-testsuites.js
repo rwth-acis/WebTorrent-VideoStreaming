@@ -1,63 +1,23 @@
 var theVideoFileSize = 788493;
 
-
+/*
 describe("Testing if manuallyAddingPeer methods", function(){   
-  var twoPeersAreConnected = false;
+  var twoPeersConnectedForTest2 = false;
   var threePeersAreConnected = false;
   var twoPeersStreamedToAnother = false;
-  var testTorrentA, testTorrentB, testTorrentC;
-   
+  var testTorrentA, testTorrentB, testTorrentC, testTorrentD, testTorrentE;
+  var myStreamingA = new OakStreaming();
+  var myStreamingB = new OakStreaming();
+  var myStreamingC = new OakStreaming();
+  var myStreamingD = new OakStreaming();
+  var myStreamingE = new OakStreaming();
+  
   it("can establish a WebTorrent connection between two OakStreaming instances", function(done){
     expect(true).toBe(true); // every Jasmine spec has to have an expect expression
-      
-      /*
-      var receivedCallbacks = 0;    
-            
-      var tryToSetCallbackA = (function(){
-         return function(){
-            if(myStreamingA.forTesting_connectedToNewWtorrentPeer){
-               console.log(" callback of myStreamingA.forTesting_connectedToNewWtorrentPeer is set");
-               myStreamingA.forTesting_connectedToNewWtorrentPeer(function(){
-                  if(receivedCallbacks === 1){
-                     twoPeersAreConnected = true;
-                     done();
-                  } else {
-                     receivedCallbacks++;
-                  }
-               });
-            } else {
-               console.log("tryToSetCallbackA setTimeout is set");
-               setTimeout(tryToSetCallbackA, 500);
-            }
-         };
-      })();
-      tryToSetCallbackA();
-      
-      
-      var tryToSetCallbackB = (function(){
-         return function(){
-            if(myStreamingB.forTesting_connectedToNewWtorrentPeer){
-                  console.log("callback of myStreamingB.forTesting_connectedToNewWtorrentPeer is set");
-                  myStreamingB.forTesting_connectedToNewWtorrentPeer(function(){
-                     if(receivedCallbacks === 1){
-                        twoPeersAreConnected = true;            
-                        done();
-                     } else {
-                        receivedCallbacks++;
-                     }
-                  });
-            } else {
-               console.log("tryToSetCallbackB setTimeout is set");
-               setTimeout(tryToSetCallbackB, 500);
-            }         
-         };
-      })();
-      tryToSetCallbackB();
-      */
 
     myStreamingA.createSignalingData(function(signalingData){
       myStreamingB.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-        myStreamingA.processSignalingResponse(signalingDataResponse, function(){console.log("Test case 1: Peers are connected"); twoPeersAreConnected = true; done();});
+        myStreamingA.processSignalingResponse(signalingDataResponse, function(){console.log("Test case 1: Peers are connected"); twoPeersConnectedForTest2 = true; done();});
       });
     });
   }, 40000);
@@ -66,18 +26,18 @@ describe("Testing if manuallyAddingPeer methods", function(){
   it("can successfully connect two OakStreaming instances for streaming", function(done){
     expect(true).toBe(true); // every Jasmine spec has to have an expect expression
 
-    function callback(streamInformationObject, torrent){
+    function callback(streamTicket, torrent){
       testTorrentA = torrent;
-      console.log("First spec, second test. Stream_Information: " + JSON.stringify(streamInformationObject));
-      console.log("First spec, second test case: the callback from streamVideo is called");
-      myStreamingB.loadVideo(streamInformationObject, function(){console.log("First spec, second test. loadVideo callback is called: "); testTorrentA.destroy(); twoPeersStreamedToAnother = true; done();}, true); // vorher false
+      console.log("First spec, second test. Stream_Information: " + JSON.stringify(streamTicket));
+      console.log("First spec, second test case: the callback from create_stream is called");
+      myStreamingB.receive_stream(streamTicket, function(){console.log("First spec, second test. receive_stream callback is called: "); testTorrentA.destroy(); twoPeersStreamedToAnother = true; myStreamingA = null; myStreamingB = null; done();}, true); // vorher false
     }
       
       function streamWhenConnectionEstablished(res){
 
-         if(twoPeersAreConnected){
-            console.log("First spec, second test case: streamVideo is called");
-            myStreamingA.streamVideo(res, {web_server_URL: false, webTorrent_trackers: []}, callback, "Return torrent");
+         if(twoPeersConnectedForTest2){
+            console.log("First spec, second test case: create_stream is called");
+            myStreamingA.create_stream(res, {web_server_URL: false, webTorrent_trackers: []}, callback, "Return torrent");
             // {webTorrentTrackers: [["ws://localhost:8081"]]}
          } else {
             setTimeout(function(){streamWhenConnectionEstablished(res);}, 1000);
@@ -96,81 +56,47 @@ describe("Testing if manuallyAddingPeer methods", function(){
         });
   }, 40000);
    
-   
-   it("can automatically establish WebTorrent connections between three OakStreaming instances", function(done){
-      expect(true).toBe(true); // every Jasmine spec has to have an expect expression  
-                
-      var receivedCallbacks = 0;     
-    
-    
-      function checkIfnewConnectionsAreCreated(){
-         console.log("In second last sec. checkIfnewConnectionsAreCreated is called");
-         if(twoPeersStreamedToAnother){
-            console.log("In second last spec. In if clause.");
-            myStreamingA.forTesting_connectedToNewWtorrentPeer(function(){
-                console.log("In second last spec. " + "myStreamingA.forTesting_connectedToNewWtorrentPeer gots called");
-               if(receivedCallbacks === 1){
-                  threePeersAreConnected = true;
-                  done();
-               } else {
-                  receivedCallbacks++;
-               }
-            });
-            myStreamingB.forTesting_connectedToNewWtorrentPeer(function(){
-               console.log("In second last spec. " + "myStreamingB.forTesting_connectedToNewWtorrentPeer gots called");
-               if(receivedCallbacks === 1){
-                  threePeersAreConnected = true;            
-                  done();
-               } else {
-                  receivedCallbacks++;
-               }
-            });
-         } else {
-            setTimeout(checkIfnewConnectionsAreCreated, 500);
-         }
-      }
-      checkIfnewConnectionsAreCreated();
-      
-      /* I think not needed
-      myStreamingC.forTesting_connectedToNewWtorrentPeer(function(){
-         if(receivedCallbacks === 4){
-            threePeersAreConnected = true;            
-            done();
-         } else {
-            receivedCallbacks++;
-         }
-      });
-      */
-    
-      myStreamingA.createSignalingData(function(signalingData){
-         myStreamingC.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-            myStreamingA.processSignalingResponse(signalingDataResponse, function(){console.log("For third spec peers connected");});
-         });
-      });    
-   }, 25000);
-
  
    it("can successfully connect three OakStreaming instances for streaming", function(done){
-      expect(true).toBe(true); // every Jasmine spec has to have an expect expression   
+      expect(true).toBe(true); // Every Jasmine spec has to have an expect expression.   
       var oneStreamingCompleted = false;
       //var testTorrent;
+      var numberOfDirectlyEstablishedConnections = 0;
       
-      function callback(streamInformationObject, torrent){
+      
+      myStreamingC.createSignalingData(function(signalingData){
+        myStreamingD.createSignalingDataResponse(signalingData, function(signalingDataResponse){
+          myStreamingC.processSignalingResponse(signalingDataResponse, function(){console.log("Test case 3: Peers are connected"); numberOfDirectlyEstablishedConnections++;});
+        });
+      });
+      myStreamingD.createSignalingData(function(signalingData){
+         myStreamingE.createSignalingDataResponse(signalingData, function(signalingDataResponse){
+            myStreamingD.processSignalingResponse(signalingDataResponse, function(){console.log("For third spec peers connected"); numberOfDirectlyEstablishedConnections++});
+         });
+      });       
+      
+      function createStreamCallback(streamTicket, torrent){
          console.log("callback from last new spec is called");
          testTorrentC = torrent;
-         myStreamingA.loadVideo(streamInformationObject, function(){
-            console.log("last new spec. callback of myStreamingA.loadVideo");
+         myStreamingE.receive_stream(streamTicket, function(){
+            console.log("last new spec. callback of myStreamingE.receive_stream");
             if(oneStreamingCompleted){
                testTorrentC.destroy();
+               myStreamingC = null;
+               myStreamingD = null;
+               myStreamingE = null;
                done();
             } else {
                oneStreamingCompleted = true;
             }
          }, true);
-         myStreamingB.loadVideo(streamInformationObject, function(){
-            console.log("last new spec. callback of myStreamingB.loadVideo");
+         myStreamingD.receive_stream(streamTicket, function(){
+            console.log("last new spec. callback of myStreamingD.receive_stream");
             if(oneStreamingCompleted){
                testTorrentC.destroy();
+               myStreamingC = null;
+               myStreamingD = null;
+               myStreamingE = null;
                done();
             } else {
                oneStreamingCompleted = true;
@@ -179,10 +105,9 @@ describe("Testing if manuallyAddingPeer methods", function(){
       }
       
       function streamWhenConnectionEstablished(res){
-         console.log("In last new spec streamWhenConnectionEstablished gets called");
-         if(threePeersAreConnected){
-            console.log("last new spec. video gets streamed from myStreamingC");
-            myStreamingC.streamVideo(res, {web_server_URL: false, webTorrent_trackers: []}, callback, "Return torrent", false);
+         if(numberOfDirectlyEstablishedConnections >= 2){
+            console.log("last new spec. video gets streamed from myStreamingE");
+            myStreamingC.create_stream(res, {web_server_URL: false, webTorrent_trackers: []}, createStreamCallback, "Return torrent", false);
             // webTorrentTrackers: [["ws://localhost:8081"]]
          } else {
             setTimeout(function(){streamWhenConnectionEstablished(res);}, 500);
@@ -204,13 +129,14 @@ describe("Testing if manuallyAddingPeer methods", function(){
 });   
 
 
-describe("Testing if streamVideo method", function(){
+describe("Testing if create_stream method", function(){
    var myStreaming = new OakStreaming();
       
-   it("creates streamInformationObject correctly",  function(done){     
-      function callback (streamInformationObject){
-         expect(streamInformationObject.SIZE_VIDEO_FILE).toEqual(theVideoFileSize);
-         expect(streamInformationObject.path_to_file_on_web_server).toMatch("/videos/example.mp4");
+   it("creates streamTicket correctly",  function(done){     
+      function callback (streamTicket){
+         expect(streamTicket.SIZE_VIDEO_FILE).toEqual(theVideoFileSize);
+         expect(streamTicket.path_to_file_on_web_server).toMatch("/videos/example.mp4");
+         myStreaming = null;
          done();
       }
       http.get({
@@ -221,24 +147,37 @@ describe("Testing if streamVideo method", function(){
             range: 'bytes=' + 0 + '-' + theVideoFileSize-1
          }
       }, function (res){   // webTorrentTrackers: [["ws://localhost:8081"]]
-         testTorrent = myStreaming.streamVideo(res, {path_to_file_on_web_server: "/videos/example.mp4"}, callback, "Return torrent", true);
+         testTorrent = myStreaming.create_stream(res, {webTorrent_trackers: ["ws://localhost:8085"], path_to_file_on_web_server: "/videos/example.mp4"}, callback, "Return torrent", true);
       });
    }, 30000); 
 });
+*/
+describe("Testing if receive_stream method", function(){
+  /*
+  var myStreaming1 = new OakStreaming();
+  var myStreaming2 = new OakStreaming();
+  var myStreaming3 = new OakStreaming();
+   */
+  var myStreaming4 = new OakStreaming();
+  var myStreaming5 = new OakStreaming();
+ 
+  var myStreaming3 = null;
+  var myStreaming6 = new OakStreaming();
+  var myStreaming7 = new OakStreaming();
+  var myStreaming8 = new OakStreaming();
+  var myStreaming9 = new OakStreaming();
+  // var myStreaming10 = new OakStreaming();
 
-describe("Testing if loadVideo method", function(){
-   var myStreaming = new OakStreaming();
-   var myStreaming2 = new OakStreaming();
-   var myStreaming3 = new OakStreaming();
-   
+   /*
    it("loads the video fast enough via server delivery", function(done){
       expect(true).toBe(true); // necessary because Jasmine wants at least one expect per it.
-      myStreaming.loadVideo({xhr_hostname: "localhost", xhr_port: 8080, path_to_file_on_web_server: "/videos/example2.mp4", SIZE_VIDEO_FILE: theVideoFileSize}, done);
-   }, 10000);
-     
+      myStreaming1.receive_stream({webTorrent_trackers: ["ws://localhost:8085"], xhr_hostname: "localhost", xhr_port: 8080, path_to_file_on_web_server: "/videos/example2.mp4", SIZE_VIDEO_FILE: theVideoFileSize}, function(){myStreaming1 = null; done()});
+   }, 20000);
+    */ 
    describe("loads the video fast enough via WebTorrent delivery", function(){
+     /*
       it("with one seeder and one downloader", function(done){
-         expect(true).toBe(true); // every Jasmine spec has to have an expect expression
+         expect(true).toBe(true); // Every Jasmine spec has to have an expect expression.
          
          req = http.get({
             hostname: 'localhost',
@@ -248,21 +187,30 @@ describe("Testing if loadVideo method", function(){
                range: 'bytes=' + 0 + '-' + theVideoFileSize-1
             }
          }, function (res) {    // webTorrentTrackers: [["ws://localhost:8081"]]
-               myStreaming.streamVideo(res, {web_server_URL: false},  function(streamInformationObject){
-                  myStreaming2.loadVideo(streamInformationObject, done);  
+               myStreaming2.create_stream(res, {webTorrent_trackers: ["ws://localhost:8085"], web_server_URL: false},  function(streamTicket){
+                  myStreaming3.receive_stream(streamTicket, function(){myStreaming2 = null; myStreaming3 = null; done();});  
                });
          });
-      }, 15000); 
-      
+      }, 400000); 
+      */
       it("with two seeders and one downloader", function(done){
          expect(true).toBe(true); // every Jasmine spec has to have an expect expression
          
-         function callback(streamInformationObject){
-            myStreaming2.loadVideo(streamInformationObject, function(){
-               myStreaming3.loadVideo(streamInformationObject, done);
+         //myStreaming3 = null; // nur zum Test nicht drinn lassen!!
+         function createStreamCallback(streamTicket){
+            myStreaming5.receive_stream(streamTicket, function(){
+               myStreaming6.receive_stream(streamTicket, function(){myStreaming4.destroy(); myStreaming4 = null; myStreaming5.destroy(); myStreaming5 = null; myStreaming6.destroy(); myStreaming6 = null; done();});
             });
          }
          
+          function createStreamWhenOtherTestComplete(res){
+            if(!myStreaming3){
+              myStreaming4.create_stream(res, {webTorrent_trackers: ["ws://localhost:8085"], web_server_URL: false}, createStreamCallback);
+            } else {
+              setTimeout(function(){createStreamWhenOtherTestComplete(res)},500);
+            }
+          }  
+          
          req = http.get({
             hostname: 'localhost',
             port: 8080,
@@ -271,23 +219,40 @@ describe("Testing if loadVideo method", function(){
                 range: 'bytes=' + 0 + '-' + theVideoFileSize-1
             }
          }, function (res) {   // webTorrentTrackers: [["ws://localhost:8081"]]
-               myStreaming.streamVideo(res, {web_server_URL: false}, callback);
+            createStreamWhenOtherTestComplete(res);     
          });
-      }, 20000);  
+      }, 400000);  
 
       it("with one seeder and two downloaders", function(done){
-         expect(true).toBe(true); // every Jasmine spec has to have an expect expression
+         expect(true).toBe(true); // Every Jasmine spec has to have an expect expression.
          var numberOfCompletedDownloads = 0;
          
-         function checkIfSpecFinished(){
-            if(++numberOfCompletedDownloads >= 2){
+         var checkIfSpecFinished = function() {
+           console.log("checkIfSpecFinished is called");
+           numberOfCompletedDownloads++;
+            if(numberOfCompletedDownloads >= 2){
+                myStreaming7 = null;
+                myStreaming8 = null;
+                myStreaming9 = null;
+                console.log("done is called");
                done();
             }
-         }       
-         function callback(streamInformationObject){
-            myStreaming2.loadVideo(streamInformationObject, checkIfSpecFinished); 
-            myStreaming3.loadVideo(streamInformationObject, checkIfSpecFinished);
-         }       
+         };       
+         var createStreamCallback = function (streamTicket){
+            console.log("The two receive_stream calls");
+            myStreaming8.receive_stream(streamTicket, checkIfSpecFinished); 
+            setTimeout(function(){myStreaming9.receive_stream(streamTicket, checkIfSpecFinished);},500);
+         };   
+
+          var createStreamWhenOtherTestComplete = function(res){
+            console.log("createStreamWhenOtherTestComplete() is called");
+            if(!myStreaming6){
+              console.log("myStreaming7.create_stream() gets executed");
+              myStreaming7.create_stream(res, {webTorrent_trackers: ["ws://localhost:8085"], web_server_URL: false}, createStreamCallback);
+            } else {
+              setTimeout(function(){createStreamWhenOtherTestComplete(res);},500);
+            }
+          };        
          req = http.get({
             hostname: 'localhost',
             port: 8080,
@@ -296,11 +261,12 @@ describe("Testing if loadVideo method", function(){
                 range: 'bytes=' + 0 + '-' + theVideoFileSize-1
             }
          }, function (res) {   // webTorrentTrackers: [["ws://localhost:8081"]]
-               myStreaming.streamVideo(res, {web_server_URL: false}, callback);
+              console.log("res has been received");
+               createStreamWhenOtherTestComplete(res);
          });
-      }, 20000);    
+      }, 400000);    
    });
-   
+   /*
    it("loads the video fast enough via peer-assisted delivery", function(done){
       expect(true).toBe(true); // every Jasmine spec has to have an expect expression
       req = http.get({
@@ -313,9 +279,10 @@ describe("Testing if loadVideo method", function(){
       }, function (res) {
          var webTorrentClient = new WebTorrent();
          webTorrentClient.seed(res, function onSeed (torrent){ // webTorrentTrackers: [["ws://localhost:8081"]]
-            myStreaming.loadVideo({XHRPath: "/videos/example3.mp4", torrentFile : torrent.torrentFile, videoFileSize : theVideoFileSize}, done);            
+            myStreaming10.receive_stream({webTorrent_trackers: ["ws://localhost:8085"], xhr_hostname: "localhost", xhr_port: 8080, path_to_file_on_web_server: "/videos/example3.mp4", torrent_file : torrent.torrentFile.toString('base64'), SIZE_VIDEO_FILE : theVideoFileSize}, function(){webTorrentClient = null; myStreaming10 = null; done();});            
          });
       });
-   }, 20000);
+   }, 400000);
+   */
 });
  

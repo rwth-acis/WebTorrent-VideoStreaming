@@ -28,6 +28,19 @@ function OakStreaming(OakName) {
     var bytesReceivedFromServer = 0;
     var notificationsBecauseNewWire = 0;
     var SIZE_VIDEO_FILE = 0;
+    var webtorrentClient = null;
+
+    self.destroy = function () {
+      if (webtorrentClient) {
+        console.log("I command the destruction!");
+        webtorrentClient.destroy(function (err) {
+          if (err) {
+            console.log("destroy err: " + err.message);
+          }
+          console.log("A WebTorrent client has been destroyed");
+        });
+      }
+    };
 
     // Only methods should be part of the OakStreaming API, i.e. only methods should be publically accessible.
     // The OakStreaming API comprises only the OakStreaming constructor and all public methods of the object that
@@ -204,7 +217,7 @@ function OakStreaming(OakName) {
         streamTicket.xhr_port = xhr_port;
       }
 
-      var webtorrentClient = new WebTorrent({ dht: false, tracker: true });
+      webtorrentClient = new WebTorrent({ dht: false, tracker: true });
 
       if (video_file) {
         var seedingOptions = {
@@ -448,7 +461,7 @@ function OakStreaming(OakName) {
 
       // All these declared variables until 'var self = this' are intended to be constants.
       var serverDeliverySelected = streamTicket.xhr_hostname !== false && (streamTicket.path_to_file_on_web_server || streamTicket.hash_value) ? true : false;
-      var WtorrentDeliverySelected = streamTicket.torrent_file ? true : false;
+      var wtorrentDeliverySelected = streamTicket.torrent_file ? true : false;
 
       var XHR_HOSTNAME = streamTicket.xhr_hostname;
       var XHR_PORT = streamTicket.xhr_port;
@@ -456,7 +469,7 @@ function OakStreaming(OakName) {
       var PATH_TO_FILE = streamTicket.path_to_file_on_web_server;
       var HASH_VALUE = streamTicket.hash_value;
       var MAGNET_URI = streamTicket.magnet_URI;
-      if (WtorrentDeliverySelected) {
+      if (wtorrentDeliverySelected) {
         var TORRENT_FILE = Buffer.from(streamTicket.torrent_file, 'base64');
       }
       SIZE_VIDEO_FILE = streamTicket.SIZE_VIDEO_FILE; // in byte
@@ -484,7 +497,7 @@ function OakStreaming(OakName) {
       // receive_stream to access and manipulate these variables.
       var self = this;
       var endStreaming = false;
-      var webtorrentClient = null;
+      // var webtorrentClient = null; Commented out because I implemented a destructor function
       var neighbors = []; // This array contains P2P connections to other peers out of the WebTorrent network.
       var videostreamRequestCounter = 0;
       bytesReceivedFromServer = 0; // This variable gets only initialized not declared.
@@ -509,7 +522,7 @@ function OakStreaming(OakName) {
       util.inherits(SimpleReadableStream, readableStream.Readable);
       SimpleReadableStream.prototype._read = function (size) {};
 
-      if (WtorrentDeliverySelected) {
+      if (wtorrentDeliverySelected) {
         webtorrentClient = new WebTorrent();
         var webtorrentOptions = {};
 
