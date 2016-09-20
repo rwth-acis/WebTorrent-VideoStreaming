@@ -1,4 +1,4 @@
-# WebTorrent-VideoStreaming
+# OakStreaming
 
 ## General information
 This project is a JavaScript library which enables to easily integrate peer-assisted streaming into a Web page.

@@ -42,7 +42,7 @@ window.handleFiles = function (files) {
   // files[0] contains the file from the user
   // addToSharedArray(content)   transfers content to all other peers
   // Maybe useful: webTorrent_trackers: [["wss://tracker.webtorrent.io"]] web_server_URL : "http://gaudi.informatik.rwth-aachen.de:9912"
-  oakStreaming.create_stream(files[0], {web_server_URL: "localhost:8080"}, function(streamInformationObject){      
+  oakStreaming.create_stream(files[0], {web_server_URL: "localhost:8080", webTorrent_trackers: ["ws://localhost:8085"]}, function(streamInformationObject){      
     addToSharedArray(streamInformationObject);
   });
 }

@@ -19,12 +19,12 @@ var combiner = require('stream-combiner2');
 
 // Add custom browserify options here.
 var customOpts = {
-  entries: ['./example_application.js'],
+  entries: ['./example-application.js'],
   extensions: [".js", ".json", ".es6", ".es", ".jsx"],
   debug: true
 };
 var customOpts2 = {
-  entries: ['./Jasmine_testsuites_help.js'],
+  entries: ['./jasmine-testsuites-help.js'],
   debug: true
 };
 var opts = assign({}, watchify.args, customOpts);
@@ -44,7 +44,7 @@ b2.on('log', gutil.log);
 function bundle() {
   return b.transform("babelify", {presets: ["es2015"]})
     .bundle()
-    .pipe(source('example_application.js'))
+    .pipe(source('example-application.js'))
     .pipe(buffer())
     .pipe(sourcemaps.init({loadMaps: true}))
     
@@ -58,8 +58,8 @@ function bundle() {
 function bundle2(){
   return b2.bundle()
     .on('error', gutil.log.bind(gutil, 'Browserify Error'))
-    .pipe(source('./Jasmine_testsuites_help.js'))
-    .pipe(gulp.dest('./Jasmine_testsuites_build/'));
+    .pipe(source('./jasmine-testsuites-help.js'))
+    .pipe(gulp.dest('./jasmine-testsuites-build/'));
 }
 
 function browserifySecondApplication(){   
@@ -99,7 +99,7 @@ function errorLog(error){
 
 gulp.task('uglify_example_app.js', ['browserify'],  function (cb) {
   pump([
-      gulp.src('./web/example_application.js'),
+      gulp.src('./web/example-application.js'),
       uglify(),
       gulp.dest('./web/')
     ],
@@ -110,12 +110,12 @@ gulp.task('uglify_example_app.js', ['browserify'],  function (cb) {
 
 // Uglifies index.html
 gulp.task('minify_example_app.html', function(){
-  gulp.src('./example_application.html')
+  gulp.src('./example-application.html')
   .pipe(htmlmin({collapseWhitespace: true}))
   .on('error', errorLog)
   .pipe(rename("index.html"))
   .pipe(gulp.dest('./web/'));
-  console.log("Uglified and renamed example_application.html");
+  console.log("Uglified and renamed example-application.html");
 });
 
 
@@ -145,20 +145,20 @@ gulp.task('connect2', ['browserify3'], function(){
 
 
 gulp.task('tests', ['browserify2'], function() {
-  return gulp.src(['./Jasmine_testsuites_build/Jasmine_testsuites_help.js', './Jasmine_testsuites.js'])
+  return gulp.src(['./jasmine-testsuites-build/jasmine-testsuites-help.js', './jasmine-testsuites.js'])
     .pipe(jasmineBrowser.specRunner())
     .pipe(jasmineBrowser.server({port: 8888}));
 });
 
 
 gulp.task('watch', ['tests', 'connect'], function(){
-  gulp.watch('./example_application.js', ['browserify']);
-  gulp.watch('./Jasmine_testsuites.js', ['browserify2', 'tests']);
+  gulp.watch('./example-application.js', ['browserify']);
+  gulp.watch('./jasmine-testsuites.js', ['browserify2', 'tests']);
   gulp.watch('./index.html', ['minify_example_app.html']);
 });
 
 gulp.task('watch_production', ['connect'], function(){
-  gulp.watch('./example_application.js', ['browserify', 'uglify_example_app.js']);
+  gulp.watch('./example-application.js', ['browserify', 'uglify_example_app.js']);
   gulp.watch('./index.html', ['minify_example_app.html']);
 });
 

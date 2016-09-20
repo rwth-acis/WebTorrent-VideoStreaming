@@ -60,7 +60,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
         myStreamingA.processSignalingResponse(signalingDataResponse, function(){console.log("Test case 1: Peers are connected"); twoPeersAreConnected = true; done();});
       });
     });
-  }, 20000);
+  }, 40000);
 
   
   it("can successfully connect two OakStreaming instances for streaming", function(done){

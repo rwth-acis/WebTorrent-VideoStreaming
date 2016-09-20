@@ -138,9 +138,7 @@ function OakStreaming(OakName){
     };
 
      
-    function create_stream(){
-      console.log("Version MK");
-      
+    function create_stream(){      
       var video_file;
       var options = {};
       var callback = function(){};
@@ -398,9 +396,7 @@ function OakStreaming(OakName){
     }
 
     
-    function receive_stream(){
-      console.log("receive_stream is executed");
-    
+    function receive_stream(){    
       /* This block of code is solely for conducting Technical Evaluations. 
       var timeLoadVideoMethodWasCalled = -42;
       var timePlaybackWasStalled = 0;
@@ -555,9 +551,7 @@ function OakStreaming(OakName){
         */
 
 
-        webtorrentClient.add(TORRENT_FILE, webtorrentOptions, function (torrentSession){
-          console.log("In receive_stream webTorrentClient.add callback is executed.");
-          
+        webtorrentClient.add(TORRENT_FILE, webtorrentOptions, function (torrentSession){          
           // From this point of time onwards, the WebTorrent instance will start downloading video data from the
           // WebTorrent network. This downloading happens in the background and according to the rarest-peace-first
           // strategy. The OakStreaming client downloads the video data as fast as possible. 
@@ -1176,7 +1170,6 @@ function OakStreaming(OakName){
             if(timeRanges.start(0) == 0 && timeRanges.end(0) == htmlVideoTag.duration){
               videoCompletelyLoaded = true;
               if(callback){
-                console.log("receive_video callback is called because video player has buffered complete video.")
                 if(stopUploadingWhenVideoDownloaded){
                   callback();
                 } else {
@@ -1203,8 +1196,6 @@ function OakStreaming(OakName){
         if(theTorrentSession && theTorrentSession.progress === 1){
           videoCompletelyLoaded = true;
           if(callback){
-            console.log("receive_stream callback is called because WebTorrent client has downloaded " + 
-                    " the video completely.")
             if(stopUploadingWhenVideoDownloaded){
               callback();
             } else {
@@ -1471,7 +1462,6 @@ function OakStreaming(OakName){
           res.on('end', xhrEnd);
           res.on('data', xhrDataHandler);
           res.on('error', function(err){
-            console.log("The http.get response object has thrown the following error");
             console.error(err);
           });
         });
