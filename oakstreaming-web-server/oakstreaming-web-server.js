@@ -12,6 +12,9 @@ var formidable = require('formidable');
 
 // It could be useful to change this constants sometime.
 
+// Port on which the server should listen.
+var PORT = 9912;
+
 // Path to the folder which contains all video files that this Web server should be able to serve via 
 // hash value identification.
 var PATH_TO_VIDEO_FOLDER = __dirname + "/web/videos";
@@ -19,6 +22,7 @@ var PATH_TO_VIDEO_FOLDER = __dirname + "/web/videos";
 // Path where the text file hashValues.sha2 will be saved. This text file will contain the hash values of
 // all files in PATH_TO_VIDEO_FOLDER.
 var HASH_VALUES_FILE_PATH = __dirname + "/web";
+
 
 
 
@@ -318,6 +322,6 @@ app.get("/example_application.js.map", function(req, res){
 
 
   
-http.listen(9912, function(){
-	console.log('Listening on port 9912');
+http.listen(PORT, function(){
+	console.log('Listening on port ' + PORT);
 });

@@ -33,11 +33,6 @@ var tracker = new WebtorrentTracker({
   }
 });
 
-// Internal http, udp, and websocket servers exposed as public properties.
-//server.http
-//server.udp
-//console.log("server.ws: " + server.ws);
-
 
 tracker.on('error', function (err) {
   // Fatal server error!
