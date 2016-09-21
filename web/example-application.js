@@ -407,15 +407,17 @@ function OakStreaming(OakName) {
       // In order to enable that all but the streamTicket_object parameter (i.e. the first parameter) of the
       // receive_stream method are optional, the arguments variable has to be read.
       var streamTicket = arguments[0];
+      var htmlVideoTag = arguements[1];
       var callback = function callback() {};
       var stopUploadingWhenVideoDownloaded = false;
 
-      if (typeof arguments[1] === 'function') {
-        callback = arguments[1];
-        stopUploadingWhenVideoDownloaded = arguments[2];
+      if (typeof arguments[2] === 'function') {
+        callback = arguments[2];
+        stopUploadingWhenVideoDownloaded = arguments[3];
+        stopUploadingWhenVideoDownloaded = arguments[3];
       } else {
         callback = undefined;
-        stopUploadingWhenVideoDownloaded = arguments[1];
+        stopUploadingWhenVideoDownloaded = arguments[2];
       }
 
       // I was stupid and forgot to implement that the used video tag can be handed over to the receive_stream method.

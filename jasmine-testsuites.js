@@ -194,6 +194,7 @@ describe("Testing if receive_stream method", function(){
       }, 400000); 
       */
       it("with two seeders and one downloader", function(done){
+        console.log("Version AM");
          expect(true).toBe(true); // every Jasmine spec has to have an expect expression
          
          //myStreaming3 = null; // nur zum Test nicht drinn lassen!!
@@ -221,7 +222,7 @@ describe("Testing if receive_stream method", function(){
          }, function (res) {   // webTorrentTrackers: [["ws://localhost:8081"]]
             createStreamWhenOtherTestComplete(res);     
          });
-      }, 400000);  
+      }, 600000);  
 
       it("with one seeder and two downloaders", function(done){
          expect(true).toBe(true); // Every Jasmine spec has to have an expect expression.
@@ -240,7 +241,7 @@ describe("Testing if receive_stream method", function(){
          };       
          var createStreamCallback = function (streamTicket){
             console.log("The two receive_stream calls");
-            myStreaming8.receive_stream(streamTicket, checkIfSpecFinished); 
+            setTimeout(function(){myStreaming8.receive_stream(streamTicket, checkIfSpecFinished);},1000);
             setTimeout(function(){myStreaming9.receive_stream(streamTicket, checkIfSpecFinished);},500);
          };   
 
@@ -250,7 +251,7 @@ describe("Testing if receive_stream method", function(){
               console.log("myStreaming7.create_stream() gets executed");
               myStreaming7.create_stream(res, {webTorrent_trackers: ["ws://localhost:8085"], web_server_URL: false}, createStreamCallback);
             } else {
-              setTimeout(function(){createStreamWhenOtherTestComplete(res);},500);
+              setTimeout(function(){createStreamWhenOtherTestComplete(res);},1000);
             }
           };        
          req = http.get({
@@ -264,7 +265,7 @@ describe("Testing if receive_stream method", function(){
               console.log("res has been received");
                createStreamWhenOtherTestComplete(res);
          });
-      }, 400000);    
+      }, 600000);    
    });
    /*
    it("loads the video fast enough via peer-assisted delivery", function(done){

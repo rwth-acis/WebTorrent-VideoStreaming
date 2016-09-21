@@ -64,9 +64,9 @@ tracker.on('start', function (addr) {
   console.log('Got start message from ' + addr)
 })
 
-tracker.on('complete', function (addr) {"Server complete"})
-tracker.on('update', function (addr) {"Server update"})
-tracker.on('stop', function (addr) {console.log("Server stopped")})
+tracker.on('complete', function (addr) {})
+tracker.on('update', function (addr) {})
+tracker.on('stop', function (addr) {console.log("The client with the address " + addr + " disconnected")});
 
 
 // Get info hashes for all torrents the torrent tracker manages.
