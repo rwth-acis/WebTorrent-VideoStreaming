@@ -3,7 +3,8 @@ var oakStreaming = new OakStreaming();
 
 
 var theSharedArray = null;
-var streamSource = false;  
+var streamSource = false;
+var theHtmlVideoTag = document.getElementById("myVideo");  
 
 
 console.log("This is the live demo");
@@ -31,7 +32,7 @@ Y({
     if(!streamSource){
       // returns the received Stream_Ticket object:    theSharedArray.get(0)
 
-      oakStreaming.receive_stream(theSharedArray.get(0), function(){console.log("receive_stream callback: All video data has been received");});  
+      oakStreaming.receive_stream(theSharedArray.get(0), theHtmlVideoTag, function(){console.log("receive_stream callback: All video data has been received");});  
     }
   });
 });

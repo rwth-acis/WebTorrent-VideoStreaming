@@ -193,14 +193,16 @@ describe("Testing if receive_stream method", function(){
          });
       }, 400000); 
       */
+      
+      /*
       it("with two seeders and one downloader", function(done){
         console.log("Version AM");
          expect(true).toBe(true); // every Jasmine spec has to have an expect expression
          
          //myStreaming3 = null; // nur zum Test nicht drinn lassen!!
          function createStreamCallback(streamTicket){
-            myStreaming5.receive_stream(streamTicket, function(){
-               myStreaming6.receive_stream(streamTicket, function(){myStreaming4.destroy(); myStreaming4 = null; myStreaming5.destroy(); myStreaming5 = null; myStreaming6.destroy(); myStreaming6 = null; done();});
+            myStreaming5.receive_stream(streamTicket, document.getElementById("myVideo5"), function(){
+               myStreaming6.receive_stream(streamTicket, document.getElementById("myVideo6"), function(){myStreaming4.destroy(); myStreaming4 = null; myStreaming5.destroy(); myStreaming5 = null; myStreaming6.destroy(); myStreaming6 = null; done();});
             });
          }
          
@@ -223,8 +225,27 @@ describe("Testing if receive_stream method", function(){
             createStreamWhenOtherTestComplete(res);     
          });
       }, 600000);  
-
+      */
+      
       it("with one seeder and two downloaders", function(done){
+        console.log("Version Keeper");
+        
+        myStreaming6 = null; // Vorrübergehend damit der Test alleine läuft
+        
+        myStreaming7.createSignalingData(function(signalingData){
+          myStreaming8.createSignalingDataResponse(signalingData, function(signalingDataResponse){
+            myStreaming7.processSignalingResponse(signalingDataResponse, function(){console.log("OakStreaming instances 7 and 8 are connected.");});
+          });
+        });
+        myStreaming8.createSignalingData(function(signalingData){
+           myStreaming9.createSignalingDataResponse(signalingData, function(signalingDataResponse){
+              myStreaming8.processSignalingResponse(signalingDataResponse, function(){console.log("OakStreaming instances 8 and 9 are connected.");});
+           });
+        });
+        
+        var timer8 = null;
+        var timer9 = null;
+        
          expect(true).toBe(true); // Every Jasmine spec has to have an expect expression.
          var numberOfCompletedDownloads = 0;
          
@@ -232,6 +253,8 @@ describe("Testing if receive_stream method", function(){
            console.log("checkIfSpecFinished is called");
            numberOfCompletedDownloads++;
             if(numberOfCompletedDownloads >= 2){
+              clearInterval(timer8);
+              clearInterval(timer9);
                 myStreaming7 = null;
                 myStreaming8 = null;
                 myStreaming9 = null;
@@ -241,15 +264,20 @@ describe("Testing if receive_stream method", function(){
          };       
          var createStreamCallback = function (streamTicket){
             console.log("The two receive_stream calls");
-            setTimeout(function(){myStreaming8.receive_stream(streamTicket, checkIfSpecFinished);},1000);
-            setTimeout(function(){myStreaming9.receive_stream(streamTicket, checkIfSpecFinished);},500);
+            myStreaming8.receive_stream(streamTicket, document.getElementById("myVideo8"), checkIfSpecFinished);
+            timer8 = setInterval(function(){console.log("myStreaming8 Downloaded: " + myStreaming8.get_number_of_bytes_downloaded_P2P()); console.log("myStreaming8 peers: " + myStreaming9.get_size_of_swarm());}, 2000);
+            
+            setTimeout(function(){myStreaming9.receive_stream(streamTicket, document.getElementById("myVideo9"), checkIfSpecFinished);
+            timer9 = setInterval(function(){console.log("myStreaming9 Downloaded: " + myStreaming9.get_number_of_bytes_downloaded_P2P()); console.log("myStreaming9 peers: " + myStreaming9.get_size_of_swarm());}, 2000);}, 250);
          };   
 
           var createStreamWhenOtherTestComplete = function(res){
             console.log("createStreamWhenOtherTestComplete() is called");
+            
+               
             if(!myStreaming6){
               console.log("myStreaming7.create_stream() gets executed");
-              myStreaming7.create_stream(res, {webTorrent_trackers: ["ws://localhost:8085"], web_server_URL: false}, createStreamCallback);
+              setTimeout(function(){myStreaming7.create_stream(res, {webTorrent_trackers: [], web_server_URL: false}, createStreamCallback);}, 8000);
             } else {
               setTimeout(function(){createStreamWhenOtherTestComplete(res);},1000);
             }
@@ -263,7 +291,7 @@ describe("Testing if receive_stream method", function(){
             }
          }, function (res) {   // webTorrentTrackers: [["ws://localhost:8081"]]
               console.log("res has been received");
-               createStreamWhenOtherTestComplete(res);
+              createStreamWhenOtherTestComplete(res);
          });
       }, 600000);    
    });

@@ -68,7 +68,17 @@ function OakStreaming(OakName){
       }
     };
       
-       
+    
+    // For testing
+    self.get_size_of_swarm = function(){
+      if(theTorrentSession){
+        return theTorrentSession.numPeers;
+      } else {
+        return -1;
+      }
+    };
+
+    
     self.get_number_of_bytes_uploaded_P2P = function(){
       if(theTorrentSession){
         return theTorrentSession.uploaded;
@@ -95,8 +105,8 @@ function OakStreaming(OakName){
     self.signaling1 = function (callback){
       var alreadyCalledCallback = false;
       var oakNumber = simplePeerCreationCounter;
-      connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({initiator: true,
-              trickle: false,  config: { iceServers: [{ url: 'stun:23.21.150.121' } ] }});
+      connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({initiator: true, // { url: 'stun:23.21.150.121' }
+              trickle: false,  config: { iceServers: [] }});
       simplePeerCreationCounter++;
          
       connectionsWaitingForSignalingData[oakNumber].on('signal', function (signalingData){
@@ -113,11 +123,12 @@ function OakStreaming(OakName){
     // another OakStreaming instance. This method returns new (WebRTC-)signaling data which has to be put into
     // signaling3 method of the OakStreaming instance which created the original signaling data.        
     self.signaling2 = function (signalingData, callback){
+      console.log("BAAAAM!!   signaling2 gets executed");
       var oakNumber = signalingData.oakNumber;
       signalingData.oakNumber = undefined;
          
-      var simplePeer = new SimplePeer({initiator: false, trickle: false, config: { iceServers: [{
-              url: 'stun:23.21.150.121' }] }});
+      var simplePeer = new SimplePeer({initiator: false, trickle: false, config: { iceServers: [] }}); // {
+              //url: 'stun:23.21.150.121' }
       var index = simplePeerCreationCounter;
       connectionsWaitingForSignalingData[index] = simplePeer;
       simplePeerCreationCounter++;
@@ -137,6 +148,7 @@ function OakStreaming(OakName){
     // This method finally establishes a WebRTC connection between both OakStreaming instances.
     // From now on, both OakStreaming instances exchange video fragments.
     self.signaling3 = function (signalingData, callback){
+      console.log("signaling3 gets executed");
       var oakNumber = signalingData.oakNumber;
       signalingData.oakNumber = undefined;
       var self = this;
@@ -229,8 +241,19 @@ function OakStreaming(OakName){
         streamTicket.xhr_port = xhr_port;
       }
        
-      webtorrentClient = new WebTorrent({dht: false, tracker: true});
-       
+      // 23.09.16 For final version: webtorrentClient = new WebTorrent({dht: false, tracker: true});
+      
+      //Without STUN server
+      webtorrentClient = new WebTorrent({
+        dht: false,
+        tracker: {
+          rtcConfig: {
+            iceServers: []
+          }
+        }
+      });
+     
+      
       if(video_file){
         var seedingOptions = {
           name: video_file.name + " - (Created by an OakStreaming client)"
@@ -422,7 +445,7 @@ function OakStreaming(OakName){
       // In order to enable that all but the streamTicket_object parameter (i.e. the first parameter) of the
       // receive_stream method are optional, the arguments variable has to be read.
       var streamTicket = arguments[0];
-      var htmlVideoTag = arguements[1];
+      var htmlVideoTag = arguments[1];
       var callback = function(){};
       var stopUploadingWhenVideoDownloaded = false;
        
@@ -527,7 +550,7 @@ function OakStreaming(OakName){
       // receive_stream to access and manipulate these variables.
       var self = this;
       var endStreaming = false;
-      // var webtorrentClient = null; Commented out because I implemented a destructor function
+      // var webtorrentClient = null; Commented out because I have implemented a destructor for the OakStreaming client
       var neighbors = []; // This array contains P2P connections to other peers out of the WebTorrent network.
       var videostreamRequestCounter = 0;
       bytesReceivedFromServer = 0; // This variable gets only initialized not declared.
@@ -555,7 +578,19 @@ function OakStreaming(OakName){
        
       
       if(wtorrentDeliverySelected){
-        webtorrentClient = new WebTorrent();
+       // For final version: webtorrentClient = new WebTorrent({dht: false, tracker: true});
+        
+        // Without STUN server
+        webtorrentClient = new WebTorrent({
+          dht: false,
+          tracker: {
+            rtcConfig: {
+              iceServers: []
+            }
+          }
+        });
+      
+        
         var webtorrentOptions = {};
           
         /*
@@ -564,7 +599,7 @@ function OakStreaming(OakName){
         }
         */
 
-
+        console.log("webtorrentClient: " + webtorrentClient);
         webtorrentClient.add(TORRENT_FILE, webtorrentOptions, function (torrentSession){          
           // From this point of time onwards, the WebTorrent instance will start downloading video data from the
           // WebTorrent network. This downloading happens in the background and according to the rarest-peace-first
@@ -662,15 +697,15 @@ function OakStreaming(OakName){
             // The ut_pex extension enables to automatically establish WebRTC connections to the neighbors of
             // ones neighbors.
             wire.use(ut_pex());
-            /* wire.ut_pex.start(); */
+            //wire.ut_pex.start();
               
-            /*
+            
             wire.ut_pex.on('peer', function (peer){
               theTorrentSession.addPeer(peer);
               // got a peer
               // probably add it to peer connections queue
             });
-            */
+            
           });
 
           // For video playback, the client-side library videostream is used.
