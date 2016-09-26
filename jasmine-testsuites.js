@@ -12,7 +12,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
   var myStreaming16 = new OakStreaming();
   
   it("can establish a WebTorrent connection between two OakStreaming instances", function(done){
-    console.log("Version Warden");
+    console.log("Version BM");
     
     expect(true).toBe(true); // every Jasmine spec has to have an expect expression
 
@@ -21,7 +21,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
         myStreaming12.processSignalingResponse(signalingDataResponse, function(){console.log("Test case 1: Peers are connected"); twoPeersConnectedForTest2 = true; done();});
       });
     });
-  }, 20000);
+  }, 40000);
 
   
   it("can successfully connect two OakStreaming instances for streaming", function(done){
@@ -54,7 +54,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
             console.log("Test2 received video stream from server");
             streamWhenConnectionEstablished(res);
         });
-  }, 20000);
+  }, 40000);
    
  
    it("can successfully connect three OakStreaming instances for streaming", function(done){
@@ -120,7 +120,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
             console.log("Last new spec XHR response stream received");
             streamWhenConnectionEstablished(res);
       });
-   }, 20000);
+   }, 40000);
 });   
 
 
@@ -144,7 +144,7 @@ describe("Testing if create_stream method", function(){
       }, function (res){   // webTorrentTrackers: [["ws://localhost:8081"]]
          testTorrent = myStreaming11.create_stream(res, {webTorrent_trackers: ["ws://localhost:8085"], path_to_file_on_web_server: "/videos/example.mp4"}, callback, "Return torrent", true);
       });
-   }, 20000); 
+   }, 40000); 
 });
 
 
@@ -167,7 +167,7 @@ describe("Testing if receive_stream method", function(){
    it("loads the video fast enough via server delivery", function(done){
       expect(true).toBe(true); // necessary because Jasmine wants at least one expect per it.
       myStreaming1.receive_stream({xhr_hostname: "localhost", xhr_port: 8080, path_to_file_on_web_server: "/videos/example2.mp4", SIZE_VIDEO_FILE: theVideoFileSize}, document.getElementById("myVideo8"), function(){done()}, true);
-   }, 20000);
+   }, 40000);
      
    describe("loads the video fast enough via WebTorrent delivery", function(){
      
@@ -186,7 +186,7 @@ describe("Testing if receive_stream method", function(){
                   myStreaming3.receive_stream(streamTicket, document.getElementById("myVideo8"), function(){myStreaming2.destroy(); myStreaming2 = null; done();}, true);  
                });
          });
-      }, 20000); 
+      }, 40000); 
       
  
       it("with two seeders and one downloader", function(done){
@@ -216,7 +216,7 @@ describe("Testing if receive_stream method", function(){
          }, function (res) {   // webTorrentTrackers: [["ws://localhost:8081"]]
             createStreamWhenOtherTestComplete(res);     
          });
-      }, 20000);  
+      }, 40000);  
       
       it("with one seeder and two downloaders", function(done){
         
@@ -264,7 +264,7 @@ describe("Testing if receive_stream method", function(){
                
             if(!myStreaming6){
               console.log("myStreaming7.create_stream() gets executed");
-              setTimeout(function(){myStreaming7.create_stream(res, {webTorrent_trackers: [], web_server_URL: false}, createStreamCallback);}, 8000);
+              setTimeout(function(){myStreaming7.create_stream(res, {webTorrent_trackers: [], web_server_URL: false}, createStreamCallback);}, 4000);
             } else {
               setTimeout(function(){createStreamWhenOtherTestComplete(res);},1000);
             }
@@ -280,7 +280,7 @@ describe("Testing if receive_stream method", function(){
               console.log("res has been received");
               createStreamWhenOtherTestComplete(res);
          });
-      }, 20000);    
+      }, 40000);    
    });
    
    it("loads the video fast enough via peer-assisted delivery", function(done){
@@ -298,6 +298,6 @@ describe("Testing if receive_stream method", function(){
             myStreaming10.receive_stream({webTorrent_trackers: ["ws://localhost:8085"], xhr_hostname: "localhost", xhr_port: 8080, path_to_file_on_web_server: "/videos/example3.mp4", torrent_file : torrent.torrentFile.toString('base64'), SIZE_VIDEO_FILE : theVideoFileSize}, document.getElementById("myVideo10"), function(){webTorrentClient.destroy(); webTorrentClient = null; done();}, true);            
          });
       });
-   }, 20000);
+   }, 40000);
 });
  

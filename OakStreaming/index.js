@@ -33,13 +33,12 @@ function OakStreaming(OakName){
       
     self.destroy = function(){
       if(webtorrentClient){
-        console.log("I command the destruction!");
         webtorrentClient.destroy(function(err){
           if(err){
-            console.log("destroy err: " + err.message)
+            console.error("ERROR: " + err.message);
+            //console.log("destroy err: " + err.message);
           }
-          console.log("A WebTorrent client has been destroyed");
-        });    
+        });
       }
     }
     
@@ -123,12 +122,11 @@ function OakStreaming(OakName){
     // another OakStreaming instance. This method returns new (WebRTC-)signaling data which has to be put into
     // signaling3 method of the OakStreaming instance which created the original signaling data.        
     self.signaling2 = function (signalingData, callback){
-      console.log("BAAAAM!!   signaling2 gets executed");
       var oakNumber = signalingData.oakNumber;
       signalingData.oakNumber = undefined;
          
-      var simplePeer = new SimplePeer({initiator: false, trickle: false, config: { iceServers: [] }}); // {
-              //url: 'stun:23.21.150.121' }
+      var simplePeer = new SimplePeer({initiator: false, trickle: false, config: {iceServers: [{
+              url: 'stun:23.21.150.121' }]}});
       var index = simplePeerCreationCounter;
       connectionsWaitingForSignalingData[index] = simplePeer;
       simplePeerCreationCounter++;
@@ -148,7 +146,6 @@ function OakStreaming(OakName){
     // This method finally establishes a WebRTC connection between both OakStreaming instances.
     // From now on, both OakStreaming instances exchange video fragments.
     self.signaling3 = function (signalingData, callback){
-      console.log("signaling3 gets executed");
       var oakNumber = signalingData.oakNumber;
       signalingData.oakNumber = undefined;
       var self = this;
@@ -241,9 +238,9 @@ function OakStreaming(OakName){
         streamTicket.xhr_port = xhr_port;
       }
        
-      // 23.09.16 For final version: webtorrentClient = new WebTorrent({dht: false, tracker: true});
+      webtorrentClient = new WebTorrent({dht: false, tracker: true});
       
-      //Without STUN server
+      /* Without STUN server
       webtorrentClient = new WebTorrent({
         dht: false,
         tracker: {
@@ -252,7 +249,7 @@ function OakStreaming(OakName){
           }
         }
       });
-     
+     */
       
       if(video_file){
         var seedingOptions = {
@@ -338,6 +335,7 @@ function OakStreaming(OakName){
           };
           xhr.send();
           */
+          
           streamTicket.torrent_file = torrent.torrentFile.toString('base64');
           streamTicket.magnet_URI = torrent.magnet_URI;
           streamTicket.infoHash = torrent.infoHash;
@@ -393,6 +391,7 @@ function OakStreaming(OakName){
         });
       } else {
         callback(streamTicket);
+        
         /* K42
         if(XHROrMethodEndHappend){
           callback(streamTicket);
@@ -400,7 +399,8 @@ function OakStreaming(OakName){
           XHROrMethodEndHappend = true;
         }
         */
-      }  
+      }
+      
       /* Nicht löschen!!!
       function updateChart(){
         if(theTorrentSession && wtorrentFile){
@@ -578,9 +578,9 @@ function OakStreaming(OakName){
        
       
       if(wtorrentDeliverySelected){
-       // For final version: webtorrentClient = new WebTorrent({dht: false, tracker: true});
+        webtorrentClient = new WebTorrent({dht: false, tracker: true});
         
-        // Without STUN server
+        /* Without STUN server
         webtorrentClient = new WebTorrent({
           dht: false,
           tracker: {
@@ -589,7 +589,7 @@ function OakStreaming(OakName){
             }
           }
         });
-      
+        */
         
         var webtorrentOptions = {};
           
@@ -599,7 +599,6 @@ function OakStreaming(OakName){
         }
         */
 
-        console.log("webtorrentClient: " + webtorrentClient);
         webtorrentClient.add(TORRENT_FILE, webtorrentOptions, function (torrentSession){          
           // From this point of time onwards, the WebTorrent instance will start downloading video data from the
           // WebTorrent network. This downloading happens in the background and according to the rarest-peace-first
@@ -1515,7 +1514,8 @@ function OakStreaming(OakName){
           });
         });
         thisRequest.xhrRequest.on('error', function(err){
-          console.log("The XHR has thrown the following error message: " + err.message);
+          // console.log("The XHR has thrown the following error message: " + err.message);
+          console.error(err);
         });
       }
       
