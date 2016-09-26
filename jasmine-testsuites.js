@@ -30,7 +30,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
     function callback(streamTicket, torrent){
       console.log("First spec, second test. Stream_Information: " + JSON.stringify(streamTicket));
       console.log("First spec, second test case: the callback from create_stream is called");
-      myStreaming13.receive_stream(streamTicket, function(){console.log("First spec, second test. receive_stream callback is called: "); twoPeersStreamedToAnother = true; myStreaming12.destroy(); myStreaming12 = null; done();}, true);
+      myStreaming13.receive_stream(streamTicket, document.getElementById("myVideo13"), function(){console.log("First spec, second test. receive_stream callback is called: "); twoPeersStreamedToAnother = true; myStreaming12.destroy(); myStreaming12 = null; done();}, true);
     }
       
       function streamWhenConnectionEstablished(res){
@@ -77,7 +77,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
       function createStreamCallback(streamTicket, torrent){
          console.log("callback from last new spec is called");
          testTorrentC = torrent;
-         myStreaming16.receive_stream(streamTicket, function(){
+         myStreaming16.receive_stream(streamTicket, document.getElementById("myVideo16"), function(){
             console.log("last new spec. callback of myStreaming16.receive_stream");
             if(oneStreamingCompleted){
                myStreaming14.destroy();
@@ -87,7 +87,7 @@ describe("Testing if manuallyAddingPeer methods", function(){
                oneStreamingCompleted = true;
             }
          }, true);
-         myStreaming15.receive_stream(streamTicket, function(){
+         myStreaming15.receive_stream(streamTicket, document.getElementById("myVideo15"), function(){
             console.log("last new spec. callback of myStreaming15.receive_stream");
             if(oneStreamingCompleted){
                myStreaming14.destroy();
@@ -166,8 +166,9 @@ describe("Testing if receive_stream method", function(){
    
    it("loads the video fast enough via server delivery", function(done){
       expect(true).toBe(true); // necessary because Jasmine wants at least one expect per it.
-      myStreaming1.receive_stream({xhr_hostname: "localhost", xhr_port: 8080, path_to_file_on_web_server: "/videos/example2.mp4", SIZE_VIDEO_FILE: theVideoFileSize}, document.getElementById("myVideo8"), function(){done()}, true);
-   }, 40000);
+      myStreaming1.receive_stream({xhr_hostname: "localhost", xhr_port: 8080, path_to_file_on_web_server: "/videos/example2.mp4", SIZE_VIDEO_FILE: theVideoFileSize}, document.getElementById("myVideo1"), function(){done();}, true);
+   }, 80000);
+     
      
    describe("loads the video fast enough via WebTorrent delivery", function(){
      
@@ -183,10 +184,10 @@ describe("Testing if receive_stream method", function(){
             }
          }, function (res) {    // webTorrentTrackers: [["ws://localhost:8081"]]
                myStreaming2.create_stream(res, {webTorrent_trackers: ["ws://localhost:8085"], web_server_URL: false},  function(streamTicket){
-                  myStreaming3.receive_stream(streamTicket, document.getElementById("myVideo8"), function(){myStreaming2.destroy(); myStreaming2 = null; done();}, true);  
+                  myStreaming3.receive_stream(streamTicket, document.getElementById("myVideo3"), function(){myStreaming2.destroy(); myStreaming2 = null; done();}, true);  
                });
          });
-      }, 40000); 
+      }, 80000); 
       
  
       it("with two seeders and one downloader", function(done){
@@ -199,7 +200,7 @@ describe("Testing if receive_stream method", function(){
          }
          
           function createStreamWhenOtherTestComplete(res){
-            if(!myStreaming3){
+            if(!myStreaming2){
               myStreaming4.create_stream(res, {webTorrent_trackers: ["ws://localhost:8085"], web_server_URL: false}, createStreamCallback);
             } else {
               setTimeout(function(){createStreamWhenOtherTestComplete(res)},500);
@@ -216,9 +217,10 @@ describe("Testing if receive_stream method", function(){
          }, function (res) {   // webTorrentTrackers: [["ws://localhost:8081"]]
             createStreamWhenOtherTestComplete(res);     
          });
-      }, 40000);  
+      }, 80000);  
       
       it("with one seeder and two downloaders", function(done){
+        var threePeersConnected = false;
         
         myStreaming7.createSignalingData(function(signalingData){
           myStreaming8.createSignalingDataResponse(signalingData, function(signalingDataResponse){
@@ -227,7 +229,7 @@ describe("Testing if receive_stream method", function(){
         });
         myStreaming8.createSignalingData(function(signalingData){
            myStreaming9.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-              myStreaming8.processSignalingResponse(signalingDataResponse, function(){console.log("OakStreaming instances 8 and 9 are connected.");});
+              myStreaming8.processSignalingResponse(signalingDataResponse, function(){console.log("OakStreaming instances 8 and 9 are connected."); threePeersConnected = true;});
            });
         });
         
@@ -258,16 +260,21 @@ describe("Testing if receive_stream method", function(){
             timer9 = setInterval(function(){console.log("myStreaming9 Downloaded: " + myStreaming9.get_number_of_bytes_downloaded_P2P()); console.log("myStreaming9 peers: " + myStreaming9.get_size_of_swarm());}, 2000);}, 250);
          };   
 
-          var createStreamWhenOtherTestComplete = function(res){
+          var createWhenInstancesConnected = function(res){
             console.log("createStreamWhenOtherTestComplete() is called");
-            
-               
-            if(!myStreaming6){
+            if(threePeersConnected){
+              myStreaming7.create_stream(res, {webTorrent_trackers: [], web_server_URL: false}, createStreamCallback);
+            } else {
+              setTimeout(function(){createWhenInstancesConnected(res)}, 500); 
+            }
+            /*   
+            if(!myStreaming5){
               console.log("myStreaming7.create_stream() gets executed");
               setTimeout(function(){myStreaming7.create_stream(res, {webTorrent_trackers: [], web_server_URL: false}, createStreamCallback);}, 4000);
             } else {
               setTimeout(function(){createStreamWhenOtherTestComplete(res);},1000);
             }
+            */
           };        
          req = http.get({
             hostname: 'localhost',
@@ -277,8 +284,8 @@ describe("Testing if receive_stream method", function(){
                 range: 'bytes=' + 0 + '-' + theVideoFileSize-1
             }
          }, function (res) {   // webTorrentTrackers: [["ws://localhost:8081"]]
-              console.log("res has been received");
-              createStreamWhenOtherTestComplete(res);
+              console.log("res has been received");              
+              createWhenInstancesConnected(res);
          });
       }, 40000);    
    });
@@ -300,4 +307,3 @@ describe("Testing if receive_stream method", function(){
       });
    }, 40000);
 });
- 
