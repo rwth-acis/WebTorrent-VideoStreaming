@@ -239,6 +239,9 @@ function OakStreaming(OakName){
       }
        
       webtorrentClient = new WebTorrent({dht: false, tracker: true});
+      webtorrentClient.on('error', function(err){
+        console.error("ERROR: " + err.message);
+      });
       
       /* Without STUN server
       webtorrentClient = new WebTorrent({
@@ -281,6 +284,9 @@ function OakStreaming(OakName){
         // This event fires as soon as the torrentSession object has been created.
         webtorrentClient.on('torrent', function (torrentSession) {
           theTorrentSession = torrentSession;
+          theTorrentSession.on('error', function (err) {
+            console.error("ERROR: " + err.message);
+          });
           wtorrentFile = theTorrentSession.files[0];
           
           // New peers can only be added to the swarm of torrentSession object, i.e. the set of peers that are used
@@ -579,7 +585,9 @@ function OakStreaming(OakName){
       
       if(wtorrentDeliverySelected){
         webtorrentClient = new WebTorrent({dht: false, tracker: true});
-        
+        webtorrentClient.on('error', function(err){
+          console.error("ERROR: " + err.message);
+        });
         /* Without STUN server
         webtorrentClient = new WebTorrent({
           dht: false,
@@ -613,7 +621,10 @@ function OakStreaming(OakName){
           // Due to the fact that only one video can be received by an OakStreaming instance at the same time,
           // at each moment the OakStreaming instance has at most one torrentSession running. The current torrentSession
           // is saved in the theTorrentSession variable.
-          theTorrentSession = torrentSession; 
+          theTorrentSession = torrentSession;
+          theTorrentSession.on('error', function (err) {
+            console.error("ERROR: " + err.message);
+          });          
       
           /*
           if(infoHashReady){

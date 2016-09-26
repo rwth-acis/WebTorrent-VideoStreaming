@@ -226,6 +226,9 @@ function OakStreaming(OakName) {
       }
 
       webtorrentClient = new WebTorrent({ dht: false, tracker: true });
+      webtorrentClient.on('error', function (err) {
+        console.error("ERROR: " + err.message);
+      });
 
       /* Without STUN server
       webtorrentClient = new WebTorrent({
@@ -267,6 +270,9 @@ function OakStreaming(OakName) {
         // This event fires as soon as the torrentSession object has been created.
         webtorrentClient.on('torrent', function (torrentSession) {
           theTorrentSession = torrentSession;
+          theTorrentSession.on('error', function (err) {
+            console.error("ERROR: " + err.message);
+          });
           wtorrentFile = theTorrentSession.files[0];
 
           // New peers can only be added to the swarm of torrentSession object, i.e. the set of peers that are used
@@ -547,7 +553,9 @@ function OakStreaming(OakName) {
 
       if (wtorrentDeliverySelected) {
         webtorrentClient = new WebTorrent({ dht: false, tracker: true });
-
+        webtorrentClient.on('error', function (err) {
+          console.error("ERROR: " + err.message);
+        });
         /* Without STUN server
         webtorrentClient = new WebTorrent({
           dht: false,
@@ -582,6 +590,9 @@ function OakStreaming(OakName) {
           // at each moment the OakStreaming instance has at most one torrentSession running. The current torrentSession
           // is saved in the theTorrentSession variable.
           theTorrentSession = torrentSession;
+          theTorrentSession.on('error', function (err) {
+            console.error("ERROR: " + err.message);
+          });
 
           /*
           if(infoHashReady){
@@ -2856,6 +2867,7 @@ Client.scrape = function (opts, cb) {
 
   var client = new Client(clientOpts)
   client.once('error', cb)
+  client.once('warning', cb)
 
   var len = Array.isArray(opts.infoHash) ? opts.infoHash.length : 1
   var results = {}
@@ -3051,9 +3063,9 @@ module.exports = WebSocketTracker
 
 var debug = require('debug')('bittorrent-tracker:websocket-tracker')
 var extend = require('xtend')
-var hat = require('hat')
 var inherits = require('inherits')
 var Peer = require('simple-peer')
+var randombytes = require('randombytes')
 var Socket = require('simple-websocket')
 
 var common = require('../common')
@@ -3110,7 +3122,7 @@ WebSocketTracker.prototype.announce = function (opts) {
     self._send(params)
   } else {
     // Limit the number of offers that are generated, since it can be slow
-    var numwant = Math.min(opts.numwant, 5)
+    var numwant = Math.min(opts.numwant, 10)
 
     self._generateOffers(numwant, function (offers) {
       params.numwant = numwant
@@ -3418,7 +3430,7 @@ WebSocketTracker.prototype._generateOffers = function (numwant, cb) {
   checkDone()
 
   function generateOffer () {
-    var offerId = hat(160)
+    var offerId = randombytes(20).toString('hex')
     debug('creating peer (from _generateOffers)')
     var peer = self.peers[offerId] = new Peer({
       initiator: true,
@@ -3452,7 +3464,7 @@ WebSocketTracker.prototype._generateOffers = function (numwant, cb) {
 
 function noop () {}
 
-},{"../common":13,"./tracker":11,"debug":31,"hat":39,"inherits":43,"simple-peer":96,"simple-websocket":98,"xtend":140}],13:[function(require,module,exports){
+},{"../common":13,"./tracker":11,"debug":31,"inherits":43,"randombytes":80,"simple-peer":96,"simple-websocket":98,"xtend":140}],13:[function(require,module,exports){
 /**
  * Functions/constants needed by both the client and server.
  */

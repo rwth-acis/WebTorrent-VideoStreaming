@@ -64,8 +64,8 @@ tracker.on('start', function (addr) {
   console.log('Got start message from ' + addr)
 })
 
-tracker.on('complete', function (addr) {})
-tracker.on('update', function (addr) {})
+tracker.on('complete', function (addr) {console.log("complete");})
+tracker.on('update', function (addr) {console.log("update");})
 tracker.on('stop', function (addr) {console.log("The client with the address " + addr + " disconnected")});
 
 

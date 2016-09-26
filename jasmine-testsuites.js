@@ -2,7 +2,7 @@ var theVideoFileSize = 788493;
 
 
 describe("Testing whether the methods to explicitly add a peer to the swarm", function(){
-  console.log("Version 1");
+  console.log("Version 2");
   
   var myStreaming12 = new OakStreaming();
   var myStreaming13 = new OakStreaming();
@@ -45,8 +45,9 @@ describe("Testing whether the methods to explicitly add a peer to the swarm", fu
     });
   }, 40000);
   
+  
   it("can successfully connect three OakStreaming instances for streaming", function(done){
-    expect(true).toBe(true); // Every Jasmine spec has to have an expect expression.   
+    expect(true).toBe(true); // Every Jasmine spec has to have an expect expression.
     var oneStreamingFinished = false;
     var numberOfEstablishedConnections = 0;
        
@@ -63,16 +64,7 @@ describe("Testing whether the methods to explicitly add a peer to the swarm", fu
       });
     });       
       
-    function createStreamCallback(streamTicket){
-      myStreaming16.receive_stream(streamTicket, document.getElementById("myVideo16"), function(){
-        if(oneStreamingFinished){
-          myStreaming14.destroy();
-          myStreaming14 = null;
-          done();
-        } else {
-          oneStreamingFinished = true;
-        }
-      }, true);
+    function createStreamCallback(streamTicket){ 
       myStreaming15.receive_stream(streamTicket, document.getElementById("myVideo15"), function(){
         if(oneStreamingFinished){
           myStreaming14.destroy();
@@ -82,10 +74,22 @@ describe("Testing whether the methods to explicitly add a peer to the swarm", fu
           oneStreamingFinished = true;
         }
       }, true);
+      
+      setTimeout(function(){
+        myStreaming16.receive_stream(streamTicket, document.getElementById("myVideo16"), function(){
+          if(oneStreamingFinished){
+            myStreaming14.destroy();
+            myStreaming14 = null;
+            done();
+          } else {
+            oneStreamingFinished = true;
+          }
+        }, true);
+      }, 500);
     }
       
     function streamWhenConnectionEstablished(res){
-      if(numberOfEstablishedConnections >= 2){
+      if(numberOfEstablishedConnections === 2){
         myStreaming14.create_stream(res, {web_server_URL: false, webTorrent_trackers: []}, 
                 createStreamCallback);
       } else {
@@ -133,7 +137,8 @@ describe("Testing whether the create_stream method", function(){
 });
 
 
-describe("Testing whether the receive_stream method", function(){ 
+describe("Testing whether the receive_stream method", function(){
+  var myStreaming0 = new OakStreaming();
   var myStreaming1 = new OakStreaming();
   var myStreaming2 = new OakStreaming();
   var myStreaming3 = new OakStreaming();  
@@ -185,15 +190,17 @@ describe("Testing whether the receive_stream method", function(){
       expect(true).toBe(true); // Every Jasmine spec has to have an expect expression.
        
       function createStreamCallback(streamTicket){
-        myStreaming5.receive_stream(streamTicket, document.getElementById("myVideo5"), function(){
-          myStreaming6.receive_stream(streamTicket, document.getElementById("myVideo6"), function(){
-            myStreaming4.destroy();
-            myStreaming4 = null;
-            myStreaming5.destroy();
-            myStreaming5 = null;
-            done();
-          }, true);
-        });
+        setTimeout(function(){
+          myStreaming5.receive_stream(streamTicket, document.getElementById("myVideo5"), function(){
+            myStreaming6.receive_stream(streamTicket, document.getElementById("myVideo6"), function(){
+              myStreaming4.destroy();
+              myStreaming4 = null;
+              myStreaming5.destroy();
+              myStreaming5 = null;
+              done();
+            }, true);
+          }, false);
+        }, 500);
       }
        
       req = http.get({
@@ -223,16 +230,14 @@ describe("Testing whether the receive_stream method", function(){
       });
       myStreaming8.createSignalingData(function(signalingData){
         myStreaming9.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-          myStreaming8.processSignalingResponse(signalingDataResponse, function(){threePeersConnected++;
-                  });
+          myStreaming8.processSignalingResponse(signalingDataResponse, function(){
+                  numberOfPeersConnected++;});
         });
       });
      
-      function checkFinished () {
+      function checkFinished(){
         numberOfCompletedDownloads++;
-        if(numberOfCompletedDownloads >= 2){
-          clearInterval(timer8);
-          clearInterval(timer9);
+        if(numberOfCompletedDownloads === 2){
           myStreaming7.destroy();
           myStreaming7 = null;
           done();
@@ -244,7 +249,7 @@ describe("Testing whether the receive_stream method", function(){
                 true);
           
         setTimeout(function(){myStreaming9.receive_stream(streamTicket, document.getElementById("myVideo9"), 
-                checkFinished, true);}, 100);
+                checkFinished, true);}, 300);
       };   
 
       function streamWhenInstancesConnected(res){
@@ -262,16 +267,14 @@ describe("Testing whether the receive_stream method", function(){
         headers: {
           range: 'bytes=' + 0 + '-' + theVideoFileSize-1
         }
-      }, function (res) {            
+      }, function (res){            
         streamWhenInstancesConnected(res);
       });
     }, 40000);    
   });
    
    
-  it("is able to receive a video stream via peer-assisted delivery", function(done){
-    var webtorrentClient = null;
-    
+  it("is able to receive a video stream via peer-assisted delivery", function(done){    
     expect(true).toBe(true); // Every Jasmine spec has to have an expect expression.
     req = http.get({
       hostname: 'localhost',
@@ -280,18 +283,16 @@ describe("Testing whether the receive_stream method", function(){
       headers: {
         range: 'bytes=' + 0 + '-' + theVideoFileSize-1
       }
-    }, function (res) {
-      webtorrentClient = new WebTorrent();
-      webtorrentClient.seed(res, function onSeed (torrent){
-        myStreaming10.receive_stream({webTorrent_trackers: ["ws://localhost:8085"], xhr_hostname: 
-                "localhost", xhr_port: 8080, path_to_file_on_web_server: "/videos/example3.mp4", 
-                torrent_file : torrent.torrentFile.toString('base64'), SIZE_VIDEO_FILE : theVideoFileSize}, 
-                document.getElementById("myVideo10"), function(){
-          webtorrentClient.destroy();
-          webtorrentClient = null;
+    }, function (res){
+      myStreaming0.create_stream({webTorrent_trackers: ["ws://localhost:8085"], web_server_URL: 
+              "http://localhost:8080", path_to_file_on_web_server: "/videos/example3.mp4"}, 
+              function(streamTicket){
+        myStreaming10.receive_stream(streamTicket, document.getElementById("myVideo10"), function(){
+          myStreaming0.destroy();
+          myStreaming0 = null;
           done();
-        }, true);            
-      });
+        }, true);        
+      });            
     });
   }, 40000);
 });
