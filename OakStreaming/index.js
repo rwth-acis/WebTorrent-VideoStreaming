@@ -164,8 +164,10 @@ function OakStreaming(OakName){
       var video_file;
       var options = {};
       var callback = function(){};
-      var returnTorrent = arguments[3];
-      var destroyTorrent = arguments[4];
+      var returnTorrent = "";
+      var destroyTorrent = false;
+      
+
       
       // In order to enable that all but the callback parameter (i.e. the third parameter) of the create_stream method
       // are optional, the arguments variable has to be read.
@@ -174,12 +176,34 @@ function OakStreaming(OakName){
         if(typeof arguments[1] !== 'function'){
           options = arguments[1];
           callback = arguments[2];
+          
+          if(arguments[3] === "Return torrent"){
+            returnTorrent = arguments[3];
+            destroyTorrent = arguments[4] || false;
+          } else {
+            returnTorrent = "No";
+            destroyTorrent = arguments[3];
+          }
         } else {
           callback = arguments[1];
+          if(arguments[2] === "Return torrent"){
+            returnTorrent = arguments[2];
+            destroyTorrent = arguments[3] || false;
+          } else {
+            returnTorrent = "No";
+            destroyTorrent = arguments[2];
+          }
         }
       } else {
         options = arguments[0];
         callback = arguments[1];
+        if(arguments[2] === "Return torrent"){
+          returnTorrent = arguments[2];
+          destroyTorrent = arguments[3] || false;
+        } else {
+          returnTorrent = "No";
+          destroyTorrent = arguments[2];
+        }
       }
 
       
@@ -386,13 +410,15 @@ function OakStreaming(OakName){
           if(returnTorrent === "Return torrent"){
             if(destroyTorrent){
               notificationsBecauseNewWire = 0;
-              torrent.destroy();
-              webtorrentClient = undefined;
+              // torrent.destroy();
+              setTimeout(function(){ // Zum Test 27.09
+                webtorrentClient.destroy();
+              }, 5000);
+            } else {
+              callback(streamTicket, torrent);
             }
-            callback(streamTicket, torrent);
           } else {
             callback(streamTicket);
-            return streamTicket;
           }    
         });
       } else {
@@ -1238,8 +1264,10 @@ function OakStreaming(OakName){
               }
               if(stopUploadingWhenVideoDownloaded){
                 if(theTorrentSession){
-                  theTorrentSession.destroy();
-                  webtorrentClient = null;
+                  setTimeout(function(){ // Neu zum Test 27.09
+                    theTorrentSession.destroy();
+                    webtorrentClient = null;
+                  }, 5000);
                 }
                 endStreaming = true;
                 return;                 

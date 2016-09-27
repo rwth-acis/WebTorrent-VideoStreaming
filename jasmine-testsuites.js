@@ -2,7 +2,7 @@ var theVideoFileSize = 788493;
 
 
 describe("Testing whether the methods to explicitly add a peer to the swarm", function(){
-  console.log("Version 2");
+  console.log("Version 4");
   
   var myStreaming12 = new OakStreaming();
   var myStreaming13 = new OakStreaming();
@@ -193,11 +193,13 @@ describe("Testing whether the receive_stream method", function(){
         setTimeout(function(){
           myStreaming5.receive_stream(streamTicket, document.getElementById("myVideo5"), function(){
             myStreaming6.receive_stream(streamTicket, document.getElementById("myVideo6"), function(){
-              myStreaming4.destroy();
-              myStreaming4 = null;
-              myStreaming5.destroy();
-              myStreaming5 = null;
-              done();
+              setTimeout(function(){
+                myStreaming4.destroy();
+                myStreaming4 = null;
+                myStreaming5.destroy();
+                myStreaming5 = null;
+                done();
+              }, 5000);
             }, true);
           }, false);
         }, 500);
@@ -238,9 +240,11 @@ describe("Testing whether the receive_stream method", function(){
       function checkFinished(){
         numberOfCompletedDownloads++;
         if(numberOfCompletedDownloads === 2){
-          myStreaming7.destroy();
-          myStreaming7 = null;
-          done();
+          setTimeout(function(){ // Zum Test 27.09
+            myStreaming7.destroy();
+            myStreaming7 = null;
+            done();
+          }, 5000);
         }
       }
       
@@ -288,9 +292,11 @@ describe("Testing whether the receive_stream method", function(){
               "http://localhost:8080", path_to_file_on_web_server: "/videos/example3.mp4"}, 
               function(streamTicket){
         myStreaming10.receive_stream(streamTicket, document.getElementById("myVideo10"), function(){
-          myStreaming0.destroy();
-          myStreaming0 = null;
-          done();
+          setTimeout(function(){
+            myStreaming0.destroy();
+            myStreaming0 = null;
+            done();
+          }, 5000);
         }, true);        
       });            
     });
