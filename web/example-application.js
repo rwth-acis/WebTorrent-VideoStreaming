@@ -152,8 +152,8 @@ function OakStreaming(OakName) {
       var video_file;
       var options = {};
       var callback = function callback() {};
-      var returnTorrent = arguments[3];
-      var destroyTorrent = arguments[4];
+      var returnTorrent = "";
+      var destroyTorrent = false;
 
       // In order to enable that all but the callback parameter (i.e. the third parameter) of the create_stream method
       // are optional, the arguments variable has to be read.
@@ -162,12 +162,34 @@ function OakStreaming(OakName) {
         if (typeof arguments[1] !== 'function') {
           options = arguments[1];
           callback = arguments[2];
+
+          if (arguments[3] === "Return torrent") {
+            returnTorrent = arguments[3];
+            destroyTorrent = arguments[4] || false;
+          } else {
+            returnTorrent = "No";
+            destroyTorrent = arguments[3];
+          }
         } else {
           callback = arguments[1];
+          if (arguments[2] === "Return torrent") {
+            returnTorrent = arguments[2];
+            destroyTorrent = arguments[3] || false;
+          } else {
+            returnTorrent = "No";
+            destroyTorrent = arguments[2];
+          }
         }
       } else {
         options = arguments[0];
         callback = arguments[1];
+        if (arguments[2] === "Return torrent") {
+          returnTorrent = arguments[2];
+          destroyTorrent = arguments[3] || false;
+        } else {
+          returnTorrent = "No";
+          destroyTorrent = arguments[2];
+        }
       }
 
       var streamTicket = options;
@@ -372,13 +394,16 @@ function OakStreaming(OakName) {
           if (returnTorrent === "Return torrent") {
             if (destroyTorrent) {
               notificationsBecauseNewWire = 0;
-              torrent.destroy();
-              webtorrentClient = undefined;
+              // torrent.destroy();
+              setTimeout(function () {
+                // Zum Test 27.09
+                webtorrentClient.destroy();
+              }, 5000);
+            } else {
+              callback(streamTicket, torrent);
             }
-            callback(streamTicket, torrent);
           } else {
             callback(streamTicket);
-            return streamTicket;
           }
         });
       } else {
@@ -520,7 +545,7 @@ function OakStreaming(OakName) {
       var CHECK_IF_ANSWERSTREAM_READY_INTERVAL = streamTicket.check_if_answerstream_ready_interval || 200; // in milliseconds
       var UPDATE_CHART_INTERVAL = streamTicket.update_chart_interval || 1000; // in milliseconds
       var CHOKE_IF_NECESSARY_INTERVAL = streamTicket.choke_if_necessary_interval || 300; // in milliseconds 
-      var CHECK_IF_VIDEO_COMPLETELY_LOADED_INTERVAL = streamTicket.check_if_video_completely_loaded_interval || 500; // in milliseconds
+      var CHECK_IF_VIDEO_DOWNLOADED_INTERVAL = streamTicket.check_if_video_downloaded_interval || 500; // in milliseconds
 
       // These variables are declared in this high scope in order to enable every function that is declared in 
       // receive_stream to access and manipulate these variables.
@@ -534,13 +559,13 @@ function OakStreaming(OakName) {
       var inServerDownloadTimeRange = true; // inServerDownloadTimeRange === true means that there is less than 
       // DOWNLOAD_FROM_SERVER_TIME_RANGE seconds of video playback buffered and consequently XHRs will be 
       // conducted.
-      var videoCompletelyLoaded = false;
+      var videoDownloaded = false;
+      var videoDownloadedByWtorrent = false;
       var bytesFromWtorrent = 0;
       var bytesFromServer = 0;
       var consoleCounter = 0; // This variable is only for debugging purposes.
       // var first2000BytesOfVideo = null; Feature was too confusing to implement.
       // var numberBytesInFirst2000BytesOfVideo = 0; Feature was too confusing to implement.
-      var videoCompletelyLoadedByWtorrent = false;
       // var timeOfLastWtorrentRequest = 0; Not needed in this version
 
       // These Node.js readable streams will be used to buffer received video data before it gets put into the
@@ -643,7 +668,7 @@ function OakStreaming(OakName) {
 
           // Emitted as soon as the complete video file has been downloaded via the WebTorrent network.
           theTorrentSession.on('done', function () {
-            videoCompletelyLoadedByWtorrent = true;
+            videoDownloadedByWtorrent = true;
           });
 
           // If this OakStreaming instance is already connected to another peer, this function calls the callback
@@ -925,7 +950,7 @@ function OakStreaming(OakName) {
             }
 
             if (serverDeliverySelected && inServerDownloadTimeRange && !thisRequest.xhrConducted) {
-              if (!wtorrentFile || !videoCompletelyLoadedByWtorrent) {
+              if (!wtorrentFile || !videoDownloadedByWtorrent) {
                 conductXhr(thisRequest);
               }
             }
@@ -974,7 +999,7 @@ function OakStreaming(OakName) {
       // is buffered in advance. If this is the case, this function conducts a new sequential byte range request
       // to the WebTorrent network.
       function checkIfInP2pDownloadTimeRange() {
-        if (videoCompletelyLoaded) {
+        if (videoDownloaded) {
           return;
         }
 
@@ -1079,8 +1104,7 @@ function OakStreaming(OakName) {
       // is reached. If it should be throttled, then every neighbor gets choked which means no more data is send to 
       // other peers for approximately 800 milliseconds.
       function chokeIfNecessary() {
-        if (theTorrentSession && theTorrentSession.uploaded >= theTorrentSession.downloaded * UPLOAD_LIMIT_MULTIPLIER + UPLOAD_LIMIT_ADDEND) {
-
+        if (stopUploadingWhenVideoDownloaded && videoDownloadedByWtorrent || theTorrentSession && theTorrentSession.uploaded >= theTorrentSession.downloaded * UPLOAD_LIMIT_MULTIPLIER + UPLOAD_LIMIT_ADDEND) {
           for (var i = 0, length = neighbors.length; i < length; i++) {
             neighbors[i].choke();
           }
@@ -1128,7 +1152,7 @@ function OakStreaming(OakName) {
       // in advance and sets the private property inServerDownloadTimeRange of the OakStreaming client accordingly.
       // If the inServerDownloadTimeRange property has been set to true, this function may conduct XHRs. 
       function checkIfInServerDownloadTimeRange(justOnce) {
-        if (videoCompletelyLoaded) {
+        if (videoDownloaded) {
           return;
         }
         if (htmlVideoTag.duration) {
@@ -1144,7 +1168,7 @@ function OakStreaming(OakName) {
           }
           if (serverDeliverySelected && inServerDownloadTimeRange) {
             for (var j = 0, length = videostreamRequestHandlers.length; j < length; j++) {
-              if ((!wtorrentFile || !videoCompletelyLoadedByWtorrent) && videostreamRequestHandlers[j].callbackOfMultistream !== null && videostreamRequestHandlers[j].xhrConducted === false) {
+              if ((!wtorrentFile || !videoDownloadedByWtorrent) && videostreamRequestHandlers[j].callbackOfMultistream !== null && videostreamRequestHandlers[j].xhrConducted === false) {
                 conductXhr(videostreamRequestHandlers[j]);
               }
             }
@@ -1157,8 +1181,8 @@ function OakStreaming(OakName) {
       }
 
       // This function checks whether the video is completely downloaded.
-      function checkIfVideoIsCompletelyLoaded() {
-        if (videoCompletelyLoaded) {
+      function checkIfVideoDownloaded() {
+        if (videoDownloaded) {
           return;
         }
 
@@ -1167,7 +1191,7 @@ function OakStreaming(OakName) {
           var timeRanges = htmlVideoTag.buffered;
           if (timeRanges.length >= 1) {
             if (timeRanges.start(0) == 0 && timeRanges.end(0) == htmlVideoTag.duration) {
-              videoCompletelyLoaded = true;
+              videoDownloaded = true;
               if (callback) {
                 if (stopUploadingWhenVideoDownloaded) {
                   callback();
@@ -1178,8 +1202,11 @@ function OakStreaming(OakName) {
               }
               if (stopUploadingWhenVideoDownloaded) {
                 if (theTorrentSession) {
-                  theTorrentSession.destroy();
-                  webtorrentClient = null;
+                  setTimeout(function () {
+                    // Neu zum Test 27.09
+                    theTorrentSession.destroy();
+                    webtorrentClient = null;
+                  }, 5000);
                 }
                 endStreaming = true;
                 return;
@@ -1193,7 +1220,8 @@ function OakStreaming(OakName) {
         // and from the Web server. Video data that is buffered by the WebTorrent instance may not be loaded
         // into the buffer of the video player yet.
         if (theTorrentSession && theTorrentSession.progress === 1) {
-          videoCompletelyLoaded = true;
+          videoDownloaded = true;
+          videoDownloadedByWtorrent = true;
           if (callback) {
             if (stopUploadingWhenVideoDownloaded) {
               callback();
@@ -1208,7 +1236,7 @@ function OakStreaming(OakName) {
           }
         }
 
-        setTimeout(checkIfVideoIsCompletelyLoaded, CHECK_IF_VIDEO_COMPLETELY_LOADED_INTERVAL);
+        setTimeout(checkIfVideoDownloaded, CHECK_IF_VIDEO_DOWNLOADED_INTERVAL);
       }
 
       // This function conducts a XHR for the VideostreamRequestHandler which is handed over to the function
@@ -1469,7 +1497,7 @@ function OakStreaming(OakName) {
       checkIfInP2pDownloadTimeRange();
       chokeIfNecessary();
       checkIfInServerDownloadTimeRange();
-      checkIfVideoIsCompletelyLoaded();
+      checkIfVideoDownloaded();
       // updateChart();   Only for testing and debugging.
 
       if (HASH_VALUE) {
