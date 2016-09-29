@@ -31,12 +31,15 @@ function OakStreaming(OakName){
     var SIZE_VIDEO_FILE = 0;
     var webtorrentClient = null;
       
-    self.destroy = function(){
+    self.destroy = function(callback){
       if(webtorrentClient){
         webtorrentClient.destroy(function(err){
           if(err){
             console.error("ERROR: " + err.message);
             //console.log("destroy err: " + err.message);
+          }
+          if(callback){
+            callback();
           }
         });
       }
@@ -104,9 +107,9 @@ function OakStreaming(OakName){
     self.signaling1 = function (callback){
       var alreadyCalledCallback = false;
       var oakNumber = simplePeerCreationCounter;
-      connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({initiator: true, // { url: 'stun:23.21.150.121' }
-              trickle: false,  config: { iceServers: [] }});
       simplePeerCreationCounter++;
+      connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({initiator: true,
+              trickle: false,  config: { iceServers: [{ url: 'stun:23.21.150.121' }] }});
          
       connectionsWaitingForSignalingData[oakNumber].on('signal', function (signalingData){
         if(!alreadyCalledCallback){
@@ -124,12 +127,12 @@ function OakStreaming(OakName){
     self.signaling2 = function (signalingData, callback){
       var oakNumber = signalingData.oakNumber;
       signalingData.oakNumber = undefined;
-         
-      var simplePeer = new SimplePeer({initiator: false, trickle: false, config: {iceServers: [{
-              url: 'stun:23.21.150.121' }]}});
+      
+      var simplePeer = new SimplePeer({initiator: false, trickle: false, config: {
+              iceServers: [{url: 'stun:23.21.150.121'}]}});
       var index = simplePeerCreationCounter;
-      connectionsWaitingForSignalingData[index] = simplePeer;
       simplePeerCreationCounter++;
+      connectionsWaitingForSignalingData[index] = simplePeer;
          
       simplePeer.on('signal', function (answerSignalingData){
         answerSignalingData.oakNumber = oakNumber;
@@ -139,6 +142,7 @@ function OakStreaming(OakName){
 
       simplePeer.on('connect', function(){
         addP2pConnectionToWtorrent(connectionsWaitingForSignalingData[index], function(){});
+        connectionsWaitingForSignalingData[index] = undefined;
       });
     };
 
@@ -148,7 +152,6 @@ function OakStreaming(OakName){
     self.signaling3 = function (signalingData, callback){
       var oakNumber = signalingData.oakNumber;
       signalingData.oakNumber = undefined;
-      var self = this;
       (connectionsWaitingForSignalingData[oakNumber]).on('connect', function (){
         addP2pConnectionToWtorrent(connectionsWaitingForSignalingData[oakNumber]);
         connectionsWaitingForSignalingData[oakNumber] = undefined;
@@ -305,6 +308,7 @@ function OakStreaming(OakName){
 
         var self = this; 
         
+        /* 28.08
         // This event fires as soon as the torrentSession object has been created.
         webtorrentClient.on('torrent', function (torrentSession) {
           theTorrentSession = torrentSession;
@@ -312,6 +316,7 @@ function OakStreaming(OakName){
             console.error("ERROR: " + err.message);
           });
           wtorrentFile = theTorrentSession.files[0];
+          
           
           // New peers can only be added to the swarm of torrentSession object, i.e. the set of peers that are used
           // for video data exchange, when the infoHash of the torrentSession object has already been created.
@@ -321,6 +326,8 @@ function OakStreaming(OakName){
               if(peersToAdd[j][1]){
                 (peersToAdd[j][1])();
               }
+              peersToAdd.splice(j, 1);
+              j--;
             }                  
           } else {
             theTorrentSession.on('infoHash', function(){                    
@@ -331,6 +338,8 @@ function OakStreaming(OakName){
                 if(peersToAdd[j][1]){
                   (peersToAdd[j][1])();
                 }
+                peersToAdd.splice(j, 1);
+                j--;
               }
             });
             theTorrentSession.on('metadata', function(){
@@ -341,12 +350,15 @@ function OakStreaming(OakName){
                 if(peersToAdd[j][1]){
                   (peersToAdd[j][1])();
                 }
+                peersToAdd.splice(j, 1);
+                j--;
               } 
             });
           }
         });
-            
-        webtorrentClient.seed(video_file, seedingOptions, function onSeed(torrent){   
+        */
+         
+        theTorrentSession = webtorrentClient.seed(video_file, seedingOptions, function onSeed(torrent){   
           /* K42 Maybe I will need this later
           var torrent_fileAsBlobURL = torrent.torrent_fileBlobURL;
           var xhr = new XMLHttpRequest();
@@ -421,6 +433,27 @@ function OakStreaming(OakName){
             callback(streamTicket);
           }    
         });
+        
+        theTorrentSession.on('metadata', function(){                    
+          // Peers which used the offered methods to manually/explicitly connect to this OakStreaming instance
+          // before a torrent file has been loaded are added now to the swarm of the torrentSession object.
+
+          setTimeout(function(){  
+            for(var j=0; j< peersToAdd.length; j++){
+              console.log("A seeding peer got added to WebTorrent");
+              console.log("typeof peersToAdd[j][0]: " + typeof peersToAdd[j][0]);
+              console.log("peersToAdd[j][0]: " + peersToAdd[j][0]);
+              theTorrentSession.addPeer(peersToAdd[j][0]);
+              if(peersToAdd[j][1]){
+                (peersToAdd[j][1])();
+              }
+              peersToAdd.splice(j, 1);
+              j--;
+            }
+          }, 10000);
+        });
+            
+            
       } else {
         callback(streamTicket);
         
@@ -633,7 +666,7 @@ function OakStreaming(OakName){
         }
         */
 
-        webtorrentClient.add(TORRENT_FILE, webtorrentOptions, function (torrentSession){          
+        theTorrentSession = webtorrentClient.add(TORRENT_FILE, webtorrentOptions, function (torrentSession){          
           // From this point of time onwards, the WebTorrent instance will start downloading video data from the
           // WebTorrent network. This downloading happens in the background and according to the rarest-peace-first
           // strategy. The OakStreaming client downloads the video data as fast as possible. 
@@ -662,10 +695,13 @@ function OakStreaming(OakName){
               if(peersToAdd[j][1]){
                 (peersToAdd[j][1])();
               }
+              peersToAdd.splice(j, 1);
+              j--;
             }                         
           } else { 
           */
           
+          /* 28.09
           // Add peers which have been directly connected to this OakStreaming instance by the library user to 
           // the (peer) swarm of this OakStreaming instance. Peers can be added to the swarm instance
           // as soon as the infoHash property is accessible.
@@ -675,6 +711,8 @@ function OakStreaming(OakName){
               if(peersToAdd[j][1]){
                 (peersToAdd[j][1])();
               }
+              peersToAdd.splice(j, 1);
+              j--;
             }                  
           } else {              
             theTorrentSession.on('infoHash', function(){
@@ -683,6 +721,8 @@ function OakStreaming(OakName){
                 if(peersToAdd[j][1]){
                   (peersToAdd[j][1])();
                 }
+                peersToAdd.splice(j, 1);
+                j--;
               } 
             });
             theTorrentSession.on('metadata', function(){   
@@ -694,9 +734,14 @@ function OakStreaming(OakName){
                 if(peersToAdd[j][1]){
                   (peersToAdd[j][1])();
                 }
+                peersToAdd.splice(j, 1);
+                j--;
               } 
             });
-          }          
+          }
+          */
+
+          
           wtorrentFile = theTorrentSession.files[0];
 
           // Emitted as soon as the complete video file has been downloaded via the WebTorrent network.
@@ -809,6 +854,29 @@ function OakStreaming(OakName){
             }
           }
         });
+        
+          
+            theTorrentSession.on('metadata', function(){   
+              // This case is necessary because WebTorrents infoHash eventListener is not reliable.
+              // The metadata event listener gets called when all meta data about the torrent has been determined
+              // (including the info hash of the torrent).
+              setTimeout(function(){
+                for(var j=0; j< peersToAdd.length; j++){
+                  console.log("A receiver peer got added to WebTorrent");
+                  console.log("typeof peersToAdd[j][0]: " + typeof peersToAdd[j][0]);
+                  console.log("peersToAdd[j][0]: " + peersToAdd[j][0]);
+                  theTorrentSession.addPeer(peersToAdd[j][0]);
+                  if(peersToAdd[j][1]){
+                    (peersToAdd[j][1])();
+                  }
+                  peersToAdd.splice(j, 1);
+                  j--;
+                }
+              }, 10000);              
+            });
+          
+        
+        
       }    
       // The following line of code belongs to the "request first 2000 byte only once from server" feature
       // The development of this feature has been canceled for now.
@@ -1574,6 +1642,7 @@ function OakStreaming(OakName){
       }
     }
 
+    
     // This function adds a simple-peer connection to the WebTorrent swarm of the OakStreaming instance.
     // A simple-peer connection is a wrapper for a WebRTC connection.
     function addP2pConnectionToWtorrent(simplePeerInstance, callback){
@@ -1604,6 +1673,7 @@ function OakStreaming(OakName){
         pair.push(simplePeerInstance);
         pair.push(callback);
         peersToAdd.push(pair);
+        console.log("A simple-peer connection got added to peersToAdd");
       }
     }
     

@@ -2,6 +2,8 @@
 (function (Buffer){
 'use strict';
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 var http = require('http');
 var MultiStream = require('multistream');
 var util = require('util');
@@ -30,12 +32,15 @@ function OakStreaming(OakName) {
     var SIZE_VIDEO_FILE = 0;
     var webtorrentClient = null;
 
-    self.destroy = function () {
+    self.destroy = function (callback) {
       if (webtorrentClient) {
         webtorrentClient.destroy(function (err) {
           if (err) {
             console.error("ERROR: " + err.message);
             //console.log("destroy err: " + err.message);
+          }
+          if (callback) {
+            callback();
           }
         });
       }
@@ -95,9 +100,9 @@ function OakStreaming(OakName) {
     self.signaling1 = function (callback) {
       var alreadyCalledCallback = false;
       var oakNumber = simplePeerCreationCounter;
-      connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({ initiator: true, // { url: 'stun:23.21.150.121' }
-        trickle: false, config: { iceServers: [] } });
       simplePeerCreationCounter++;
+      connectionsWaitingForSignalingData[oakNumber] = new SimplePeer({ initiator: true,
+        trickle: false, config: { iceServers: [{ url: 'stun:23.21.150.121' }] } });
 
       connectionsWaitingForSignalingData[oakNumber].on('signal', function (signalingData) {
         if (!alreadyCalledCallback) {
@@ -115,11 +120,11 @@ function OakStreaming(OakName) {
       var oakNumber = signalingData.oakNumber;
       signalingData.oakNumber = undefined;
 
-      var simplePeer = new SimplePeer({ initiator: false, trickle: false, config: { iceServers: [{
-            url: 'stun:23.21.150.121' }] } });
+      var simplePeer = new SimplePeer({ initiator: false, trickle: false, config: {
+          iceServers: [{ url: 'stun:23.21.150.121' }] } });
       var index = simplePeerCreationCounter;
-      connectionsWaitingForSignalingData[index] = simplePeer;
       simplePeerCreationCounter++;
+      connectionsWaitingForSignalingData[index] = simplePeer;
 
       simplePeer.on('signal', function (answerSignalingData) {
         answerSignalingData.oakNumber = oakNumber;
@@ -129,6 +134,7 @@ function OakStreaming(OakName) {
 
       simplePeer.on('connect', function () {
         addP2pConnectionToWtorrent(connectionsWaitingForSignalingData[index], function () {});
+        connectionsWaitingForSignalingData[index] = undefined;
       });
     };
 
@@ -137,7 +143,6 @@ function OakStreaming(OakName) {
     self.signaling3 = function (signalingData, callback) {
       var oakNumber = signalingData.oakNumber;
       signalingData.oakNumber = undefined;
-      var self = this;
       connectionsWaitingForSignalingData[oakNumber].on('connect', function () {
         addP2pConnectionToWtorrent(connectionsWaitingForSignalingData[oakNumber]);
         connectionsWaitingForSignalingData[oakNumber] = undefined;
@@ -289,6 +294,7 @@ function OakStreaming(OakName) {
 
         var self = this;
 
+        /* 28.08
         // This event fires as soon as the torrentSession object has been created.
         webtorrentClient.on('torrent', function (torrentSession) {
           theTorrentSession = torrentSession;
@@ -296,41 +302,49 @@ function OakStreaming(OakName) {
             console.error("ERROR: " + err.message);
           });
           wtorrentFile = theTorrentSession.files[0];
-
+          
+          
           // New peers can only be added to the swarm of torrentSession object, i.e. the set of peers that are used
           // for video data exchange, when the infoHash of the torrentSession object has already been created.
-          if (theTorrentSession.infoHash) {
-            for (var j = 0; j < peersToAdd.length; j++) {
+          if(theTorrentSession.infoHash){
+            for(var j=0; j< peersToAdd.length; j++){
               theTorrentSession.addPeer(peersToAdd[j][0]);
-              if (peersToAdd[j][1]) {
-                peersToAdd[j][1]();
+              if(peersToAdd[j][1]){
+                (peersToAdd[j][1])();
               }
-            }
+              peersToAdd.splice(j, 1);
+              j--;
+            }                  
           } else {
-            theTorrentSession.on('infoHash', function () {
+            theTorrentSession.on('infoHash', function(){                    
               // Peers which used the offered methods to manually/explicitly connect to this OakStreaming instance
               // before a torrent file has been loaded are added now to the swarm of the torrentSession object. 
-              for (var j = 0; j < peersToAdd.length; j++) {
+              for(var j=0; j< peersToAdd.length; j++){
                 theTorrentSession.addPeer(peersToAdd[j][0]);
-                if (peersToAdd[j][1]) {
-                  peersToAdd[j][1]();
+                if(peersToAdd[j][1]){
+                  (peersToAdd[j][1])();
                 }
+                peersToAdd.splice(j, 1);
+                j--;
               }
             });
-            theTorrentSession.on('metadata', function () {
+            theTorrentSession.on('metadata', function(){
               // Peers which used the offered methods to manually connect to this OakStreaming instance
               // before a torrent file was loaded are added now to the swarm of the torrentSession object.
-              for (var j = 0; j < peersToAdd.length; j++) {
+              for(var j=0; j< peersToAdd.length; j++){               
                 theTorrentSession.addPeer(peersToAdd[j][0]);
-                if (peersToAdd[j][1]) {
-                  peersToAdd[j][1]();
+                if(peersToAdd[j][1]){
+                  (peersToAdd[j][1])();
                 }
-              }
+                peersToAdd.splice(j, 1);
+                j--;
+              } 
             });
           }
         });
+        */
 
-        webtorrentClient.seed(video_file, seedingOptions, function onSeed(torrent) {
+        theTorrentSession = webtorrentClient.seed(video_file, seedingOptions, function onSeed(torrent) {
           /* K42 Maybe I will need this later
           var torrent_fileAsBlobURL = torrent.torrent_fileBlobURL;
           var xhr = new XMLHttpRequest();
@@ -405,6 +419,25 @@ function OakStreaming(OakName) {
           } else {
             callback(streamTicket);
           }
+        });
+
+        theTorrentSession.on('metadata', function () {
+          // Peers which used the offered methods to manually/explicitly connect to this OakStreaming instance
+          // before a torrent file has been loaded are added now to the swarm of the torrentSession object.
+
+          setTimeout(function () {
+            for (var j = 0; j < peersToAdd.length; j++) {
+              console.log("A seeding peer got added to WebTorrent");
+              console.log("typeof peersToAdd[j][0]: " + _typeof(peersToAdd[j][0]));
+              console.log("peersToAdd[j][0]: " + peersToAdd[j][0]);
+              theTorrentSession.addPeer(peersToAdd[j][0]);
+              if (peersToAdd[j][1]) {
+                peersToAdd[j][1]();
+              }
+              peersToAdd.splice(j, 1);
+              j--;
+            }
+          }, 10000);
         });
       } else {
         callback(streamTicket);
@@ -600,7 +633,7 @@ function OakStreaming(OakName) {
         }
         */
 
-        webtorrentClient.add(TORRENT_FILE, webtorrentOptions, function (torrentSession) {
+        theTorrentSession = webtorrentClient.add(TORRENT_FILE, webtorrentOptions, function (torrentSession) {
           // From this point of time onwards, the WebTorrent instance will start downloading video data from the
           // WebTorrent network. This downloading happens in the background and according to the rarest-peace-first
           // strategy. The OakStreaming client downloads the video data as fast as possible. 
@@ -629,41 +662,52 @@ function OakStreaming(OakName) {
               if(peersToAdd[j][1]){
                 (peersToAdd[j][1])();
               }
+              peersToAdd.splice(j, 1);
+              j--;
             }                         
           } else { 
           */
 
+          /* 28.09
           // Add peers which have been directly connected to this OakStreaming instance by the library user to 
           // the (peer) swarm of this OakStreaming instance. Peers can be added to the swarm instance
           // as soon as the infoHash property is accessible.
-          if (theTorrentSession.infoHash) {
-            for (var j = 0; j < peersToAdd.length; j++) {
+          if(theTorrentSession.infoHash){
+            for(var j=0; j< peersToAdd.length; j++){             
               theTorrentSession.addPeer(peersToAdd[j][0]);
-              if (peersToAdd[j][1]) {
-                peersToAdd[j][1]();
+              if(peersToAdd[j][1]){
+                (peersToAdd[j][1])();
               }
-            }
-          } else {
-            theTorrentSession.on('infoHash', function () {
-              for (var j = 0; j < peersToAdd.length; j++) {
+              peersToAdd.splice(j, 1);
+              j--;
+            }                  
+          } else {              
+            theTorrentSession.on('infoHash', function(){
+              for(var j=0; j< peersToAdd.length; j++){                   
                 theTorrentSession.addPeer(peersToAdd[j][0]);
-                if (peersToAdd[j][1]) {
-                  peersToAdd[j][1]();
+                if(peersToAdd[j][1]){
+                  (peersToAdd[j][1])();
                 }
-              }
+                peersToAdd.splice(j, 1);
+                j--;
+              } 
             });
-            theTorrentSession.on('metadata', function () {
+            theTorrentSession.on('metadata', function(){   
               // This case is necessary because WebTorrents infoHash eventListener is not reliable.
               // The metadata event listener gets called when all meta data about the torrent has been determined
               // (including the info hash of the torrent).
-              for (var j = 0; j < peersToAdd.length; j++) {
+              for(var j=0; j< peersToAdd.length; j++){                  
                 theTorrentSession.addPeer(peersToAdd[j][0]);
-                if (peersToAdd[j][1]) {
-                  peersToAdd[j][1]();
+                if(peersToAdd[j][1]){
+                  (peersToAdd[j][1])();
                 }
-              }
+                peersToAdd.splice(j, 1);
+                j--;
+              } 
             });
           }
+          */
+
           wtorrentFile = theTorrentSession.files[0];
 
           // Emitted as soon as the complete video file has been downloaded via the WebTorrent network.
@@ -772,6 +816,25 @@ function OakStreaming(OakName) {
               thisRequest.wtorrentStream.pipe(thisRequest.collectorStreamForWtorrent);
             }
           }
+        });
+
+        theTorrentSession.on('metadata', function () {
+          // This case is necessary because WebTorrents infoHash eventListener is not reliable.
+          // The metadata event listener gets called when all meta data about the torrent has been determined
+          // (including the info hash of the torrent).
+          setTimeout(function () {
+            for (var j = 0; j < peersToAdd.length; j++) {
+              console.log("A receiver peer got added to WebTorrent");
+              console.log("typeof peersToAdd[j][0]: " + _typeof(peersToAdd[j][0]));
+              console.log("peersToAdd[j][0]: " + peersToAdd[j][0]);
+              theTorrentSession.addPeer(peersToAdd[j][0]);
+              if (peersToAdd[j][1]) {
+                peersToAdd[j][1]();
+              }
+              peersToAdd.splice(j, 1);
+              j--;
+            }
+          }, 10000);
         });
       }
       // The following line of code belongs to the "request first 2000 byte only once from server" feature
@@ -1537,6 +1600,7 @@ function OakStreaming(OakName) {
         pair.push(simplePeerInstance);
         pair.push(callback);
         peersToAdd.push(pair);
+        console.log("A simple-peer connection got added to peersToAdd");
       }
     }
 
@@ -2895,6 +2959,7 @@ Client.scrape = function (opts, cb) {
 
   var client = new Client(clientOpts)
   client.once('error', cb)
+  client.once('warning', cb)
 
   var len = Array.isArray(opts.infoHash) ? opts.infoHash.length : 1
   var results = {}
@@ -3090,9 +3155,9 @@ module.exports = WebSocketTracker
 
 var debug = require('debug')('bittorrent-tracker:websocket-tracker')
 var extend = require('xtend')
-var hat = require('hat')
 var inherits = require('inherits')
 var Peer = require('simple-peer')
+var randombytes = require('randombytes')
 var Socket = require('simple-websocket')
 
 var common = require('../common')
@@ -3149,7 +3214,7 @@ WebSocketTracker.prototype.announce = function (opts) {
     self._send(params)
   } else {
     // Limit the number of offers that are generated, since it can be slow
-    var numwant = Math.min(opts.numwant, 5)
+    var numwant = Math.min(opts.numwant, 10)
 
     self._generateOffers(numwant, function (offers) {
       params.numwant = numwant
@@ -3457,7 +3522,7 @@ WebSocketTracker.prototype._generateOffers = function (numwant, cb) {
   checkDone()
 
   function generateOffer () {
-    var offerId = hat(160)
+    var offerId = randombytes(20).toString('hex')
     debug('creating peer (from _generateOffers)')
     var peer = self.peers[offerId] = new Peer({
       initiator: true,
@@ -3491,7 +3556,7 @@ WebSocketTracker.prototype._generateOffers = function (numwant, cb) {
 
 function noop () {}
 
-},{"../common":13,"./tracker":11,"debug":31,"hat":39,"inherits":43,"simple-peer":96,"simple-websocket":98,"xtend":140}],13:[function(require,module,exports){
+},{"../common":13,"./tracker":11,"debug":31,"inherits":43,"randombytes":80,"simple-peer":96,"simple-websocket":98,"xtend":140}],13:[function(require,module,exports){
 /**
  * Functions/constants needed by both the client and server.
  */
@@ -15505,9 +15570,8 @@ module.exports = Peer
 
 var debug = require('debug')('simple-peer')
 var getBrowserRTC = require('get-browser-rtc')
-var hat = require('hat')
 var inherits = require('inherits')
-var once = require('once')
+var randombytes = require('randombytes')
 var stream = require('readable-stream')
 
 inherits(Peer, stream.Duplex)
@@ -15520,6 +15584,11 @@ inherits(Peer, stream.Duplex)
 function Peer (opts) {
   var self = this
   if (!(self instanceof Peer)) return new Peer(opts)
+
+  self.channelName = opts.initiator
+    ? opts.channelName || randombytes(20).toString('hex')
+    : null
+
   self._debug('new peer %o', opts)
 
   if (!opts) opts = {}
@@ -15530,11 +15599,10 @@ function Peer (opts) {
 
   self.initiator = opts.initiator || false
   self.channelConfig = opts.channelConfig || Peer.channelConfig
-  self.channelName = opts.initiator ? (opts.channelName || hat(160)) : null
   self.config = opts.config || Peer.config
   self.constraints = opts.constraints || Peer.constraints
-  self.offerConstraints = opts.offerConstraints
-  self.answerConstraints = opts.answerConstraints
+  self.offerConstraints = opts.offerConstraints || {}
+  self.answerConstraints = opts.answerConstraints || {}
   self.reconnectTimer = opts.reconnectTimer || false
   self.sdpTransform = opts.sdpTransform || function (sdp) { return sdp }
   self.stream = opts.stream || false
@@ -15586,17 +15654,29 @@ function Peer (opts) {
   }
 
   if (self.stream) self._pc.addStream(self.stream)
-  self._pc.onaddstream = function (event) {
-    self._onAddStream(event)
+
+  if ('ontrack' in self._pc) {
+    // WebRTC Spec, Firefox
+    self._pc.ontrack = function (event) {
+      self._onTrack(event)
+    }
+  } else {
+    // Chrome, etc. This can be removed once all browsers support `ontrack`
+    self._pc.onaddstream = function (event) {
+      self._onAddStream(event)
+    }
   }
 
   if (self.initiator) {
     self._setupData({
       channel: self._pc.createDataChannel(self.channelName, self.channelConfig)
     })
-    self._pc.onnegotiationneeded = once(function () {
-      self._createOffer()
-    })
+
+    var createdOffer = false
+    self._pc.onnegotiationneeded = function () {
+      if (!createdOffer) self._createOffer()
+      createdOffer = true
+    }
     // Only Chrome triggers "negotiationneeded"; this is a workaround for other
     // implementations
     if (typeof window === 'undefined' || !window.webkitRTCPeerConnection) {
@@ -15754,7 +15834,11 @@ Peer.prototype._destroy = function (err, onclose) {
     self._pc.oniceconnectionstatechange = null
     self._pc.onsignalingstatechange = null
     self._pc.onicecandidate = null
-    self._pc.onaddstream = null
+    if ('ontrack' in self._pc) {
+      self._pc.ontrack = null
+    } else {
+      self._pc.onaddstream = null
+    }
     self._pc.onnegotiationneeded = null
     self._pc.ondatachannel = null
   }
@@ -16059,6 +16143,13 @@ Peer.prototype._onAddStream = function (event) {
   self.emit('stream', event.stream)
 }
 
+Peer.prototype._onTrack = function (event) {
+  var self = this
+  if (self.destroyed) return
+  self._debug('on track')
+  self.emit('stream', event.streams[0])
+}
+
 Peer.prototype._onError = function (err) {
   var self = this
   if (self.destroyed) return
@@ -16078,7 +16169,7 @@ function noop () {}
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":19,"debug":31,"get-browser-rtc":38,"hat":39,"inherits":43,"once":63,"readable-stream":87}],97:[function(require,module,exports){
+},{"buffer":19,"debug":31,"get-browser-rtc":38,"inherits":43,"randombytes":80,"readable-stream":87}],97:[function(require,module,exports){
 var Rusha = require('rusha')
 
 var rusha = new Rusha
