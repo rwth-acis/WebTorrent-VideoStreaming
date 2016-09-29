@@ -2,8 +2,6 @@
 (function (Buffer){
 'use strict';
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
 var http = require('http');
 var MultiStream = require('multistream');
 var util = require('util');
@@ -257,17 +255,6 @@ function OakStreaming(OakName) {
         console.error("ERROR: " + err.message);
       });
 
-      /* Without STUN server
-      webtorrentClient = new WebTorrent({
-        dht: false,
-        tracker: {
-          rtcConfig: {
-            iceServers: []
-          }
-        }
-      });
-      */
-
       if (video_file) {
         var seedingOptions = {
           name: video_file.name + " - (Created by an OakStreaming client)"
@@ -294,56 +281,6 @@ function OakStreaming(OakName) {
 
         var self = this;
 
-        /* 28.08
-        // This event fires as soon as the torrentSession object has been created.
-        webtorrentClient.on('torrent', function (torrentSession) {
-          theTorrentSession = torrentSession;
-          theTorrentSession.on('error', function (err) {
-            console.error("ERROR: " + err.message);
-          });
-          wtorrentFile = theTorrentSession.files[0];
-          
-          
-          // New peers can only be added to the swarm of torrentSession object, i.e. the set of peers that are used
-          // for video data exchange, when the infoHash of the torrentSession object has already been created.
-          if(theTorrentSession.infoHash){
-            for(var j=0; j< peersToAdd.length; j++){
-              theTorrentSession.addPeer(peersToAdd[j][0]);
-              if(peersToAdd[j][1]){
-                (peersToAdd[j][1])();
-              }
-              peersToAdd.splice(j, 1);
-              j--;
-            }                  
-          } else {
-            theTorrentSession.on('infoHash', function(){                    
-              // Peers which used the offered methods to manually/explicitly connect to this OakStreaming instance
-              // before a torrent file has been loaded are added now to the swarm of the torrentSession object. 
-              for(var j=0; j< peersToAdd.length; j++){
-                theTorrentSession.addPeer(peersToAdd[j][0]);
-                if(peersToAdd[j][1]){
-                  (peersToAdd[j][1])();
-                }
-                peersToAdd.splice(j, 1);
-                j--;
-              }
-            });
-            theTorrentSession.on('metadata', function(){
-              // Peers which used the offered methods to manually connect to this OakStreaming instance
-              // before a torrent file was loaded are added now to the swarm of the torrentSession object.
-              for(var j=0; j< peersToAdd.length; j++){               
-                theTorrentSession.addPeer(peersToAdd[j][0]);
-                if(peersToAdd[j][1]){
-                  (peersToAdd[j][1])();
-                }
-                peersToAdd.splice(j, 1);
-                j--;
-              } 
-            });
-          }
-        });
-        */
-
         theTorrentSession = webtorrentClient.seed(video_file, seedingOptions, function onSeed(torrent) {
           /* K42 Maybe I will need this later
           var torrent_fileAsBlobURL = torrent.torrent_fileBlobURL;
@@ -363,7 +300,7 @@ function OakStreaming(OakName) {
           };
           xhr.send();
           */
-
+          wtorrentFile = theTorrentSession.files[0];
           streamTicket.torrent_file = torrent.torrentFile.toString('base64');
           streamTicket.magnet_URI = torrent.magnet_URI;
           streamTicket.infoHash = torrent.infoHash;
@@ -408,11 +345,9 @@ function OakStreaming(OakName) {
           if (returnTorrent === "Return torrent") {
             if (destroyTorrent) {
               notificationsBecauseNewWire = 0;
-              // torrent.destroy();
-              setTimeout(function () {
-                // Zum Test 27.09
-                webtorrentClient.destroy();
-              }, 5000);
+              // setTimeout(function(){ // Zum Test 27.09
+              webtorrentClient.destroy();
+              //}, 5000);
             } else {
               callback(streamTicket, torrent);
             }
@@ -421,15 +356,26 @@ function OakStreaming(OakName) {
           }
         });
 
-        theTorrentSession.on('metadata', function () {
-          // Peers which used the offered methods to manually/explicitly connect to this OakStreaming instance
-          // before a torrent file has been loaded are added now to the swarm of the torrentSession object.
+        theTorrentSession.on('error', function (err) {
+          console.error("ERROR: " + err.message);
+        });
 
-          setTimeout(function () {
+        // New peers can only be added to the swarm of torrentSession object, i.e. the set of peers that are used
+        // for video data exchange, when the infoHash of the torrentSession object has already been created.
+        if (theTorrentSession.infoHash) {
+          for (var j = 0; j < peersToAdd.length; j++) {
+            theTorrentSession.addPeer(peersToAdd[j][0]);
+            if (peersToAdd[j][1]) {
+              peersToAdd[j][1]();
+            }
+            peersToAdd.splice(j, 1);
+            j--;
+          }
+        } else {
+          theTorrentSession.on('infoHash', function () {
+            // Peers which used the offered methods to manually/explicitly connect to this OakStreaming instance
+            // before a torrent file has been loaded are added now to the swarm of the torrentSession object. 
             for (var j = 0; j < peersToAdd.length; j++) {
-              console.log("A seeding peer got added to WebTorrent");
-              console.log("typeof peersToAdd[j][0]: " + _typeof(peersToAdd[j][0]));
-              console.log("peersToAdd[j][0]: " + peersToAdd[j][0]);
               theTorrentSession.addPeer(peersToAdd[j][0]);
               if (peersToAdd[j][1]) {
                 peersToAdd[j][1]();
@@ -437,11 +383,42 @@ function OakStreaming(OakName) {
               peersToAdd.splice(j, 1);
               j--;
             }
-          }, 10000);
-        });
-      } else {
-        callback(streamTicket);
+          });
 
+          theTorrentSession.on('metadata', function () {
+            // Peers which used the offered methods to manually connect to this OakStreaming instance
+            // before a torrent file was loaded are added now to the swarm of the torrentSession object.
+            for (var j = 0; j < peersToAdd.length; j++) {
+              theTorrentSession.addPeer(peersToAdd[j][0]);
+              if (peersToAdd[j][1]) {
+                peersToAdd[j][1]();
+              }
+              peersToAdd.splice(j, 1);
+              j--;
+            }
+          });
+        }
+
+        /* 29.09   3:30 pm
+        theTorrentSession.on('metadata', function(){                    
+          // Peers which used the offered methods to manually/explicitly connect to this OakStreaming instance
+          // before a torrent file has been loaded are added now to the swarm of the torrentSession object.
+            //setTimeout(function(){  
+            for(var j=0; j< peersToAdd.length; j++){
+              theTorrentSession.addPeer(peersToAdd[j][0]);
+              if(peersToAdd[j][1]){
+                (peersToAdd[j][1])();
+              }
+              peersToAdd.splice(j, 1);
+              j--;
+            }
+          //}, 10000);
+        });
+            
+            
+        } else {
+        callback(streamTicket);
+        
         /* K42
         if(XHROrMethodEndHappend){
           callback(streamTicket);
@@ -614,24 +591,8 @@ function OakStreaming(OakName) {
         webtorrentClient.on('error', function (err) {
           console.error("ERROR: " + err.message);
         });
-        /* Without STUN server
-        webtorrentClient = new WebTorrent({
-          dht: false,
-          tracker: {
-            rtcConfig: {
-              iceServers: []
-            }
-          }
-        });
-        */
 
         var webtorrentOptions = {};
-
-        /*
-        if(streamTicket.PATH_TO_FILEToSeed){
-          webtorrentOptions.path = streamTicket.PATH_TO_FILEToSeed;
-        }
-        */
 
         theTorrentSession = webtorrentClient.add(TORRENT_FILE, webtorrentOptions, function (torrentSession) {
           // From this point of time onwards, the WebTorrent instance will start downloading video data from the
@@ -647,10 +608,8 @@ function OakStreaming(OakName) {
           // Due to the fact that only one video can be received by an OakStreaming instance at the same time,
           // at each moment the OakStreaming instance has at most one torrentSession running. The current torrentSession
           // is saved in the theTorrentSession variable.
+
           theTorrentSession = torrentSession;
-          theTorrentSession.on('error', function (err) {
-            console.error("ERROR: " + err.message);
-          });
 
           /*
           if(infoHashReady){
@@ -710,6 +669,49 @@ function OakStreaming(OakName) {
 
           wtorrentFile = theTorrentSession.files[0];
 
+          theTorrentSession.on('error', function (err) {
+            console.error("ERROR: " + err.message);
+          });
+
+          // New peers can only be added to the swarm of torrentSession object, i.e. the set of peers that are used
+          // for video data exchange, when the infoHash of the torrentSession object has already been created.
+          if (theTorrentSession.infoHash) {
+            for (var j = 0; j < peersToAdd.length; j++) {
+              theTorrentSession.addPeer(peersToAdd[j][0]);
+              if (peersToAdd[j][1]) {
+                peersToAdd[j][1]();
+              }
+              peersToAdd.splice(j, 1);
+              j--;
+            }
+          } else {
+            theTorrentSession.on('infoHash', function () {
+              // Peers which used the offered methods to manually/explicitly connect to this OakStreaming instance
+              // before a torrent file has been loaded are added now to the swarm of the torrentSession object. 
+              for (var j = 0; j < peersToAdd.length; j++) {
+                theTorrentSession.addPeer(peersToAdd[j][0]);
+                if (peersToAdd[j][1]) {
+                  peersToAdd[j][1]();
+                }
+                peersToAdd.splice(j, 1);
+                j--;
+              }
+            });
+
+            theTorrentSession.on('metadata', function () {
+              // Peers which used the offered methods to manually connect to this OakStreaming instance
+              // before a torrent file was loaded are added now to the swarm of the torrentSession object.
+              for (var j = 0; j < peersToAdd.length; j++) {
+                theTorrentSession.addPeer(peersToAdd[j][0]);
+                if (peersToAdd[j][1]) {
+                  peersToAdd[j][1]();
+                }
+                peersToAdd.splice(j, 1);
+                j--;
+              }
+            });
+          }
+
           // Emitted as soon as the complete video file has been downloaded via the WebTorrent network.
           theTorrentSession.on('done', function () {
             videoDownloadedByWtorrent = true;
@@ -744,7 +746,6 @@ function OakStreaming(OakName) {
             // The ut_pex extension enables to automatically establish WebRTC connections to the neighbors of
             // ones neighbors.
             wire.use(ut_pex());
-            //wire.ut_pex.start();
 
             wire.ut_pex.on('peer', function (peer) {
               theTorrentSession.addPeer(peer);
@@ -822,19 +823,16 @@ function OakStreaming(OakName) {
           // This case is necessary because WebTorrents infoHash eventListener is not reliable.
           // The metadata event listener gets called when all meta data about the torrent has been determined
           // (including the info hash of the torrent).
-          setTimeout(function () {
-            for (var j = 0; j < peersToAdd.length; j++) {
-              console.log("A receiver peer got added to WebTorrent");
-              console.log("typeof peersToAdd[j][0]: " + _typeof(peersToAdd[j][0]));
-              console.log("peersToAdd[j][0]: " + peersToAdd[j][0]);
-              theTorrentSession.addPeer(peersToAdd[j][0]);
-              if (peersToAdd[j][1]) {
-                peersToAdd[j][1]();
-              }
-              peersToAdd.splice(j, 1);
-              j--;
+          // setTimeout(function(){
+          for (var j = 0; j < peersToAdd.length; j++) {
+            theTorrentSession.addPeer(peersToAdd[j][0]);
+            if (peersToAdd[j][1]) {
+              peersToAdd[j][1]();
             }
-          }, 10000);
+            peersToAdd.splice(j, 1);
+            j--;
+          }
+          //}, 10000);              
         });
       }
       // The following line of code belongs to the "request first 2000 byte only once from server" feature
@@ -1617,7 +1615,7 @@ function OakStreaming(OakName) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":19,"http":100,"multistream":61,"readable-stream":87,"simple-peer":96,"ut_pex":121,"util":128,"videostream":130,"webtorrent":131}],2:[function(require,module,exports){
+},{"buffer":19,"http":100,"multistream":61,"readable-stream":87,"simple-peer":96,"ut_pex":121,"util":124,"videostream":126,"webtorrent":127}],2:[function(require,module,exports){
 "use strict";
 
 var OakStreaming = require("./OakStreaming");
@@ -2817,7 +2815,7 @@ function pull (requests, piece, offset, length) {
   return null
 }
 
-},{"bencode":6,"bitfield":8,"debug":31,"inherits":43,"randombytes":80,"readable-stream":87,"safe-buffer":93,"speedometer":99,"xtend":140}],10:[function(require,module,exports){
+},{"bencode":6,"bitfield":8,"debug":31,"inherits":43,"randombytes":80,"readable-stream":87,"safe-buffer":93,"speedometer":99,"xtend":136}],10:[function(require,module,exports){
 (function (process){
 module.exports = Client
 
@@ -3118,7 +3116,7 @@ Client.prototype._defaultAnnounceOpts = function (opts) {
 
 }).call(this,require('_process'))
 
-},{"./lib/client/http-tracker":16,"./lib/client/udp-tracker":16,"./lib/client/websocket-tracker":12,"./lib/common":13,"_process":73,"debug":31,"events":35,"inherits":43,"once":63,"run-parallel":91,"safe-buffer":93,"simple-peer":96,"uniq":116,"url":118,"xtend":140}],11:[function(require,module,exports){
+},{"./lib/client/http-tracker":16,"./lib/client/udp-tracker":16,"./lib/client/websocket-tracker":12,"./lib/common":13,"_process":73,"debug":31,"events":35,"inherits":43,"once":63,"run-parallel":91,"safe-buffer":93,"simple-peer":96,"uniq":116,"url":118,"xtend":136}],11:[function(require,module,exports){
 module.exports = Tracker
 
 var EventEmitter = require('events').EventEmitter
@@ -3556,7 +3554,7 @@ WebSocketTracker.prototype._generateOffers = function (numwant, cb) {
 
 function noop () {}
 
-},{"../common":13,"./tracker":11,"debug":31,"inherits":43,"randombytes":80,"simple-peer":96,"simple-websocket":98,"xtend":140}],13:[function(require,module,exports){
+},{"../common":13,"./tracker":11,"debug":31,"inherits":43,"randombytes":80,"simple-peer":96,"simple-websocket":98,"xtend":136}],13:[function(require,module,exports){
 /**
  * Functions/constants needed by both the client and server.
  */
@@ -3584,7 +3582,7 @@ exports.hexToBinary = function (str) {
 var config = require('./common-node')
 extend(exports, config)
 
-},{"./common-node":16,"safe-buffer":93,"xtend/mutable":141}],14:[function(require,module,exports){
+},{"./common-node":16,"safe-buffer":93,"xtend/mutable":137}],14:[function(require,module,exports){
 (function (Buffer){
 /* global Blob, FileReader */
 
@@ -6401,7 +6399,7 @@ function getStreamStream (readable, file) {
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("buffer").Buffer)
 
-},{"_process":73,"bencode":27,"block-stream2":15,"buffer":19,"filestream/read":36,"flatten":37,"fs":17,"is-file":47,"junk":50,"multistream":61,"once":63,"path":70,"piece-length":71,"readable-stream":87,"run-parallel":91,"simple-sha1":97,"xtend":140}],27:[function(require,module,exports){
+},{"_process":73,"bencode":27,"block-stream2":15,"buffer":19,"filestream/read":36,"flatten":37,"fs":17,"is-file":47,"junk":50,"multistream":61,"once":63,"path":70,"piece-length":71,"readable-stream":87,"run-parallel":91,"simple-sha1":97,"xtend":136}],27:[function(require,module,exports){
 var bencode = module.exports
 
 bencode.encode = require( './lib/encode' )
@@ -8647,7 +8645,7 @@ function magnetURIEncode (obj) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":19,"thirty-two":109,"uniq":116,"xtend":140}],52:[function(require,module,exports){
+},{"buffer":19,"thirty-two":109,"uniq":116,"xtend":136}],52:[function(require,module,exports){
 module.exports = MediaElementWrapper
 
 var inherits = require('inherits')
@@ -10817,7 +10815,7 @@ function once (fn) {
   return f
 }
 
-},{"wrappy":139}],64:[function(require,module,exports){
+},{"wrappy":135}],64:[function(require,module,exports){
 (function (Buffer){
 module.exports = decodeTorrentFile
 module.exports.decode = decodeTorrentFile
@@ -14456,7 +14454,7 @@ function CorkedRequest(state) {
 }
 }).call(this,require('_process'))
 
-},{"./_stream_duplex":82,"_process":73,"buffer":19,"buffer-shims":18,"core-util-is":25,"events":35,"inherits":43,"process-nextick-args":72,"util-deprecate":126}],87:[function(require,module,exports){
+},{"./_stream_duplex":82,"_process":73,"buffer":19,"buffer-shims":18,"core-util-is":25,"events":35,"inherits":43,"process-nextick-args":72,"util-deprecate":122}],87:[function(require,module,exports){
 (function (process){
 var Stream = (function (){
   try {
@@ -14828,7 +14826,7 @@ function parseOpts (opts) {
   if (opts.maxBlobLength == null) opts.maxBlobLength = MAX_BLOB_LENGTH
 }
 
-},{"./lib/mime.json":89,"debug":31,"is-ascii":45,"mediasource":52,"path":70,"stream-to-blob-url":104,"videostream":130}],89:[function(require,module,exports){
+},{"./lib/mime.json":89,"debug":31,"is-ascii":45,"mediasource":52,"path":70,"stream-to-blob-url":104,"videostream":126}],89:[function(require,module,exports){
 module.exports={
   ".3gp": "video/3gpp",
   ".aac": "audio/aac",
@@ -15564,7 +15562,7 @@ function parseOptsUrl (opts) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"buffer":19,"http":100,"https":40,"once":63,"unzip-response":16,"url":118,"xtend":140}],96:[function(require,module,exports){
+},{"buffer":19,"http":100,"https":40,"once":63,"unzip-response":16,"url":118,"xtend":136}],96:[function(require,module,exports){
 (function (Buffer){
 module.exports = Peer
 
@@ -16594,7 +16592,7 @@ http.METHODS = [
 ]
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./lib/request":102,"builtin-status-codes":21,"url":118,"xtend":140}],101:[function(require,module,exports){
+},{"./lib/request":102,"builtin-status-codes":21,"url":118,"xtend":136}],101:[function(require,module,exports){
 (function (global){
 exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableByteStream)
 
@@ -17808,7 +17806,7 @@ Discovery.prototype._dhtAnnounce = function () {
 
 }).call(this,require('_process'))
 
-},{"_process":73,"bittorrent-dht/client":16,"bittorrent-tracker/client":10,"debug":31,"events":35,"inherits":43,"run-parallel":91,"xtend":140}],113:[function(require,module,exports){
+},{"_process":73,"bittorrent-dht/client":16,"bittorrent-tracker/client":10,"debug":31,"events":35,"inherits":43,"run-parallel":91,"xtend":136}],113:[function(require,module,exports){
 (function (Buffer){
 module.exports = Piece
 
@@ -19227,269 +19225,7 @@ module.exports = function () {
 
 }).call(this,require("buffer").Buffer)
 
-},{"bencode":122,"buffer":19,"compact2string":24,"events":35,"inherits":43,"string2compact":107}],122:[function(require,module,exports){
-arguments[4][27][0].apply(exports,arguments)
-},{"./lib/decode":123,"./lib/encode":125,"dup":27}],123:[function(require,module,exports){
-(function (Buffer){
-var Dict = require("./dict")
-
-/**
- * Decodes bencoded data.
- *
- * @param  {Buffer} data
- * @param  {Number} start (optional)
- * @param  {Number} end (optional)
- * @param  {String} encoding (optional)
- * @return {Object|Array|Buffer|String|Number}
- */
-function decode( data, start, end, encoding ) {
-  
-  if( typeof start !== 'number' && encoding == null ) {
-    encoding = start
-    start = undefined
-  }
-  
-  if( typeof end !== 'number' && encoding == null ) {
-    encoding = end
-    end = undefined
-  }
-  
-  decode.position = 0
-  decode.encoding = encoding || null
-
-  decode.data = !( Buffer.isBuffer(data) )
-    ? new Buffer( data )
-    : data.slice( start, end )
-  
-  decode.bytes = decode.data.length
-  
-  return decode.next()
-
-}
-
-decode.bytes = 0
-decode.position = 0
-decode.data     = null
-decode.encoding = null
-
-decode.next = function() {
-
-  switch( decode.data[decode.position] ) {
-    case 0x64: return decode.dictionary(); break
-    case 0x6C: return decode.list(); break
-    case 0x69: return decode.integer(); break
-    default:   return decode.buffer(); break
-  }
-
-}
-
-decode.find = function( chr ) {
-
-  var i = decode.position
-  var c = decode.data.length
-  var d = decode.data
-
-  while( i < c ) {
-    if( d[i] === chr )
-      return i
-    i++
-  }
-
-  throw new Error(
-    'Invalid data: Missing delimiter "' +
-    String.fromCharCode( chr ) + '" [0x' +
-    chr.toString( 16 ) + ']'
-  )
-
-}
-
-decode.dictionary = function() {
-
-  decode.position++
-
-  var dict = new Dict()
-
-  while( decode.data[decode.position] !== 0x65 ) {
-    dict.binarySet(decode.buffer(), decode.next())
-  }
-
-  decode.position++
-
-  return dict
-
-}
-
-decode.list = function() {
-
-  decode.position++
-
-  var lst = []
-
-  while( decode.data[decode.position] !== 0x65 ) {
-    lst.push( decode.next() )
-  }
-
-  decode.position++
-
-  return lst
-
-}
-
-decode.integer = function() {
-
-  var end    = decode.find( 0x65 )
-  var number = decode.data.toString( 'ascii', decode.position + 1, end )
-
-  decode.position += end + 1 - decode.position
-
-  return parseInt( number, 10 )
-
-}
-
-decode.buffer = function() {
-
-  var sep    = decode.find( 0x3A )
-  var length = parseInt( decode.data.toString( 'ascii', decode.position, sep ), 10 )
-  var end    = ++sep + length
-
-  decode.position = end
-
-  return decode.encoding
-    ? decode.data.toString( decode.encoding, sep, end )
-    : decode.data.slice( sep, end )
-
-}
-
-// Exports
-module.exports = decode
-
-}).call(this,require("buffer").Buffer)
-
-},{"./dict":124,"buffer":19}],124:[function(require,module,exports){
-arguments[4][29][0].apply(exports,arguments)
-},{"dup":29}],125:[function(require,module,exports){
-(function (Buffer){
-/**
- * Encodes data in bencode.
- *
- * @param  {Buffer|Array|String|Object|Number|Boolean} data
- * @return {Buffer}
- */
-function encode( data, buffer, offset ) {
-  
-  var buffers = []
-  var result = null
-  
-  encode._encode( buffers, data )
-  result = Buffer.concat( buffers )
-  encode.bytes = result.length
-  
-  if( Buffer.isBuffer( buffer ) ) {
-    result.copy( buffer, offset )
-    return buffer
-  }
-  
-  return result
-  
-}
-
-encode.bytes = -1
-encode._floatConversionDetected = false
-
-encode._encode = function( buffers, data ) {
-
-  if( Buffer.isBuffer(data) ) {
-    buffers.push(new Buffer(data.length + ':'))
-    buffers.push(data)
-    return;
-  }
-
-  switch( typeof data ) {
-    case 'string':
-      encode.buffer( buffers, data )
-      break
-    case 'number':
-      encode.number( buffers, data )
-      break
-    case 'object':
-      data.constructor === Array
-        ? encode.list( buffers, data )
-        : encode.dict( buffers, data )
-      break
-    case 'boolean':
-      encode.number( buffers, data ? 1 : 0 )
-      break
-  }
-
-}
-
-var buff_e = new Buffer('e')
-  , buff_d = new Buffer('d')
-  , buff_l = new Buffer('l')
-
-encode.buffer = function( buffers, data ) {
-
-  buffers.push( new Buffer(Buffer.byteLength( data ) + ':' + data) )
-}
-
-encode.number = function( buffers, data ) {
-  var maxLo = 0x80000000
-  var hi = ( data / maxLo ) << 0
-  var lo = ( data % maxLo  ) << 0
-  var val = hi * maxLo + lo
-
-  buffers.push( new Buffer( 'i' + val + 'e' ))
-
-  if( val !== data && !encode._floatConversionDetected ) {
-    encode._floatConversionDetected = true
-    console.warn(
-      'WARNING: Possible data corruption detected with value "'+data+'":',
-      'Bencoding only defines support for integers, value was converted to "'+val+'"'
-    )
-    console.trace()
-  }
-
-}
-
-encode.dict = function( buffers, data ) {
-
-  buffers.push( buff_d )
-
-  var j = 0
-  var k
-  // fix for issue #13 - sorted dicts
-  var keys = Object.keys( data ).sort()
-  var kl = keys.length
-
-  for( ; j < kl ; j++) {
-    k=keys[j]
-    encode.buffer( buffers, k )
-    encode._encode( buffers, data[k] )
-  }
-
-  buffers.push( buff_e )
-}
-
-encode.list = function( buffers, data ) {
-
-  var i = 0, j = 1
-  var c = data.length
-  buffers.push( buff_l )
-
-  for( ; i < c; i++ ) {
-    encode._encode( buffers, data[i] )
-  }
-
-  buffers.push( buff_e )
-
-}
-
-// Expose
-module.exports = encode
-
-}).call(this,require("buffer").Buffer)
-
-},{"buffer":19}],126:[function(require,module,exports){
+},{"bencode":6,"buffer":19,"compact2string":24,"events":35,"inherits":43,"string2compact":107}],122:[function(require,module,exports){
 (function (global){
 
 /**
@@ -19561,14 +19297,14 @@ function config (name) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],127:[function(require,module,exports){
+},{}],123:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],128:[function(require,module,exports){
+},{}],124:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -20159,7 +19895,7 @@ function hasOwnProperty(obj, prop) {
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./support/isBuffer":127,"_process":73,"inherits":43}],129:[function(require,module,exports){
+},{"./support/isBuffer":123,"_process":73,"inherits":43}],125:[function(require,module,exports){
 (function (Buffer){
 var bs = require('binary-search')
 var EventEmitter = require('events').EventEmitter
@@ -20630,7 +20366,7 @@ MP4Remuxer.prototype._generateMoof = function (track, firstSample, lastSample) {
 
 }).call(this,require("buffer").Buffer)
 
-},{"binary-search":7,"buffer":19,"events":35,"inherits":43,"mp4-box-encoding":56,"mp4-stream":59,"range-slice-stream":81}],130:[function(require,module,exports){
+},{"binary-search":7,"buffer":19,"events":35,"inherits":43,"mp4-box-encoding":56,"mp4-stream":59,"range-slice-stream":81}],126:[function(require,module,exports){
 var MediaElementWrapper = require('mediasource')
 var pump = require('pump')
 
@@ -20731,7 +20467,7 @@ VideoStream.prototype.destroy = function () {
 	self._elem.src = ''
 }
 
-},{"./mp4-remuxer":129,"mediasource":52,"pump":74}],131:[function(require,module,exports){
+},{"./mp4-remuxer":125,"mediasource":52,"pump":74}],127:[function(require,module,exports){
 (function (process,global){
 module.exports = WebTorrent
 
@@ -21180,7 +20916,7 @@ function isReadable (obj) {
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./lib/tcp-pool":16,"./lib/torrent":136,"./package.json":138,"_process":73,"bittorrent-dht/client":16,"create-torrent":26,"debug":31,"events":35,"hat":39,"inherits":43,"load-ip-set":16,"parse-torrent":69,"path":70,"run-parallel":91,"safe-buffer":93,"simple-concat":94,"simple-peer":96,"speedometer":99,"xtend":140,"zero-fill":142}],132:[function(require,module,exports){
+},{"./lib/tcp-pool":16,"./lib/torrent":132,"./package.json":134,"_process":73,"bittorrent-dht/client":16,"create-torrent":26,"debug":31,"events":35,"hat":39,"inherits":43,"load-ip-set":16,"parse-torrent":69,"path":70,"run-parallel":91,"safe-buffer":93,"simple-concat":94,"simple-peer":96,"speedometer":99,"xtend":136,"zero-fill":138}],128:[function(require,module,exports){
 module.exports = FileStream
 
 var debug = require('debug')('webtorrent:file-stream')
@@ -21282,7 +21018,7 @@ FileStream.prototype._destroy = function (err, onclose) {
   if (onclose) onclose()
 }
 
-},{"debug":31,"inherits":43,"readable-stream":87}],133:[function(require,module,exports){
+},{"debug":31,"inherits":43,"readable-stream":87}],129:[function(require,module,exports){
 (function (process){
 module.exports = File
 
@@ -21383,7 +21119,7 @@ File.prototype._destroy = function () {
 
 }).call(this,require('_process'))
 
-},{"./file-stream":132,"_process":73,"end-of-stream":34,"events":35,"inherits":43,"path":70,"readable-stream":87,"render-media":88,"stream-to-blob-url":104,"stream-with-known-length-to-buffer":106}],134:[function(require,module,exports){
+},{"./file-stream":128,"_process":73,"end-of-stream":34,"events":35,"inherits":43,"path":70,"readable-stream":87,"render-media":88,"stream-to-blob-url":104,"stream-with-known-length-to-buffer":106}],130:[function(require,module,exports){
 var arrayRemove = require('unordered-array-remove')
 var debug = require('debug')('webtorrent:peer')
 var Wire = require('bittorrent-protocol')
@@ -21630,7 +21366,7 @@ Peer.prototype.destroy = function (err) {
 
 function noop () {}
 
-},{"./webconn":137,"bittorrent-protocol":9,"debug":31,"unordered-array-remove":117}],135:[function(require,module,exports){
+},{"./webconn":133,"bittorrent-protocol":9,"debug":31,"unordered-array-remove":117}],131:[function(require,module,exports){
 module.exports = RarityMap
 
 /**
@@ -21753,7 +21489,7 @@ function trueFn () {
   return true
 }
 
-},{}],136:[function(require,module,exports){
+},{}],132:[function(require,module,exports){
 (function (process,global){
 /* global URL, Blob */
 
@@ -23487,7 +23223,7 @@ function noop () {}
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../package.json":138,"./file":133,"./peer":134,"./rarity-map":135,"./server":16,"_process":73,"addr-to-ip-port":3,"bitfield":8,"chunk-store-stream/write":22,"debug":31,"events":35,"fs":17,"fs-chunk-store":53,"immediate-chunk-store":42,"inherits":43,"multistream":61,"net":16,"os":16,"parse-torrent":69,"path":70,"pump":74,"random-iterate":79,"run-parallel":91,"run-parallel-limit":90,"simple-get":95,"simple-sha1":97,"speedometer":99,"torrent-discovery":112,"torrent-piece":113,"uniq":116,"ut_metadata":120,"ut_pex":16,"xtend":140,"xtend/mutable":141}],137:[function(require,module,exports){
+},{"../package.json":134,"./file":129,"./peer":130,"./rarity-map":131,"./server":16,"_process":73,"addr-to-ip-port":3,"bitfield":8,"chunk-store-stream/write":22,"debug":31,"events":35,"fs":17,"fs-chunk-store":53,"immediate-chunk-store":42,"inherits":43,"multistream":61,"net":16,"os":16,"parse-torrent":69,"path":70,"pump":74,"random-iterate":79,"run-parallel":91,"run-parallel-limit":90,"simple-get":95,"simple-sha1":97,"speedometer":99,"torrent-discovery":112,"torrent-piece":113,"uniq":116,"ut_metadata":120,"ut_pex":16,"xtend":136,"xtend/mutable":137}],133:[function(require,module,exports){
 module.exports = WebConn
 
 var BitField = require('bitfield')
@@ -23646,9 +23382,9 @@ WebConn.prototype.destroy = function () {
   this._torrent = null
 }
 
-},{"../package.json":138,"bitfield":8,"bittorrent-protocol":9,"debug":31,"inherits":43,"safe-buffer":93,"simple-get":95,"simple-sha1":97}],138:[function(require,module,exports){
+},{"../package.json":134,"bitfield":8,"bittorrent-protocol":9,"debug":31,"inherits":43,"safe-buffer":93,"simple-get":95,"simple-sha1":97}],134:[function(require,module,exports){
 module.exports={"version":"0.94.4"}
-},{}],139:[function(require,module,exports){
+},{}],135:[function(require,module,exports){
 // Returns a wrapper function that returns a wrapped callback
 // The wrapper function should do some stuff, and return a
 // presumably different callback function.
@@ -23683,7 +23419,7 @@ function wrappy (fn, cb) {
   }
 }
 
-},{}],140:[function(require,module,exports){
+},{}],136:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -23704,7 +23440,7 @@ function extend() {
     return target
 }
 
-},{}],141:[function(require,module,exports){
+},{}],137:[function(require,module,exports){
 module.exports = extend
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -23723,7 +23459,7 @@ function extend(target) {
     return target
 }
 
-},{}],142:[function(require,module,exports){
+},{}],138:[function(require,module,exports){
 /**
  * Given a number, return a zero-filled string.
  * From http://stackoverflow.com/questions/1267283/
