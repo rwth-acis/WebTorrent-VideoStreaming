@@ -10,7 +10,7 @@ describe("Testing whether the methods to explicitly add a peer to the swarm", fu
   var myStreaming15 = new OakStreaming();
   var myStreaming16 = new OakStreaming();
   
-/*
+
   it("can establish a WebTorrent connection between two OakStreaming instances", function(done){    
     expect(true).toBe(true); // Every Jasmine spec has to have an expect expression.
 
@@ -48,7 +48,7 @@ describe("Testing whether the methods to explicitly add a peer to the swarm", fu
       myStreaming12.create_stream(res, {web_server_URL: false, webTorrent_trackers: []}, callback);
     });
   }, 400000);
-*/ 
+
   
 
   it("can successfully connect three OakStreaming instances for streaming", function(done){
@@ -56,80 +56,57 @@ describe("Testing whether the methods to explicitly add a peer to the swarm", fu
     var oneStreamingFinished = false;
     var numberOfEstablishedConnections = 0;
     
-
+    myStreaming14.createSignalingData(function(signalingData){
+      myStreaming15.createSignalingDataResponse(signalingData, function(signalingDataResponse){
+        myStreaming14.processSignalingResponse(signalingDataResponse, function(){
+          numberOfEstablishedConnections++;
+        });
+      });
+    });
+    
       myStreaming14.createSignalingData(function(signalingData){
-        myStreaming15.createSignalingDataResponse(signalingData, function(signalingDataResponse){
+        myStreaming16.createSignalingDataResponse(signalingData, function(signalingDataResponse){
           myStreaming14.processSignalingResponse(signalingDataResponse, function(){
-            console.log("Connected 1 baby!");
             numberOfEstablishedConnections++;
           });
         });
       });
-      
-      setTimeout(function(){
-        myStreaming14.createSignalingData(function(signalingData){
-          myStreaming16.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-            myStreaming14.processSignalingResponse(signalingDataResponse, function(){
-              console.log("Connected 2 baby!");
-              numberOfEstablishedConnections++;
-            });
-          });
-        });
-      }, 15000);
-      
+    
+    
     function createStreamCallback(streamTicket){
-      console.log("createStreamCallback is called chick!");
-      
-      console.log("myStreaming15.receive_stream");
       myStreaming15.receive_stream(streamTicket, document.getElementById("myVideo15"), function(){
         if(oneStreamingFinished){
-          console.log("Spec 3 finished successfully");
           myStreaming14.destroy();
           myStreaming14 = null;
           myStreaming15.destroy();
           myStreaming15 = null;
+          console.log("Spec 3 finished successfully");
           done();
         } else {
-          console.log("One thing finished baby!");
           oneStreamingFinished = true;
         }
       }, false);
         
-    
-      console.log("myStreaming16.receive_stream");
       myStreaming16.receive_stream(streamTicket, document.getElementById("myVideo16"), function(){
         if(oneStreamingFinished){
-            console.log("Spec 3 finished successfully");
-            myStreaming14.destroy();
-            myStreaming14 = null;
-            myStreaming15.destroy();
-            myStreaming15 = null;
-            done();
+          myStreaming14.destroy();
+          myStreaming14 = null;
+          myStreaming15.destroy();
+          myStreaming15 = null;
+          console.log("Spec 3 finished successfully");
+          done();
         } else {
-          console.log("One thing finished baby!");
           oneStreamingFinished = true;
         }
       }, true);
     }
     
     
-    function showSwarmSizes(){
-      console.log("myStreaming14.get_size_of_swarm(): " +  myStreaming14.get_size_of_swarm());
-      console.log("myStreaming15.get_size_of_swarm(): " +  myStreaming15.get_size_of_swarm());
-      console.log("myStreaming16.get_size_of_swarm(): " +  myStreaming16.get_size_of_swarm());
-      setTimeout(showSwarmSizes, 1000);
-    }
-    showSwarmSizes();
-    
-    
     function streamWhenConnectionEstablished(res){
-      if(numberOfEstablishedConnections === 2){
-        myStreaming14.create_stream(res, {web_server_URL: false, webTorrent_trackers: []}, 
-                createStreamCallback);
-     } else {
-        setTimeout(function(){streamWhenConnectionEstablished(res);}, 500);
-      }
+      myStreaming14.create_stream(res, {web_server_URL: false, webTorrent_trackers: []}, 
+              createStreamCallback);
     }
+    
     
     http.get({
       hostname: 'localhost',
@@ -139,14 +116,13 @@ describe("Testing whether the methods to explicitly add a peer to the swarm", fu
         range: 'bytes=' + 0 + '-' + theVideoFileSize-1
       }
     }, function (res){
-      console.log("Received res baby!");
       streamWhenConnectionEstablished(res);
     });
-  }, 400000);
+  }, 80000);
 });  
   
 
-/*
+
 describe("Testing whether the create_stream method", function(){
   var myStreaming11 = new OakStreaming();
 
@@ -351,4 +327,3 @@ describe("Testing whether the receive_stream method", function(){
     });
   }, 400000);
 });
-*/
