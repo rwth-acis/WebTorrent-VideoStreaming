@@ -318,6 +318,8 @@ function OakStreaming(OakName){
           };
           xhr.send();
           */
+          
+          
           wtorrentFile = theTorrentSession.files[0];
           streamTicket.torrent_file = torrent.torrentFile.toString('base64');
           streamTicket.magnet_URI = torrent.magnet_URI;
@@ -363,9 +365,7 @@ function OakStreaming(OakName){
           if(returnTorrent === "Return torrent"){
             if(destroyTorrent){
               notificationsBecauseNewWire = 0;
-             // setTimeout(function(){ // Zum Test 27.09
                 webtorrentClient.destroy();
-              //}, 5000);
             } else {
               callback(streamTicket, torrent);
             }
@@ -416,27 +416,7 @@ function OakStreaming(OakName){
               j--;
             }
           });           
-        }
-        
-        
-        /* 29.09   3:30 pm
-        theTorrentSession.on('metadata', function(){                    
-          // Peers which used the offered methods to manually/explicitly connect to this OakStreaming instance
-          // before a torrent file has been loaded are added now to the swarm of the torrentSession object.
-
-          //setTimeout(function(){  
-            for(var j=0; j< peersToAdd.length; j++){
-              theTorrentSession.addPeer(peersToAdd[j][0]);
-              if(peersToAdd[j][1]){
-                (peersToAdd[j][1])();
-              }
-              peersToAdd.splice(j, 1);
-              j--;
-            }
-          //}, 10000);
-        });
-            
-            
+        }   
       } else {
         callback(streamTicket);
         
@@ -468,7 +448,7 @@ function OakStreaming(OakName){
         self.loadVideo(streamTicket, callback, stopUploadingWhenVideoDownloaded);  
       } else {
         setTimeout(function(){waitStartPlayingOffset(streamTicket, callback,
-                stopUploadingWhenVideoDownloaded);},10);
+                stopUploadingWhenVideoDownloaded);}, 10);
       }
     }
    
@@ -510,6 +490,7 @@ function OakStreaming(OakName){
       htmlVideoTag.addEventListener('error', function (err){
         console.error(htmlVideoTag.error);
       });
+      
       
       /* This block of code is solely for conducting Technical Evaluations.
       htmlVideoTag.onplay = function(){
@@ -598,7 +579,6 @@ function OakStreaming(OakName){
       // receive_stream to access and manipulate these variables.
       var self = this;
       var endStreaming = false;
-      // var webtorrentClient = null; Commented out because I have implemented a destructor for the OakStreaming client
       var neighbors = []; // This array contains P2P connections to other peers out of the WebTorrent network.
       var videostreamRequestCounter = 0;
       bytesReceivedFromServer = 0; // This variable gets only initialized not declared.
@@ -649,64 +629,6 @@ function OakStreaming(OakName){
           // Due to the fact that only one video can be received by an OakStreaming instance at the same time,
           // at each moment the OakStreaming instance has at most one torrentSession running. The current torrentSession
           // is saved in the theTorrentSession variable.
-          
-          theTorrentSession = torrentSession;         
-      
-          /*
-          if(infoHashReady){
-            // Peers which used the offered methods to manually connect to this OakStreaming instance
-            // before a torrent file was loaded are added now to the set of peers that are used for video data exchange.
-            for(var j=0; j< peersToAdd.length; j++){  // Vorher hatte ich das onInfohash gemacht
-              //console.log("I manually added a peer to the swarm");                     
-              theTorrentSession.addPeer(peersToAdd[j][0]);
-              if(peersToAdd[j][1]){
-                (peersToAdd[j][1])();
-              }
-              peersToAdd.splice(j, 1);
-              j--;
-            }                         
-          } else { 
-          */
-          
-          /* 28.09
-          // Add peers which have been directly connected to this OakStreaming instance by the library user to 
-          // the (peer) swarm of this OakStreaming instance. Peers can be added to the swarm instance
-          // as soon as the infoHash property is accessible.
-          if(theTorrentSession.infoHash){
-            for(var j=0; j< peersToAdd.length; j++){             
-              theTorrentSession.addPeer(peersToAdd[j][0]);
-              if(peersToAdd[j][1]){
-                (peersToAdd[j][1])();
-              }
-              peersToAdd.splice(j, 1);
-              j--;
-            }                  
-          } else {              
-            theTorrentSession.on('infoHash', function(){
-              for(var j=0; j< peersToAdd.length; j++){                   
-                theTorrentSession.addPeer(peersToAdd[j][0]);
-                if(peersToAdd[j][1]){
-                  (peersToAdd[j][1])();
-                }
-                peersToAdd.splice(j, 1);
-                j--;
-              } 
-            });
-            theTorrentSession.on('metadata', function(){   
-              // This case is necessary because WebTorrents infoHash eventListener is not reliable.
-              // The metadata event listener gets called when all meta data about the torrent has been determined
-              // (including the info hash of the torrent).
-              for(var j=0; j< peersToAdd.length; j++){                  
-                theTorrentSession.addPeer(peersToAdd[j][0]);
-                if(peersToAdd[j][1]){
-                  (peersToAdd[j][1])();
-                }
-                peersToAdd.splice(j, 1);
-                j--;
-              } 
-            });
-          }
-          */
 
           
           wtorrentFile = theTorrentSession.files[0];
@@ -867,27 +789,23 @@ function OakStreaming(OakName){
             }
           }
         });
-        
-          
-            theTorrentSession.on('metadata', function(){   
-              // This case is necessary because WebTorrents infoHash eventListener is not reliable.
-              // The metadata event listener gets called when all meta data about the torrent has been determined
-              // (including the info hash of the torrent).
-             // setTimeout(function(){
-                for(var j=0; j< peersToAdd.length; j++){
-                  theTorrentSession.addPeer(peersToAdd[j][0]);
-                  if(peersToAdd[j][1]){
-                    (peersToAdd[j][1])();
-                  }
-                  peersToAdd.splice(j, 1);
-                  j--;
-                }
-              //}, 10000);              
-            });
-          
-        
-        
-      }    
+           
+           
+        theTorrentSession.on('metadata', function(){   
+          // This case is necessary because WebTorrents infoHash eventListener is not reliable.
+          // The metadata event listener gets called when all meta data about the torrent has been determined
+          // (including the info hash of the torrent).
+            for(var j=0; j< peersToAdd.length; j++){
+              theTorrentSession.addPeer(peersToAdd[j][0]);
+              if(peersToAdd[j][1]){
+                (peersToAdd[j][1])();
+              }
+              peersToAdd.splice(j, 1);
+              j--;
+            }             
+        });
+      }
+      
       // The following line of code belongs to the "request first 2000 byte only once from server" feature
       // The development of this feature has been canceled for now.
       // first2000BytesOfVideo = new SimpleReadableStream({highWaterMark: 2000});
@@ -1683,7 +1601,6 @@ function OakStreaming(OakName){
         pair.push(simplePeerInstance);
         pair.push(callback);
         peersToAdd.push(pair);
-        console.log("A simple-peer connection got added to peersToAdd");
       }
     }
     
