@@ -2,7 +2,7 @@ var theVideoFileSize = 788493;
 
 
 describe("Testing whether the methods to explicitly add a peer to the swarm", function(){
-  console.log("Version 17");
+  console.log("Version 36");
   
   var myStreaming12 = new OakStreaming();
   var myStreaming13 = new OakStreaming();
@@ -11,9 +11,9 @@ describe("Testing whether the methods to explicitly add a peer to the swarm", fu
   var myStreaming16 = new OakStreaming();
   
 
-  it("can establish a WebTorrent connection between two OakStreaming instances", function(done){    
+  it("can establish a WebRTC connection between two OakStreaming instances", function(done){    
     expect(true).toBe(true); // Every Jasmine spec has to have an expect expression.
-
+ 
     myStreaming12.createSignalingData(function(signalingData){
       myStreaming13.createSignalingDataResponse(signalingData, function(signalingDataResponse){
         myStreaming12.processSignalingResponse(signalingDataResponse, function(){
@@ -22,7 +22,7 @@ describe("Testing whether the methods to explicitly add a peer to the swarm", fu
         });
       });
     });
-  }, 400000);
+  }, 120000);
 
   
   it("can successfully connect two OakStreaming instances for streaming", function(done){
@@ -30,10 +30,11 @@ describe("Testing whether the methods to explicitly add a peer to the swarm", fu
 
     function callback(streamTicket){
       myStreaming13.receive_stream(streamTicket, document.getElementById("myVideo13"), function(){
-        myStreaming12.destroy();
-        myStreaming12 = null;
-        console.log("Spec 2 finished successfully");
-        done();
+        myStreaming12.destroy(function(){
+          myStreaming12 = null;
+          console.log("Spec 2 finished successfully");
+          done();
+        });
       }, true);
     }
       
@@ -47,7 +48,7 @@ describe("Testing whether the methods to explicitly add a peer to the swarm", fu
     }, function (res){
       myStreaming12.create_stream(res, {web_server_URL: false, webTorrent_trackers: []}, callback);
     });
-  }, 400000);
+  }, 120000);
 
   
 
@@ -62,26 +63,26 @@ describe("Testing whether the methods to explicitly add a peer to the swarm", fu
           numberOfEstablishedConnections++;
         });
       });
-    });
-    
-      myStreaming14.createSignalingData(function(signalingData){
-        myStreaming16.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-          myStreaming14.processSignalingResponse(signalingDataResponse, function(){
-            numberOfEstablishedConnections++;
-          });
+    });  
+    myStreaming14.createSignalingData(function(signalingData){
+      myStreaming16.createSignalingDataResponse(signalingData, function(signalingDataResponse){
+        myStreaming14.processSignalingResponse(signalingDataResponse, function(){
+          numberOfEstablishedConnections++;
         });
       });
-    
+    });
     
     function createStreamCallback(streamTicket){
       myStreaming15.receive_stream(streamTicket, document.getElementById("myVideo15"), function(){
         if(oneStreamingFinished){
-          myStreaming14.destroy();
-          myStreaming14 = null;
-          myStreaming15.destroy();
-          myStreaming15 = null;
-          console.log("Spec 3 finished successfully");
-          done();
+          myStreaming14.destroy(function(){
+            myStreaming14 = null;
+            myStreaming15.destroy(function(){
+              myStreaming15 = null;
+              console.log("Spec 3 finished successfully");
+              done();
+            });
+          });
         } else {
           oneStreamingFinished = true;
         }
@@ -89,25 +90,20 @@ describe("Testing whether the methods to explicitly add a peer to the swarm", fu
         
       myStreaming16.receive_stream(streamTicket, document.getElementById("myVideo16"), function(){
         if(oneStreamingFinished){
-          myStreaming14.destroy();
-          myStreaming14 = null;
-          myStreaming15.destroy();
-          myStreaming15 = null;
-          console.log("Spec 3 finished successfully");
-          done();
+          myStreaming14.destroy(function(){
+            myStreaming14 = null;
+            myStreaming15.destroy(function(){
+              myStreaming15 = null;
+              console.log("Spec 3 finished successfully");
+              done();
+            });
+          });
         } else {
           oneStreamingFinished = true;
         }
       }, true);
     }
-    
-    
-    function streamWhenConnectionEstablished(res){
-      myStreaming14.create_stream(res, {web_server_URL: false, webTorrent_trackers: []}, 
-              createStreamCallback);
-    }
-    
-    
+      
     http.get({
       hostname: 'localhost',
       port: 8080,
@@ -116,9 +112,10 @@ describe("Testing whether the methods to explicitly add a peer to the swarm", fu
         range: 'bytes=' + 0 + '-' + theVideoFileSize-1
       }
     }, function (res){
-      streamWhenConnectionEstablished(res);
+      myStreaming14.create_stream(res, {web_server_URL: false, webTorrent_trackers: []}, 
+              createStreamCallback);
     });
-  }, 80000);
+  }, 120000);
 });  
   
 
@@ -130,12 +127,11 @@ describe("Testing whether the create_stream method", function(){
     function callback (streamTicket){
       expect(streamTicket.SIZE_VIDEO_FILE).toEqual(theVideoFileSize);
       expect(streamTicket.path_to_file_on_web_server).toMatch("/videos/example.mp4");
-      setTimeout(function(){
-        myStreaming11.destroy();
+      myStreaming11.destroy(function(){
         myStreaming11 = null;
         console.log("Spec 4 finished successfully");
         done();
-      }, 5000);
+      });
     }
     
     http.get({
@@ -149,7 +145,7 @@ describe("Testing whether the create_stream method", function(){
       myStreaming11.create_stream(res, {webTorrent_trackers: ["ws://localhost:8085"], 
               path_to_file_on_web_server: "/videos/example.mp4"}, callback);
     });
-  }, 400000); 
+  }, 120000); 
 });
 
 
@@ -175,11 +171,11 @@ describe("Testing whether the receive_stream method", function(){
       console.log("Spec 5 finished successfully");        
       done();
     }, true);
-  }, 400000);
+  }, 120000);
 
   
-  describe("is able to download the video via WebTorrent", function(){
-    
+  describe("is able to download the video via WebTorrent", function(){  
+  
     it("with one seeder and one downloader", function(done){
       expect(true).toBe(true); // Every Jasmine spec has to have an expect expression.
 
@@ -195,14 +191,15 @@ describe("Testing whether the receive_stream method", function(){
                 web_server_URL: false},  function(streamTicket){
           myStreaming3.receive_stream(streamTicket, document.getElementById("myVideo3"), 
           function(){
-            myStreaming2.destroy();
-            myStreaming2 = null;
-            console.log("Spec 6 finished successfully");
-            done();
+            myStreaming2.destroy(function(){
+              myStreaming2 = null;
+              console.log("Spec 6 finished successfully");
+              done();
+            });
           }, true);
         });
       });
-    }, 400000); 
+    }, 120000); 
 
  
     it("with two seeders and one downloader", function(done){
@@ -212,14 +209,14 @@ describe("Testing whether the receive_stream method", function(){
         setTimeout(function(){
           myStreaming5.receive_stream(streamTicket, document.getElementById("myVideo5"), function(){
             myStreaming6.receive_stream(streamTicket, document.getElementById("myVideo6"), function(){
-              setTimeout(function(){
-                myStreaming4.destroy();
+              myStreaming4.destroy(function(){
                 myStreaming4 = null;
-                myStreaming5.destroy();
-                myStreaming5 = null;
-                console.log("Spec 7 finished successfully");
-                done();
-              }, 5000);
+                myStreaming5.destroy(function(){
+                  myStreaming5 = null;
+                  console.log("Spec 7 finished successfully");
+                  done();
+                });
+              });
             }, true);
           }, false);
         }, 500);
@@ -236,57 +233,39 @@ describe("Testing whether the receive_stream method", function(){
         myStreaming4.create_stream(res, {webTorrent_trackers: ["ws://localhost:8085"], 
                 web_server_URL: false}, createStreamCallback);  
       });
-    }, 400000);  
-  
+    }, 120000);  
+   
    
     it("with one seeder and two downloaders", function(done){
-      expect(true).toBe(true); // Every Jasmine spec has to have an expect expression.
-      var numberOfPeersConnected = 0;
+     expect(true).toBe(true); // Every Jasmine spec has to have an expect expression.
       var numberOfCompletedDownloads = 0;
-      
-      myStreaming7.createSignalingData(function(signalingData){
-        myStreaming8.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-          myStreaming7.processSignalingResponse(signalingDataResponse, function(){
-                  numberOfPeersConnected++;});
-        });
-      });
-      myStreaming8.createSignalingData(function(signalingData){
-        myStreaming9.createSignalingDataResponse(signalingData, function(signalingDataResponse){
-          myStreaming8.processSignalingResponse(signalingDataResponse, function(){
-                  numberOfPeersConnected++;});
-        });
-      });
-     
+    
       function checkFinished(){
         numberOfCompletedDownloads++;
         if(numberOfCompletedDownloads === 2){
-          setTimeout(function(){ // Zum Test 27.09
-            myStreaming7.destroy();
+          myStreaming7.destroy(function(){
             myStreaming7 = null;
-            myStreaming8.destroy();
-            myStreaming8 = null;
-            console.log("Spec 8 finished successfully");
-            done();
-          }, 5000);
+            myStreaming8.destroy(function(){
+              myStreaming8 = null;
+              console.log("Spec 8 finished successfully");
+              done();
+            });
+          });
         }
       }
-      
+    
       function createStreamCallback (streamTicket){
-        myStreaming8.receive_stream(streamTicket, document.getElementById("myVideo8"), checkFinished,
-                false);
+        setTimeout(function(){
+          myStreaming8.receive_stream(streamTicket, document.getElementById("myVideo8"), 
+                  checkFinished, false);
           
-        setTimeout(function(){myStreaming9.receive_stream(streamTicket, document.getElementById("myVideo9"), 
-                checkFinished, true);}, 300);
+          setTimeout(function(){
+            myStreaming9.receive_stream(streamTicket, document.getElementById("myVideo9"), 
+                    checkFinished, true);
+          }, 1200);     
+        }, 500);
       };   
-
-      function streamWhenInstancesConnected(res){
-        if(numberOfPeersConnected === 2){
-          myStreaming7.create_stream(res, {webTorrent_trackers: [], web_server_URL: false}, 
-                  createStreamCallback);
-        } else {
-          setTimeout(function(){streamWhenInstancesConnected(res)}, 500); 
-        }
-      };
+      
       http.get({
         hostname: 'localhost',
         port: 8080,
@@ -294,12 +273,15 @@ describe("Testing whether the receive_stream method", function(){
         headers: {
           range: 'bytes=' + 0 + '-' + theVideoFileSize-1
         }
-      }, function (res){            
-        streamWhenInstancesConnected(res);
+      }, function (res){
+        setTimeout(function(){
+          myStreaming7.create_stream(res, {webTorrent_trackers: ["ws://localhost:8085"], 
+                  web_server_URL: false}, createStreamCallback);
+        }, 5000);
       });
-    }, 400000);    
+    }, 120000);    
   });
-   
+  
    
   it("is able to receive a video stream via peer-assisted delivery", function(done){    
     expect(true).toBe(true); // Every Jasmine spec has to have an expect expression.
@@ -316,14 +298,12 @@ describe("Testing whether the receive_stream method", function(){
       web_server_URL: "http://localhost:8080", path_to_file_on_web_server: "/videos/example3.mp4"}, 
               function(streamTicket){
         myStreaming10.receive_stream(streamTicket, document.getElementById("myVideo10"), function(){
-          setTimeout(function(){
-            myStreaming0.destroy();
-            myStreaming0 = null;
-            console.log("Spec 9 finished successfully");
-            done();
-          }, 5000);
+          myStreaming0.destroy();
+          myStreaming0 = null;
+          console.log("Spec 9 finished successfully");
+          done();
         }, true);        
       });            
     });
-  }, 400000);
+  }, 120000);
 });

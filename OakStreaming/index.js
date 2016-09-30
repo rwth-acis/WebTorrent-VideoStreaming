@@ -31,6 +31,7 @@ function OakStreaming(OakName){
     var SIZE_VIDEO_FILE = 0;
     var webtorrentClient = null;
       
+      
     self.destroy = function(callback){
       if(webtorrentClient){
         webtorrentClient.destroy(function(err){
@@ -42,6 +43,10 @@ function OakStreaming(OakName){
             callback();
           }
         });
+      } else {
+        if(callback){
+          callback();
+        }
       }
     }
     
@@ -1260,10 +1265,12 @@ function OakStreaming(OakName){
               }
               if(stopUploadingWhenVideoDownloaded){
                 if(theTorrentSession){
-                  setTimeout(function(){ // Neu zum Test 27.09
-                    theTorrentSession.destroy();
-                    webtorrentClient = null;
-                  }, 5000);
+                  theTorrentSession.destroy();
+                  theTorrentSession = null; // 30.09
+                }
+                if(webtorrentClient){
+                  webtorrentClient.destroy(); // 30.09
+                  webtorrentClient = null; // 30.09  
                 }
                 endStreaming = true;
                 return;                 
