@@ -2,7 +2,7 @@ var theVideoFileSize = 788493;
 
 
 describe("Testing whether the methods to explicitly add a peer to the swarm", function(){
-  console.log("Version 36");
+  console.log("Version 37");
   
   var myStreaming12 = new OakStreaming();
   var myStreaming13 = new OakStreaming();
