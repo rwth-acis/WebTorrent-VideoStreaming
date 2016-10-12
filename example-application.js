@@ -38,7 +38,7 @@ Y({
       //        webTorrent_trackers: []}
 
       oakStreaming.receive_stream(theSharedArray.get(0), theHtmlVideoTag, function(){
-          console.log("receive_stream callback: All video data has been received");
+        console.log("receive_stream callback: All video data has been received");
       });  
     }
   });

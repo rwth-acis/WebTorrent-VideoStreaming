@@ -36,8 +36,7 @@ function OakStreaming(OakName){
       if(webtorrentClient){
         webtorrentClient.destroy(function(err){
           if(err){
-            // console.error("ERROR: " + err.message); 12.10
-            console.log("ERROR: " + err.message); // 12.10
+            console.log("ERROR: " + err.message);
           }
           if(callback){
             callback();
@@ -272,8 +271,7 @@ function OakStreaming(OakName){
        
       webtorrentClient = new WebTorrent({dht: false, tracker: true});
       webtorrentClient.on('error', function(err){
-        //console.error("ERROR: " + err.message); 12.10
-        console.log("ERROR: " + err.message); // 12.10
+        console.log("ERROR: " + err.message);
       });
       
       
@@ -382,8 +380,7 @@ function OakStreaming(OakName){
         
 
         theTorrentSession.on('error', function (err) {
-          //console.error("ERROR: " + err.message); 12.10
-          console.log("ERROR: " + err.message); // 12.10
+          console.log("ERROR: " + err.message);
         });
 
         // New peers can only be added to the swarm of torrentSession object, i.e. the set of peers that are used
@@ -487,7 +484,6 @@ function OakStreaming(OakName){
       if(typeof arguments[2] === 'function'){
         callback = arguments[2];
         stopUploadingWhenVideoDownloaded = arguments[3];
-        stopUploadingWhenVideoDownloaded = arguments[3];
       } else {
         callback = undefined;
         stopUploadingWhenVideoDownloaded = arguments[2];
@@ -495,8 +491,7 @@ function OakStreaming(OakName){
 
       htmlVideoTag = document.getElementsByTagName('video')[0];
       htmlVideoTag.addEventListener('error', function (err){
-        // console.error(htmlVideoTag.error); 12.10
-        console.log("ERROR: " + htmlVideoTag.error); // 12.10
+        console.log("ERROR: " + htmlVideoTag.error);
       });
       
       
@@ -594,7 +589,7 @@ function OakStreaming(OakName){
       var inServerDownloadTimeRange = true; // inServerDownloadTimeRange === true means that there is less than 
               // DOWNLOAD_FROM_SERVER_TIME_RANGE seconds of video playback buffered and consequently XHRs will be 
               // conducted.
-      var videoDownloaded = false;
+      var playerHasBufferedVideo = false;
       var videoDownloadedByWtorrent = false;
       var bytesFromWtorrent = 0;
       var bytesFromServer = 0;
@@ -616,7 +611,7 @@ function OakStreaming(OakName){
       if(wtorrentDeliverySelected){
         webtorrentClient = new WebTorrent({dht: false, tracker: true});
         webtorrentClient.on('error', function(err){
-          console.error("ERROR: " + err.message); // 12.10
+          console.error("ERROR: " + err.message);
         });
         
         
@@ -643,8 +638,7 @@ function OakStreaming(OakName){
 
           
           theTorrentSession.on('error', function (err) {
-            //console.error("ERROR: " + err.message); 12.10
-            console.log("ERROR: " + err.message); // 12.10
+            console.log("ERROR: " + err.message);
           });
           
           // New peers can only be added to the swarm of torrentSession object, i.e. the set of peers that are used
@@ -1048,7 +1042,7 @@ function OakStreaming(OakName){
       // is buffered in advance. If this is the case, this function conducts a new sequential byte range request
       // to the WebTorrent network.
       function checkIfInP2pDownloadTimeRange(){
-        if(videoDownloaded){
+        if(playerHasBufferedVideo){
           return;
         }  
           
@@ -1215,9 +1209,10 @@ function OakStreaming(OakName){
       // in advance and sets the private property inServerDownloadTimeRange of the OakStreaming client accordingly.
       // If the inServerDownloadTimeRange property has been set to true, this function may conduct XHRs. 
       function checkIfInServerDownloadTimeRange(justOnce){
-        if(videoDownloaded){
+        if(playerHasBufferedVideo){
           return;
         }
+        
         if(htmlVideoTag.duration){
           var timeRanges = htmlVideoTag.buffered;
 
@@ -1249,7 +1244,7 @@ function OakStreaming(OakName){
 
       // This function checks whether the video is completely downloaded.
       function checkIfVideoDownloaded (){
-        if(videoDownloaded){
+        if(playerHasBufferedVideo){ 
           return;
         }
         
@@ -1258,7 +1253,7 @@ function OakStreaming(OakName){
           var timeRanges = htmlVideoTag.buffered;
           if(timeRanges.length >= 1){
             if(timeRanges.start(0) == 0 && timeRanges.end(0) == htmlVideoTag.duration){
-              videoDownloaded = true;
+              playerHasBufferedVideo = true;
               if(callback){
                 if(stopUploadingWhenVideoDownloaded){
                   callback();
@@ -1288,7 +1283,7 @@ function OakStreaming(OakName){
         // and from the Web server. Video data that is buffered by the WebTorrent instance may not be loaded
         // into the buffer of the video player yet.
         if(theTorrentSession && theTorrentSession.progress === 1){
-          videoDownloaded = true;
+          // playerHasBufferedVideo = true; 12.10 
           videoDownloadedByWtorrent = true;
           if(callback){
             if(stopUploadingWhenVideoDownloaded){
@@ -1551,28 +1546,18 @@ function OakStreaming(OakName){
             // }
           }
 
-          // Setting this kind of headers seems no t to be necessary for CORS.
+          // Setting this kind of headers seems not to be necessary for CORS.
           // res.setHeader('Access-Control-Allow-Headers', thisRequest.xhrRequest.header.origin);
          
          
-          if(res.statusCode){
-            console.log("typeof res.statusCode: " + typeof res.statusCode);
-          } else {
-            console.log("res.statusCode seems to be undefined");
-          }
-        
-          console.log("res.statusCode: " + res.statusCode);
-          
-          if(res.statusCode && ('' + res.statusCode)[0] === "2"){      //res.statusCode !== '200'){
+
+          if(res.statusCode && ('' + res.statusCode)[0] === "2"){
             res.on('end', xhrEnd);
             res.on('data', xhrDataHandler);
             res.on('error', function(err){
-              //console.error(err); 12.10
               console.log("ERROR: " + err.message);
             });
           } else {
-            console.log("XHR statusCode property is not right");
-            
             // A response from the server has been received but the server signals that it can not deliver the
             // requested data.
             thisRequest.xhrConducted = false; 
@@ -1580,8 +1565,6 @@ function OakStreaming(OakName){
         });
         
         thisRequest.xhrRequest.on('error', function(err){
-          // console.log("The XHR has thrown the following error message: " + err.message);
-          // console.error(err); 12.10
           console.log("ERROR: " + err.message);
         });
       }
