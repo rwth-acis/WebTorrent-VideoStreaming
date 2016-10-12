@@ -31,8 +31,15 @@ Y({
     console.log(event);
     if(!streamSource){
       // returns the received Stream_Ticket object:    theSharedArray.get(0)
+      
+      
+      // {xhr_hostname: "localhost", xhr_port: 8080, 
+      //        path_to_file_on_web_server: "/videos/grassland.mp4", SIZE_VIDEO_FILE: 374824780, 
+      //        webTorrent_trackers: []}
 
-      oakStreaming.receive_stream(theSharedArray.get(0), theHtmlVideoTag, function(){console.log("receive_stream callback: All video data has been received");});  
+      oakStreaming.receive_stream(theSharedArray.get(0), theHtmlVideoTag, function(){
+          console.log("receive_stream callback: All video data has been received");
+      });  
     }
   });
 });
@@ -50,7 +57,7 @@ window.handleFiles = function (files) {
 
 
 function updateChart(){
-  document.getElementById("A").innerHTML = "File length in byte: " + oakStreaming.get_file_size();
+  document.getElementById("A").innerHTML = "File size in byte: " + oakStreaming.get_file_size();
   document.getElementById("B").innerHTML = "Bytes downloaded from other peers: " + oakStreaming.get_number_of_bytes_downloaded_P2P();
   document.getElementById("C").innerHTML = "Bytes uploaded to other peers: " + oakStreaming.get_number_of_bytes_uploaded_P2P();
   document.getElementById("D").innerHTML = "Percentage of video file downloaded from P2P network: " + oakStreaming.get_percentage_downloaded_of_torrent();

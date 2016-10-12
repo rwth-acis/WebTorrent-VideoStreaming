@@ -2,6 +2,8 @@
 (function (Buffer){
 'use strict';
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
 var http = require('http');
 var MultiStream = require('multistream');
 var util = require('util');
@@ -34,8 +36,8 @@ function OakStreaming(OakName) {
       if (webtorrentClient) {
         webtorrentClient.destroy(function (err) {
           if (err) {
-            console.error("ERROR: " + err.message);
-            //console.log("destroy err: " + err.message);
+            // console.error("ERROR: " + err.message); 12.10
+            console.log("ERROR: " + err.message); // 12.10
           }
           if (callback) {
             callback();
@@ -256,7 +258,8 @@ function OakStreaming(OakName) {
 
       webtorrentClient = new WebTorrent({ dht: false, tracker: true });
       webtorrentClient.on('error', function (err) {
-        console.error("ERROR: " + err.message);
+        //console.error("ERROR: " + err.message); 12.10
+        console.log("ERROR: " + err.message); // 12.10
       });
 
       if (video_file) {
@@ -360,7 +363,8 @@ function OakStreaming(OakName) {
         });
 
         theTorrentSession.on('error', function (err) {
-          console.error("ERROR: " + err.message);
+          //console.error("ERROR: " + err.message); 12.10
+          console.log("ERROR: " + err.message); // 12.10
         });
 
         // New peers can only be added to the swarm of torrentSession object, i.e. the set of peers that are used
@@ -470,7 +474,8 @@ function OakStreaming(OakName) {
 
       htmlVideoTag = document.getElementsByTagName('video')[0];
       htmlVideoTag.addEventListener('error', function (err) {
-        console.error(htmlVideoTag.error);
+        // console.error(htmlVideoTag.error); 12.10
+        console.log("ERROR: " + htmlVideoTag.error); // 12.10
       });
 
       /* This block of code is solely for conducting Technical Evaluations.
@@ -573,7 +578,7 @@ function OakStreaming(OakName) {
       if (wtorrentDeliverySelected) {
         webtorrentClient = new WebTorrent({ dht: false, tracker: true });
         webtorrentClient.on('error', function (err) {
-          console.error("ERROR: " + err.message);
+          console.error("ERROR: " + err.message); // 12.10
         });
 
         var webtorrentOptions = {};
@@ -596,7 +601,8 @@ function OakStreaming(OakName) {
           wtorrentFile = theTorrentSession.files[0];
 
           theTorrentSession.on('error', function (err) {
-            console.error("ERROR: " + err.message);
+            //console.error("ERROR: " + err.message); 12.10
+            console.log("ERROR: " + err.message); // 12.10
           });
 
           // New peers can only be added to the swarm of torrentSession object, i.e. the set of peers that are used
@@ -1464,26 +1470,38 @@ function OakStreaming(OakName) {
             // }
           }
 
-          // Setting this kind of headers seems not to be necessary for CORS.
+          // Setting this kind of headers seems no t to be necessary for CORS.
           // res.setHeader('Access-Control-Allow-Headers', thisRequest.xhrRequest.header.origin);
 
-          if (res.statusCode !== '200') {
-            // A response from the server has been received but the server signals that it can not deliver the
-            // requested data.
-            thisRequest.xhrConducted = false;
+          if (res.statusCode) {
+            console.log("typeof res.statusCode: " + _typeof(res.statusCode));
           } else {
+            console.log("res.statusCode seems to be undefined");
+          }
+
+          console.log("res.statusCode: " + res.statusCode);
+
+          if (res.statusCode && ('' + res.statusCode)[0] === "2") {
+            //res.statusCode !== '200'){
             res.on('end', xhrEnd);
             res.on('data', xhrDataHandler);
             res.on('error', function (err) {
-              console.error(err);
+              //console.error(err); 12.10
+              console.log("ERROR: " + err.message);
             });
+          } else {
+            console.log("XHR statusCode property is not right");
+
+            // A response from the server has been received but the server signals that it can not deliver the
+            // requested data.
+            thisRequest.xhrConducted = false;
           }
         });
 
         thisRequest.xhrRequest.on('error', function (err) {
-          console.log(err.message);
           // console.log("The XHR has thrown the following error message: " + err.message);
-          console.error(err);
+          // console.error(err); 12.10
+          console.log("ERROR: " + err.message);
         });
       }
 
@@ -1582,6 +1600,10 @@ Y({
     if (!streamSource) {
       // returns the received Stream_Ticket object:    theSharedArray.get(0)
 
+      // {xhr_hostname: "localhost", xhr_port: 8080, 
+      //        path_to_file_on_web_server: "/videos/grassland.mp4", SIZE_VIDEO_FILE: 374824780, 
+      //        webTorrent_trackers: []}
+
       oakStreaming.receive_stream(theSharedArray.get(0), theHtmlVideoTag, function () {
         console.log("receive_stream callback: All video data has been received");
       });
@@ -1600,7 +1622,7 @@ window.handleFiles = function (files) {
 };
 
 function updateChart() {
-  document.getElementById("A").innerHTML = "File length in byte: " + oakStreaming.get_file_size();
+  document.getElementById("A").innerHTML = "File size in byte: " + oakStreaming.get_file_size();
   document.getElementById("B").innerHTML = "Bytes downloaded from other peers: " + oakStreaming.get_number_of_bytes_downloaded_P2P();
   document.getElementById("C").innerHTML = "Bytes uploaded to other peers: " + oakStreaming.get_number_of_bytes_uploaded_P2P();
   document.getElementById("D").innerHTML = "Percentage of video file downloaded from P2P network: " + oakStreaming.get_percentage_downloaded_of_torrent();

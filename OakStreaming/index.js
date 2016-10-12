@@ -36,8 +36,8 @@ function OakStreaming(OakName){
       if(webtorrentClient){
         webtorrentClient.destroy(function(err){
           if(err){
-            console.error("ERROR: " + err.message);
-            //console.log("destroy err: " + err.message);
+            // console.error("ERROR: " + err.message); 12.10
+            console.log("ERROR: " + err.message); // 12.10
           }
           if(callback){
             callback();
@@ -272,7 +272,8 @@ function OakStreaming(OakName){
        
       webtorrentClient = new WebTorrent({dht: false, tracker: true});
       webtorrentClient.on('error', function(err){
-        console.error("ERROR: " + err.message);
+        //console.error("ERROR: " + err.message); 12.10
+        console.log("ERROR: " + err.message); // 12.10
       });
       
       
@@ -381,7 +382,8 @@ function OakStreaming(OakName){
         
 
         theTorrentSession.on('error', function (err) {
-          console.error("ERROR: " + err.message);
+          //console.error("ERROR: " + err.message); 12.10
+          console.log("ERROR: " + err.message); // 12.10
         });
 
         // New peers can only be added to the swarm of torrentSession object, i.e. the set of peers that are used
@@ -493,7 +495,8 @@ function OakStreaming(OakName){
 
       htmlVideoTag = document.getElementsByTagName('video')[0];
       htmlVideoTag.addEventListener('error', function (err){
-        console.error(htmlVideoTag.error);
+        // console.error(htmlVideoTag.error); 12.10
+        console.log("ERROR: " + htmlVideoTag.error); // 12.10
       });
       
       
@@ -613,7 +616,7 @@ function OakStreaming(OakName){
       if(wtorrentDeliverySelected){
         webtorrentClient = new WebTorrent({dht: false, tracker: true});
         webtorrentClient.on('error', function(err){
-          console.error("ERROR: " + err.message);
+          console.error("ERROR: " + err.message); // 12.10
         });
         
         
@@ -640,7 +643,8 @@ function OakStreaming(OakName){
 
           
           theTorrentSession.on('error', function (err) {
-            console.error("ERROR: " + err.message);
+            //console.error("ERROR: " + err.message); 12.10
+            console.log("ERROR: " + err.message); // 12.10
           });
           
           // New peers can only be added to the swarm of torrentSession object, i.e. the set of peers that are used
@@ -1547,26 +1551,38 @@ function OakStreaming(OakName){
             // }
           }
 
-          // Setting this kind of headers seems not to be necessary for CORS.
+          // Setting this kind of headers seems no t to be necessary for CORS.
           // res.setHeader('Access-Control-Allow-Headers', thisRequest.xhrRequest.header.origin);
          
-         if(res.statusCode !== '200'){
-            // A response from the server has been received but the server signals that it can not deliver the
-            // requested data.
-            thisRequest.xhrConducted = false; 
+         
+          if(res.statusCode){
+            console.log("typeof res.statusCode: " + typeof res.statusCode);
           } else {
+            console.log("res.statusCode seems to be undefined");
+          }
+        
+          console.log("res.statusCode: " + res.statusCode);
+          
+          if(res.statusCode && ('' + res.statusCode)[0] === "2"){      //res.statusCode !== '200'){
             res.on('end', xhrEnd);
             res.on('data', xhrDataHandler);
             res.on('error', function(err){
-              console.error(err);
+              //console.error(err); 12.10
+              console.log("ERROR: " + err.message);
             });
+          } else {
+            console.log("XHR statusCode property is not right");
+            
+            // A response from the server has been received but the server signals that it can not deliver the
+            // requested data.
+            thisRequest.xhrConducted = false; 
           } 
         });
         
         thisRequest.xhrRequest.on('error', function(err){
-          console.log(err.message);
           // console.log("The XHR has thrown the following error message: " + err.message);
-          console.error(err);
+          // console.error(err); 12.10
+          console.log("ERROR: " + err.message);
         });
       }
       

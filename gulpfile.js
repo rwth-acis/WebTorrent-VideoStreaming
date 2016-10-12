@@ -119,7 +119,7 @@ gulp.task('minify_example_app.html', function(){
 });
 
 
-// Start Web server on localhost:8888
+// Start Web server on localhost:8080
 gulp.task('connect', function(){
   connect.server({
     root: "./web",
