@@ -1467,13 +1467,21 @@ function OakStreaming(OakName) {
           // Setting this kind of headers seems not to be necessary for CORS.
           // res.setHeader('Access-Control-Allow-Headers', thisRequest.xhrRequest.header.origin);
 
-          res.on('end', xhrEnd);
-          res.on('data', xhrDataHandler);
-          res.on('error', function (err) {
-            console.error(err);
-          });
+          if (res.statusCode !== '200') {
+            // A response from the server has been received but the server signals that it can not deliver the
+            // requested data.
+            thisRequest.xhrConducted = false;
+          } else {
+            res.on('end', xhrEnd);
+            res.on('data', xhrDataHandler);
+            res.on('error', function (err) {
+              console.error(err);
+            });
+          }
         });
+
         thisRequest.xhrRequest.on('error', function (err) {
+          console.log(err.message);
           // console.log("The XHR has thrown the following error message: " + err.message);
           console.error(err);
         });

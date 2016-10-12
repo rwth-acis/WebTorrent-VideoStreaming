@@ -123,6 +123,7 @@ gulp.task('minify_example_app.html', function(){
 gulp.task('connect', function(){
   connect.server({
     root: "./web",
+    //debug: true,
     livereload: false,
     middleware : function(connect, opts){
       return [cors()];

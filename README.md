@@ -16,8 +16,8 @@ Peer-assisted delivery denotes a hybrid between peer-to-peer and server delivery
 
 
 ## Usage of the exemplary Web application
-1. Open the Web application in several browser tabs.
-2. Choose via the *Choose File* button a video file, e.g. the *example.mp4* file in the project folder (a larger video file like https://durian.blender.org/download/ is probably more suitable to show the power of the OakStreaming library), that should be streamed to all browser tabs that currently visit the same URL. If the video file (identical content and file name) can also be found in the *web/videos* folder, the video will be streamed via peer-assisted delivery. Otherwise, the video will be streamed purely peer-to-peer. <br />
+1. Open the Web application in several browser windows.
+2. Choose via the *Choose File* button a video file, e.g. the *example.mp4* file in the project folder (a larger video file like https://durian.blender.org/download/ is probably more suitable to show the power of the OakStreaming library), that should be streamed to all browser windows that currently visit the same URL. If the video file (identical content and file name) can also be found in the *web/videos* folder, the video will be streamed via peer-assisted delivery. Otherwise, the video will be streamed purely peer-to-peer. <br />
 
 
 ## Additional information
