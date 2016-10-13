@@ -29,7 +29,7 @@ Peer-assisted delivery denotes a hybrid between peer-to-peer and server delivery
 <br><br>
 - The file *example-application.js* contains the JavaScript code of the example application.
 <br><br>
-- In the *web* folder, the minified html page (*index.html*) and the built JavaScript code of the example application are located. The *web* folder contains additional files which are needed for the example application but not for the OakStreaming library. Moreover, the *web* folder contains a *videos* folder where some example videos files are located. These video files are necessary for the successful run of the Jasmine test suites. The *web* folder is the root directory of the gulp Web server. Video files that the gulp Web server should serve to the example application have to be put into the *videos* folder.
+- In the *web* folder, the minified html page (*index.html*) and the built JavaScript code of the example application are located. The *web* folder contains additional files which are needed for the example application but not for the OakStreaming library. Moreover, the *web* folder contains a *videos* folder where some example videos files are located. These video files are necessary for the successful run of the Jasmine test suites. The *web* folder is the root directory of the gulp Web server. Video files that the gulp Web server should serve to the example application have to be put into the *web* folder.
 <br><br>
 - The source code of the example application is commented and does not comprise a large number of lines. Therefore, it is probably not a bad idea to change the code in order to experiment with the OakStreaming library.
 <br><br>
