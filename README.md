@@ -16,8 +16,8 @@ Peer-assisted delivery denotes a hybrid between peer-to-peer and server delivery
 
 
 ## Usage of the exemplary Web application
-1. Open the Web application in several browser windows.
-2. Choose via the *Choose File* button a video file, e.g. the *example.mp4* file in the project folder (a larger video file like https://durian.blender.org/download/ is probably more suitable to show the power of the OakStreaming library), that should be streamed to all browser windows that currently visit the same URL. If the video file (identical content and file name) can also be found in the *web* folder (this does not include subfolders of *web*), the video will be streamed via peer-assisted delivery. Otherwise, the video will be streamed purely peer-to-peer. <br />
+1. Open the Web application in two or three browser windows.
+2. Choose via the *Choose File* button a video file, e.g. the *example.mp4* file in the project folder (a larger video file like https://durian.blender.org/download/ is probably more suitable to show the power of the OakStreaming library), that should be streamed to all browser windows that currently visit the same URL. If the video file (identical content and file name) can also be found in the *web* folder (this does not include subfolders of *web*), the video will be streamed via peer-assisted delivery. Otherwise, the video will be streamed purely peer-to-peer.
 
 
 ## Additional information
@@ -37,7 +37,7 @@ Peer-assisted delivery denotes a hybrid between peer-to-peer and server delivery
 <br><br>
 - The example application uses a via Yjs (https://github.com/y-js/yjs) synchronized data structure to transfer the Stream_Ticket object from the seeder to the other peers. Therefore, the application needs to connect to a special kind of WebRTC signaling server. The signaling server can be downloaded at https://github.com/DadaMonad/signalmaster. By default, the example application connects to a free, public WebRTC signaling server.
 <br><br>
-- If the create_stream method of the OakStreaming library does not get handed over URLs to one or more torrent tracker, it tries to connect to several public WebTorrent tracking servers, which support all functionality needed by the OakStreaming library. The example application only tries to connect to a local torrent tracker.
+- If the create_stream method of the OakStreaming library does not get handed over URLs to one or more torrent trackers, it tries to connect to several public WebTorrent tracking servers, which support all functionality needed by the OakStreaming library. The example application only tries to connect to a local torrent tracker.
 <br><br>
 - The file *jasmine-testsuites.js* contains the JavaScript code of the Jasmine test suites.
 <br><br>
