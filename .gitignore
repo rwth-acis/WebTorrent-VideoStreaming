@@ -5,12 +5,10 @@ test1.mp4
 bfg.jar
 grassland.mp4
 grassland_for_technical_evaluation.mp4
-Jasmine_testsuites_build/
+sintel-1024-surround.mp4
 node_modules/
-build/**/index.html
-build/**/example_application.js
-Jasmine_testsuites_build/**/Jasmine_testsuites_help.js
 web/**/index.html
-web/**/example_application.js.map
-web/**/example_application.js
-Jasmine_testsuites_build/*
+web/**/example-application.js.map
+web/**/example-application.js
+jasmine-testsuites-build/
+jasmine-testsuites-build/*

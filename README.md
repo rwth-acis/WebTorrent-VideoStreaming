@@ -21,6 +21,8 @@ Peer-assisted delivery denotes a hybrid between peer-to-peer and server delivery
 
 
 ## Additional information
+- The OakStreaming library has been developed for the Web browser Google Chrome. Therefore, you should run the OakStreaming library, the example application and the Jasmine test suites in Google Chrome.
+<br><br>
 - The program code of the library itself is located in the *oakstreaming* folder.
 <br><br>
 - The JSDoc documentation of the library API can be found in the *Final JSDoc documentation* folder.

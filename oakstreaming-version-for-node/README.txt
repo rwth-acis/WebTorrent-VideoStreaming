@@ -1,0 +1,1 @@
+In contrast to the browser version of OakStreaming, which uses Node.js modules but does not run on Node.js, the OakStreaming version for Node.js has never worked.

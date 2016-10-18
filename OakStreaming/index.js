@@ -491,7 +491,7 @@ function OakStreaming(OakName){
 
       htmlVideoTag = document.getElementsByTagName('video')[0];
       htmlVideoTag.addEventListener('error', function (err){
-        console.log("ERROR: " + htmlVideoTag.error);
+        console.log("ERROR: " + err.message);
       });
       
       
