@@ -24389,16 +24389,16 @@ function OakStreaming(OakName) {
           videoStartUpOver = true;
         }
       };
-       var userPausedVideo = false;
-       htmlVideoTag.pause = function(){
+        var userPausedVideo = false;
+        htmlVideoTag.pause = function(){
         userPausedVideo = true;
       };
-       htmlVideoTag.onwaiting = function() {
+        htmlVideoTag.onwaiting = function() {
         ////console.log("Video is holded at " + (Date.now() - timeLoadVideoMethodWasCalled) + 
                 " miliseconds after loadVideo has been called.");
         lastTimeWhenVideoHolded = Date.now();
       };
-       htmlVideoTag.onstalled = function() {
+        htmlVideoTag.onstalled = function() {
         ////console.log("Video is stalled at " + (Date.now() - timeLoadVideoMethodWasCalled) + 
                 " miliseconds after loadVideo has been called.");
         lastTimeWhenVideoHolded = Date.now();
